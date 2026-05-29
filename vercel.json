@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/xprt-farm",
+      "destination": "/regions/midwest",
+      "permanent": true
+    }
+  ]
+}
