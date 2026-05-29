@@ -1,0 +1,100 @@
+/* src/styles/tokens.css
+ *
+ * WHY: All design decisions live here as CSS custom properties.
+ * Components reference tokens by name, never raw values.
+ * Changing a color or spacing value here updates it everywhere.
+ * See docs/brand.md for full brand guidelines.
+ */
+
+:root {
+  /* ── Brand colors ───────────────────────────────────────────────── */
+  /* TODO: confirm final hex values from brand guide */
+  --color-green-dark:    #2E6B3E;
+  --color-green:         #3A7D50;
+  --color-green-light:   #4A8F5C;
+  --color-green-pale:    #C8D8C0;
+  --color-cream:         #F7F4EF;
+  --color-off-white:     #F0F0EC;
+
+  --color-text-primary:  #1A1A1A;
+  --color-text-secondary:#4A4A4A;
+  --color-text-muted:    #767676;
+
+  --color-white:         #FFFFFF;
+  --color-black:         #000000;
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-sans:   'DM Sans', system-ui, sans-serif;
+  --font-serif:  'DM Serif Display', Georgia, serif;
+  --font-mono:   'Fira Code', 'Courier New', monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+  --text-5xl:  3rem;
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.625;
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semi:   600;
+  --font-bold:   700;
+
+  /* ── Spacing ────────────────────────────────────────────────────── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  --max-width-sm:   640px;
+  --max-width-md:   768px;
+  --max-width-lg:   1024px;
+  --max-width-xl:   1280px;
+  --max-width-2xl:  1536px;
+  --content-width:  1200px;
+
+  /* ── Borders & Radii ────────────────────────────────────────────── */
+  --radius-sm:  0.25rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.75rem;
+  --radius-xl:  1rem;
+  --radius-full:9999px;
+
+  --border-thin:   1px;
+  --border-base:   2px;
+
+  /* ── Shadows ────────────────────────────────────────────────────── */
+  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  /* ── Transitions ────────────────────────────────────────────────── */
+  --transition-fast:   150ms ease;
+  --transition-base:   250ms ease;
+  --transition-slow:   400ms ease;
+
+  /* ── Z-index scale ──────────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-nav:     300;
+  --z-toast:   400;
+}

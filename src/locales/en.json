@@ -1,0 +1,37 @@
+{
+  "nav": {
+    "agriculture":  "Agriculture",
+    "turf":         "Turf",
+    "technologies": "Technologies",
+    "regions":      "Regions",
+    "university":   "University",
+    "blog":         "Blog",
+    "podcast":      "Podcast",
+    "contact":      "Contact"
+  },
+  "utility": {
+    "dashboard":       "Dashboard",
+    "universityLogin": "University Login"
+  },
+  "common": {
+    "learnMore":     "Learn More",
+    "viewAll":       "View All",
+    "findARep":      "Find a Rep",
+    "contactUs":     "Contact Us",
+    "download":      "Download",
+    "backToBlog":    "Back to Blog",
+    "backToPodcast": "Back to Podcast"
+  },
+  "repLocator": {
+    "heading":       "Find a Rep",
+    "placeholder":   "Enter your zip code",
+    "submit":        "Search",
+    "noResults":     "No reps found for that area. Contact us directly.",
+    "invalidZip":    "Please enter a valid 5-digit zip code."
+  },
+  "university": {
+    "signUp":        "Sign Up",
+    "logIn":         "Log In",
+    "gatedMessage":  "This content requires a Redox University account."
+  }
+}
