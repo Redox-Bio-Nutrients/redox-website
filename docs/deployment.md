@@ -1,7 +1,7 @@
 # Deployment Guide
 
-**Version:** 1.1  
-**Last updated:** 2026-05-29  
+**Version:** 1.2  
+**Last updated:** 2026-06-09  
 
 ## Environments
 
@@ -78,11 +78,35 @@ Local `.env` values:
 - `PUBLIC_SITE_URL=http://localhost:4321`
 - `SANITY_API_TOKEN` — your personal Sanity API token
 
+## Content Rebuild Webhooks
+
+Publishing in Sanity Studio triggers a Vercel rebuild automatically, so
+new/edited content goes live without a code push:
+
+```
+Studio publish → Sanity GROQ webhook → Vercel deploy hook → rebuild (~1 min)
+```
+
+| Webhook (sanity.io/manage → API → Webhooks) | Dataset | Triggers |
+|---|---|---|
+| Vercel Production Deploy | `production` | Production rebuild (`main`) |
+| Vercel Staging Deploy | `staging` | Staging rebuild (`dev`) |
+
+Both fire on create/update/delete of published documents, filtered to
+site content types only (`product`, `technology`, `region`, `rep`,
+`blogPost`, `category`, `author`, `podcastEpisode`,
+`universityResource`, `page`) — drafts and system documents do not
+trigger builds.
+
+The matching Vercel deploy hooks (`sanity-production`, `sanity-staging`)
+live in Vercel → Settings → Git → Deploy Hooks.
+
+Note: `SANITY_WEBHOOK_SECRET` is currently unused — it's reserved for
+future *inbound* webhooks to the site (e.g. on-demand ISR). The
+Sanity→Vercel deploy-hook flow above doesn't need it.
+
 ## TODO
 
 - [ ] Connect custom domain (redoxgrows.com) in Vercel
-- [ ] Set up Sanity webhook → Vercel production deploy hook
-- [ ] Set up Sanity webhook → Vercel staging deploy hook
-- [ ] Replace `SANITY_WEBHOOK_SECRET` placeholder with real secret
 - [ ] Add `PUBLIC_HUBSPOT_PORTAL_ID` when HubSpot integration begins
 - [ ] Add `PUBLIC_BUZZSPROUT_PODCAST_ID` when podcast is configured
