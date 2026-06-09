@@ -1,0 +1,47 @@
+---
+// src/components/products/ProductGrid.astro
+
+import type { ProductCard as ProductCardType } from '../../lib/types/sanity'
+import ProductCard from './ProductCard.astro'
+
+interface Props {
+  products: ProductCardType[]
+  emptyMessage?: string
+}
+
+const { products, emptyMessage = 'Products coming soon.' } = Astro.props
+---
+
+{products.length > 0 ? (
+  <div class="grid">
+    {products.map((product) => <ProductCard product={product} />)}
+  </div>
+) : (
+  <p class="empty">{emptyMessage}</p>
+)}
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-16) 0;
+  }
+
+  @media (max-width: 1023px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

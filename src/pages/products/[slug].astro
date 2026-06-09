@@ -1,0 +1,195 @@
+---
+// src/pages/products/[slug].astro
+//
+// Static product detail pages — one route per published product.
+// The hero band picks up the product's primaryColor; sections render
+// via ProductSections.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import ProductSections from '../../components/products/ProductSections.astro'
+import { getAllProducts, getProduct } from '../../lib/queries'
+import { urlFor } from '../../lib/sanity'
+
+export async function getStaticPaths() {
+  const products = await getAllProducts()
+  return products.map((p) => ({ params: { slug: p.slug } }))
+}
+
+const { slug } = Astro.params
+const product = await getProduct(slug!)
+
+if (!product) {
+  return Astro.redirect('/404')
+}
+
+const heroColor = product.primaryColor ?? 'var(--color-green-dark)'
+const imageUrl = product.image
+  ? urlFor(product.image).width(900).fit('max').url()
+  : null
+const marketLinks = product.markets.map((m) =>
+  m === 'agriculture'
+    ? { label: 'Agriculture', href: '/agriculture' }
+    : { label: 'Turf', href: '/turf' },
+)
+---
+
+<BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
+  <header class="hero" style={`--product-color: ${heroColor}`}>
+    <div class="hero__inner">
+      <div class="hero__text">
+        <nav class="hero__crumbs" aria-label="Breadcrumb">
+          {marketLinks.map((m, i) => (
+            <>
+              {i > 0 && <span aria-hidden="true"> · </span>}
+              <a href={m.href}>{m.label}</a>
+            </>
+          ))}
+        </nav>
+        <h1>{product.title}</h1>
+        {product.tagline && <p class="hero__tagline">{product.tagline}</p>}
+      </div>
+      {imageUrl && (
+        <img
+          class="hero__image"
+          src={imageUrl}
+          alt={product.image?.alt ?? product.title}
+          width="450"
+          loading="eager"
+        />
+      )}
+    </div>
+  </header>
+
+  <div class="content">
+    {product.sections && product.sections.length > 0 && (
+      <ProductSections sections={product.sections} productColor={product.primaryColor} />
+    )}
+
+    {product.technologies && product.technologies.length > 0 && (
+      <section class="techs">
+        <h2>Technologies</h2>
+        <ul>
+          {product.technologies.map((tech) => (
+            <li>
+              <a href={`/technologies/${tech.slug}`}>{tech.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {product.documents && product.documents.length > 0 && (
+      <section class="docs">
+        <h2>Documents</h2>
+        <ul>
+          {product.documents.map((doc) => (
+            <li>
+              <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                {doc.title ?? 'Download'}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .hero {
+    background: var(--product-color);
+    color: var(--color-white);
+  }
+
+  .hero__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-10);
+  }
+
+  .hero__crumbs {
+    font-size: var(--text-sm);
+    opacity: 0.85;
+    margin-bottom: var(--space-3);
+  }
+
+  .hero__crumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .hero h1 {
+    font-size: var(--text-5xl);
+    color: var(--color-white);
+  }
+
+  .hero__tagline {
+    margin-top: var(--space-4);
+    font-size: var(--text-xl);
+    opacity: 0.9;
+    max-width: 32ch;
+  }
+
+  .hero__image {
+    max-width: 450px;
+    flex-shrink: 0;
+  }
+
+  .content {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+
+  .techs h2,
+  .docs h2 {
+    font-size: var(--text-2xl);
+    color: var(--color-green-dark);
+    margin-bottom: var(--space-3);
+  }
+
+  .techs ul,
+  .docs ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .techs a,
+  .docs a {
+    display: inline-block;
+    padding: var(--space-2) var(--space-4);
+    border: var(--border-thin) solid var(--color-green-pale);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    color: var(--color-green-dark);
+    transition: background 0.15s ease;
+  }
+
+  .techs a:hover,
+  .docs a:hover {
+    background: var(--color-green-pale);
+  }
+
+  @media (max-width: 767px) {
+    .hero__inner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hero__image {
+      max-width: 100%;
+    }
+
+    .hero h1 {
+      font-size: var(--text-4xl);
+    }
+  }
+</style>
