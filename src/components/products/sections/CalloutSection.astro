@@ -1,0 +1,68 @@
+---
+// src/components/products/sections/CalloutSection.astro
+//
+// WHY: The callout's color comes from the product's primaryColor, not
+// the section — recoloring a product restyles every callout on it.
+// Tint mode uses color-mix() so the wash is derived from the same hex.
+
+import { PortableText } from 'astro-portabletext'
+import type { CalloutSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: CalloutSection
+  productColor?: string
+}
+
+const { section, productColor } = Astro.props
+const color = productColor ?? 'var(--color-green)'
+const solid = section.tone !== 'tint'
+---
+
+<section
+  class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
+  style={`--callout-color: ${color}`}
+>
+  {section.heading && <h2>{section.heading}</h2>}
+  <div class="callout__body">
+    <PortableText value={section.body} />
+  </div>
+</section>
+
+<style>
+  .callout {
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+  }
+
+  .callout--solid {
+    background: var(--callout-color);
+    color: var(--color-white);
+  }
+
+  .callout--solid h2 {
+    color: var(--color-white);
+  }
+
+  .callout--tint {
+    background: color-mix(in srgb, var(--callout-color) 12%, white);
+    border-left: 4px solid var(--callout-color);
+  }
+
+  .callout--tint h2 {
+    color: var(--callout-color);
+  }
+
+  .callout h2 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-3);
+  }
+
+  .callout__body :global(p) {
+    margin-bottom: var(--space-3);
+    line-height: var(--leading-relaxed);
+  }
+
+  .callout__body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>

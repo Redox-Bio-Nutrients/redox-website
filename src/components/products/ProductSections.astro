@@ -1,0 +1,45 @@
+---
+// src/components/products/ProductSections.astro
+//
+// Switches on each section's _type to pick its renderer. Adding a new
+// section kind: add the schema object, the type, a component, and a
+// case here.
+
+import type { ProductSection } from '../../lib/types/sanity'
+import TextSection from './sections/TextSection.astro'
+import CalloutSection from './sections/CalloutSection.astro'
+import BulletSection from './sections/BulletSection.astro'
+import AnalysisSection from './sections/AnalysisSection.astro'
+
+interface Props {
+  sections: ProductSection[]
+  productColor?: string
+}
+
+const { sections, productColor } = Astro.props
+---
+
+<div class="product-sections">
+  {sections.map((section) => {
+    switch (section._type) {
+      case 'textSection':
+        return <TextSection section={section} />
+      case 'calloutSection':
+        return <CalloutSection section={section} productColor={productColor} />
+      case 'bulletSection':
+        return <BulletSection section={section} />
+      case 'analysisSection':
+        return <AnalysisSection section={section} />
+      default:
+        return null
+    }
+  })}
+</div>
+
+<style>
+  .product-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+</style>
