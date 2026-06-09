@@ -1,0 +1,63 @@
+---
+// src/components/products/sections/AnalysisSection.astro
+//
+// Dotted leader between chemical name and value: each row is a flex
+// line whose middle element is a bottom-dotted spacer that absorbs the
+// free space — the classic table-of-contents treatment.
+
+import type { AnalysisSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: AnalysisSection
+}
+
+const { section } = Astro.props
+---
+
+<section class="analysis">
+  {section.heading && <h2>{section.heading}</h2>}
+  <dl class="analysis__rows">
+    {section.rows.map((row) => (
+      <div class="analysis__row">
+        <dt>{row.label}</dt>
+        <span class="analysis__leader" aria-hidden="true"></span>
+        <dd>{row.value}</dd>
+      </div>
+    ))}
+  </dl>
+</section>
+
+<style>
+  .analysis h2 {
+    font-size: var(--text-3xl);
+    color: var(--color-green-dark);
+    margin-bottom: var(--space-4);
+  }
+
+  .analysis__rows {
+    max-width: var(--max-width-md);
+  }
+
+  .analysis__row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+  }
+
+  .analysis__row dt {
+    color: var(--color-text-primary);
+    font-weight: var(--font-medium);
+  }
+
+  .analysis__leader {
+    flex: 1;
+    border-bottom: 2px dotted var(--color-text-muted);
+    transform: translateY(-4px);
+  }
+
+  .analysis__row dd {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-primary);
+  }
+</style>

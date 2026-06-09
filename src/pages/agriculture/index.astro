@@ -1,0 +1,45 @@
+---
+// src/pages/agriculture/index.astro
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import ProductGrid from '../../components/products/ProductGrid.astro'
+import { getProductsByMarket } from '../../lib/queries'
+
+const products = await getProductsByMarket('agriculture')
+---
+
+<BaseLayout
+  title="Agriculture"
+  description="Redox Bio-Nutrients products for agriculture — improving soil, water, and plant health in row crops, orchards, and more."
+>
+  <div class="page">
+    <header class="page__header">
+      <h1>Agriculture</h1>
+      <p>Bio-nutrient products for healthier soil and stronger crops.</p>
+    </header>
+    <ProductGrid products={products} />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-6) var(--space-24);
+  }
+
+  .page__header {
+    margin-bottom: var(--space-10);
+  }
+
+  .page__header h1 {
+    font-size: var(--text-4xl);
+    color: var(--color-green-dark);
+  }
+
+  .page__header p {
+    margin-top: var(--space-3);
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+  }
+</style>
