@@ -1,0 +1,214 @@
+---
+// src/components/global/Header.astro
+//
+// Nav items come from src/config/site.ts — never hardcoded here.
+// Mobile menu is a no-JS-fallback-friendly checkbox toggle; swap for
+// a scripted disclosure if the design calls for animation.
+
+import { primaryNav, site, utilityNav } from '../../config/site'
+
+const currentPath = Astro.url.pathname
+const isActive = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath.startsWith(href)
+---
+
+<header class="header">
+  <div class="header__inner">
+    <a href="/" class="header__logo" aria-label={`${site.name} — Home`}>
+      <span class="header__logo-text">{site.name}</span>
+    </a>
+
+    <input type="checkbox" id="nav-toggle" class="header__toggle-input" aria-hidden="true" />
+    <label for="nav-toggle" class="header__toggle" aria-label="Toggle menu">
+      <span class="header__toggle-bar"></span>
+      <span class="header__toggle-bar"></span>
+      <span class="header__toggle-bar"></span>
+    </label>
+
+    <nav class="header__nav" aria-label="Primary">
+      <ul class="header__nav-list">
+        {primaryNav.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class:list={['header__nav-link', { 'header__nav-link--active': isActive(item.href) }]}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="header__utility">
+        <a
+          href={utilityNav.universityLogin.href}
+          class="header__utility-link"
+        >
+          {utilityNav.universityLogin.label}
+        </a>
+        <a
+          href={utilityNav.dashboard.href}
+          class="header__utility-link header__utility-link--button"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {utilityNav.dashboard.label}
+        </a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    background: var(--color-white);
+    border-bottom: var(--border-thin) solid var(--color-off-white);
+  }
+
+  .header__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+
+  .header__logo-text {
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    color: var(--color-green-dark);
+    white-space: nowrap;
+  }
+
+  .header__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .header__nav-list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    list-style: none;
+  }
+
+  .header__nav-link {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+    padding: var(--space-2) 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease;
+  }
+
+  .header__nav-link:hover {
+    color: var(--color-green-dark);
+  }
+
+  .header__nav-link--active {
+    color: var(--color-green-dark);
+    border-bottom-color: var(--color-green);
+  }
+
+  .header__utility {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .header__utility-link {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+  }
+
+  .header__utility-link:hover {
+    color: var(--color-green-dark);
+  }
+
+  .header__utility-link--button {
+    background: var(--color-green);
+    color: var(--color-white);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    transition: background 0.15s ease;
+  }
+
+  .header__utility-link--button:hover {
+    background: var(--color-green-dark);
+    color: var(--color-white);
+  }
+
+  /* ── Mobile toggle ──────────────────────────────────────────── */
+  .header__toggle-input {
+    display: none;
+  }
+
+  .header__toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: var(--space-2);
+  }
+
+  .header__toggle-bar {
+    width: 24px;
+    height: 2px;
+    background: var(--color-text-primary);
+  }
+
+  @media (max-width: 1023px) {
+    .header__toggle {
+      display: flex;
+    }
+
+    .header__nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      background: var(--color-white);
+      border-bottom: var(--border-thin) solid var(--color-off-white);
+      box-shadow: var(--shadow-lg);
+      padding: var(--space-4) var(--space-6) var(--space-6);
+    }
+
+    .header__toggle-input:checked ~ .header__nav {
+      display: flex;
+    }
+
+    .header__nav-list {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .header__nav-link {
+      display: block;
+      padding: var(--space-3) 0;
+      font-size: var(--text-base);
+    }
+
+    .header__utility {
+      margin-top: var(--space-4);
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+
+    .header__utility-link--button {
+      padding: var(--space-3) var(--space-4);
+    }
+  }
+</style>
