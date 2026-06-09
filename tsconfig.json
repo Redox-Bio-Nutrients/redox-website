@@ -10,5 +10,6 @@
       "@styles/*":     ["src/styles/*"],
       "@locales/*":       ["src/locales/*"]
     }
-  }
+  },
+  "exclude": ["sanity", "dist"]
 }
