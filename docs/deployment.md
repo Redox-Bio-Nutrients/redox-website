@@ -8,7 +8,7 @@
 | Environment | Branch | URL | Sanity Dataset |
 |---|---|---|---|
 | Production | `main` | redoxgrows.com (TBD — domain not yet connected) | `production` |
-| Staging | `dev` | Vercel preview URL (see Vercel dashboard) | `staging` |
+| Staging | `dev` | https://redox-website-git-dev-redox-bio-nutrients-projects.vercel.app | `staging` |
 
 ## Infrastructure
 
