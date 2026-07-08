@@ -107,6 +107,12 @@
   --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl:  0 24px 48px -12px rgb(0 0 0 / 0.18);
 
+  /* ── Chart accents ──────────────────────────────────────────────
+   * Supporting categorical hues for trial charts (slot 1 is always
+   * the product color at runtime). Validated for both surfaces. */
+  --chart-2: #4A86C2;
+  --chart-3: #8E5BA6;
+
   /* ── Frosted glass (Biorg-style panels over imagery) ───────────── */
   --glass-bg:     rgb(255 255 255 / 0.55);
   --glass-blur:   blur(24px);

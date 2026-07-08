@@ -16,11 +16,30 @@ interface Props {
 }
 
 const { section } = Astro.props
-const max = Math.max(...section.rows.map((r) => r.value))
+const values = section.rows.map((r) => r.value)
+const max = Math.max(...values)
+const min = Math.min(...values)
+
+// When trial values sit within a narrow band (the usual case — "same
+// yield, less nitrogen"), a zero baseline renders near-identical bars
+// and buries the comparison. Zoom the baseline to spread the
+// difference, and disclose it under the plot so the chart stays honest.
+const range = max - min
+const zoomed = range > 0 && range / max < 0.3
+const base = zoomed ? Math.max(0, min - range * 0.6) : 0
+const denominator = max - base || 1
+
+// Bar colors: highlighted rows (the treated result) always wear the
+// product color; supporting rows cycle through the validated chart
+// accents so multi-arm trials read with variety.
+const supportColors = ['var(--chart-2)', 'var(--chart-3)']
+let supportIdx = 0
 const rows = section.rows.map((r) => ({
   ...r,
-  // Bars scale relative to the max; floor keeps tiny values visible
-  pct: Math.max((r.value / max) * 100, 4),
+  pct: Math.max(((r.value - base) / denominator) * 100, 6),
+  color: r.highlight
+    ? 'var(--product-color, var(--color-green))'
+    : supportColors[supportIdx++ % supportColors.length],
 }))
 ---
 
@@ -37,7 +56,7 @@ const rows = section.rows.map((r) => ({
         <div class="chart__track">
           <div
             class:list={['chart__bar', { 'chart__bar--highlight': row.highlight }]}
-            style={`width: ${row.pct}%`}
+            style={`width: ${row.pct}%; background: ${row.color}`}
           >
           </div>
           <span class="chart__value">
@@ -48,7 +67,16 @@ const rows = section.rows.map((r) => ({
     ))}
   </div>
 
-  {section.footnote && <p class="chart__footnote">{section.footnote}</p>}
+  {(section.footnote || zoomed) && (
+    <p class="chart__footnote">
+      {section.footnote}
+      {zoomed && (
+        <span class="chart__scale-note">
+          {section.footnote && ' · '}Axis zoomed to show difference — baseline {base.toFixed(1)}{section.unit && ` ${section.unit}`}
+        </span>
+      )}
+    </p>
+  )}
 </section>
 
 <style>
@@ -99,12 +127,11 @@ const rows = section.rows.map((r) => ({
   .chart__bar {
     height: 28px;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0; /* flat baseline, rounded data end */
-    background: color-mix(in srgb, var(--color-text-muted) 38%, transparent);
     transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .chart__bar--highlight {
-    background: var(--product-color, var(--color-green));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--product-color, var(--color-green)) 30%, transparent);
   }
 
   .chart__row:hover .chart__bar {
@@ -124,6 +151,10 @@ const rows = section.rows.map((r) => ({
     font-size: var(--text-xs);
     color: var(--color-text-muted);
     line-height: var(--leading-snug);
+  }
+
+  .chart__scale-note {
+    opacity: 0.85;
   }
 
   @media (max-width: 767px) {
