@@ -10,6 +10,7 @@ import TextSection from './sections/TextSection.astro'
 import CalloutSection from './sections/CalloutSection.astro'
 import BulletSection from './sections/BulletSection.astro'
 import AnalysisSection from './sections/AnalysisSection.astro'
+import ChartSection from './sections/ChartSection.astro'
 
 interface Props {
   sections: ProductSection[]
@@ -21,18 +22,29 @@ const { sections, productColor } = Astro.props
 
 <div class="product-sections">
   {sections.map((section) => {
-    switch (section._type) {
-      case 'textSection':
-        return <TextSection section={section} />
-      case 'calloutSection':
-        return <CalloutSection section={section} productColor={productColor} />
-      case 'bulletSection':
-        return <BulletSection section={section} />
-      case 'analysisSection':
-        return <AnalysisSection section={section} />
-      default:
-        return null
-    }
+    // Anchor target for the sidebar jump nav — scroll-margin clears
+    // the sticky header.
+    const inner = (() => {
+      switch (section._type) {
+        case 'textSection':
+          return <TextSection section={section} />
+        case 'calloutSection':
+          return <CalloutSection section={section} productColor={productColor} />
+        case 'bulletSection':
+          return <BulletSection section={section} />
+        case 'analysisSection':
+          return <AnalysisSection section={section} />
+        case 'chartSection':
+          return <ChartSection section={section} />
+        default:
+          return null
+      }
+    })()
+    return inner && (
+      <div class="product-sections__anchor" id={`section-${section._key}`} data-section-anchor>
+        {inner}
+      </div>
+    )
   })}
 </div>
 
@@ -40,6 +52,16 @@ const { sections, productColor } = Astro.props
   .product-sections {
     display: flex;
     flex-direction: column;
-    gap: var(--space-12);
+    gap: var(--space-24);
+  }
+
+  .product-sections__anchor {
+    scroll-margin-top: 100px;
+  }
+
+  @media (max-width: 767px) {
+    .product-sections {
+      gap: var(--space-16);
+    }
   }
 </style>

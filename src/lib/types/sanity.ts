@@ -66,11 +66,22 @@ export interface AnalysisSection {
   rows: { label: string; value: string }[]
 }
 
+export interface ChartSection {
+  _type: 'chartSection'
+  _key: string
+  heading: string
+  source?: string
+  unit?: string
+  rows: { label: string; value: number; highlight?: boolean }[]
+  footnote?: string
+}
+
 export type ProductSection =
   | TextSection
   | CalloutSection
   | BulletSection
   | AnalysisSection
+  | ChartSection
 
 // ── Catalog ────────────────────────────────────────────────────────
 
@@ -85,7 +96,10 @@ export interface ProductCard {
 
 export interface Product extends ProductCard {
   primaryColor?: string
+  heroImage?: SanityImage
   sections?: ProductSection[]
+  crops?: string[]
+  relatedProducts?: ProductCard[]
   documents?: { title?: string; url: string }[]
   technologies?: TechnologyCard[]
   seo?: Seo

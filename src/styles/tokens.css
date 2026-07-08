@@ -23,6 +23,19 @@
   --color-white:         #FFFFFF;
   --color-black:         #000000;
 
+  /* ── Semantic surfaces ──────────────────────────────────────────── */
+  /* Components use these (not raw palette colors) for backgrounds so
+   * the dark theme only has to remap tokens, never components.
+   * --color-white stays literal — it's for text on colored surfaces. */
+  --bg-page:       #FFFFFF;
+  --bg-surface:    var(--color-cream);    /* soft slabs, tiles */
+  --bg-raised:     #FFFFFF;               /* cards on tinted panels */
+  --border-subtle: rgb(0 0 0 / 0.07);
+
+  --footer-bg:    #2E6B3E;
+  --footer-text:  #F7F4EF;
+  --footer-muted: #C8D8C0;
+
   /* ── Typography ─────────────────────────────────────────────────── */
   --font-sans:   'DM Sans', system-ui, sans-serif;
   --font-serif:  'DM Serif Display', Georgia, serif;
@@ -37,6 +50,10 @@
   --text-3xl:  1.875rem;
   --text-4xl:  2.25rem;
   --text-5xl:  3rem;
+  /* Display sizes — image-led heroes and editorial headings.
+   * Fluid: scale with viewport, clamp for mobile/ultrawide. */
+  --text-display:    clamp(3.5rem, 9vw, 7.5rem);
+  --text-display-sm: clamp(2.25rem, 5vw, 3.75rem);
 
   --leading-tight:  1.25;
   --leading-snug:   1.375;
@@ -61,6 +78,8 @@
   --space-16: 4rem;
   --space-20: 5rem;
   --space-24: 6rem;
+  --space-32: 8rem;
+  --space-40: 10rem;
 
   /* ── Layout ─────────────────────────────────────────────────────── */
   --max-width-sm:   640px;
@@ -75,6 +94,8 @@
   --radius-md:  0.5rem;
   --radius-lg:  0.75rem;
   --radius-xl:  1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2.5rem;   /* large rounded content slabs */
   --radius-full:9999px;
 
   --border-thin:   1px;
@@ -84,6 +105,12 @@
   --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl:  0 24px 48px -12px rgb(0 0 0 / 0.18);
+
+  /* ── Frosted glass (Biorg-style panels over imagery) ───────────── */
+  --glass-bg:     rgb(255 255 255 / 0.55);
+  --glass-blur:   blur(24px);
+  --glass-border: 1px solid rgb(255 255 255 / 0.6);
 
   /* ── Transitions ────────────────────────────────────────────────── */
   --transition-fast:   150ms ease;
@@ -97,4 +124,38 @@
   --z-modal:   200;
   --z-nav:     300;
   --z-toast:   400;
+}
+
+/* ── Dark theme ─────────────────────────────────────────────────────
+ * Moody, warm near-black — not pure #000. Product colors and imagery
+ * glow against it. Activated by data-theme="dark" on <html>, which an
+ * inline script in BaseLayout sets pre-paint (system preference is the
+ * default when the visitor hasn't chosen).
+ */
+:root[data-theme='dark'] {
+  --bg-page:       #101210;
+  --bg-surface:    #1B1E1A;
+  --bg-raised:     #252923;
+  --border-subtle: rgb(255 255 255 / 0.09);
+
+  --color-text-primary:   #F1EEE6;
+  --color-text-secondary: #C6C2B7;
+  --color-text-muted:     #8E8B81;
+
+  /* Greens brighten for contrast as text/accents on dark */
+  --color-green-dark:  #9CC3A6;
+  --color-green:       #6FA57E;
+  --color-green-light: #86B694;
+  --color-green-pale:  #2C3A30;
+  --color-cream:       #1B1E1A;
+  --color-off-white:   #242822;
+
+  --footer-bg:    #131A15;
+  --footer-text:  #E9E6DD;
+  --footer-muted: #93A296;
+
+  --glass-bg:     rgb(18 20 17 / 0.55);
+  --glass-border: 1px solid rgb(255 255 255 / 0.14);
+
+  --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.55);
 }

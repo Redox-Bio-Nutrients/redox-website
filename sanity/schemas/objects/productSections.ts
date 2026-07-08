@@ -181,3 +181,87 @@ export const analysisSection = defineType({
     },
   },
 })
+
+// ── Trial chart (bar) ──────────────────────────────────────────────
+// Editors enter rows; the frontend renders a native, theme-aware bar
+// chart. `highlight: true` rows render in the product color (the
+// treated result); others render as neutral controls.
+
+export const chartSection = defineType({
+  name: 'chartSection',
+  title: 'Trial Chart',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'source',
+      title: 'Trial / Source',
+      type: 'string',
+      description: 'e.g. "Trial 23-N31" — shown small under the heading.',
+    }),
+    defineField({
+      name: 'unit',
+      title: 'Unit',
+      type: 'string',
+      description: 'e.g. "bu/acre", "kg" — appended to each value.',
+    }),
+    defineField({
+      name: 'rows',
+      title: 'Bars',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'chartRow',
+          fields: [
+            defineField({
+              name: 'label',
+              title: 'Label',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'value',
+              title: 'Value',
+              type: 'number',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'highlight',
+              title: 'Highlight (product-color bar)',
+              type: 'boolean',
+              initialValue: false,
+              description: 'On for the treated/RDX result; off for controls.',
+            }),
+          ],
+          preview: {
+            select: { title: 'label', value: 'value', highlight: 'highlight' },
+            prepare({ title, value, highlight }) {
+              return { title, subtitle: `${value}${highlight ? ' ★' : ''}` }
+            },
+          },
+        },
+      ],
+      validation: (rule) => rule.required().min(2).max(6),
+    }),
+    defineField({
+      name: 'footnote',
+      title: 'Footnote',
+      type: 'string',
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', rows: 'rows' },
+    prepare({ title, rows }) {
+      return {
+        title: title || 'Trial Chart',
+        subtitle: `Chart — ${rows?.length ?? 0} bars`,
+      }
+    },
+  },
+})

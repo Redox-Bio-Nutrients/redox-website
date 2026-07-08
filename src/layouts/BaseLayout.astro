@@ -34,6 +34,20 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script is:inline>
+      // Theme init — runs before paint to avoid a flash of the wrong
+      // theme. Stored choice wins; otherwise follow the system.
+      ;(() => {
+        const stored = localStorage.getItem('theme')
+        const theme =
+          stored === 'dark' || stored === 'light'
+            ? stored
+            : matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+        document.documentElement.dataset.theme = theme
+      })()
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 

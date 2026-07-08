@@ -1,9 +1,9 @@
 ---
 // src/components/products/sections/AnalysisSection.astro
 //
-// Dotted leader between chemical name and value: each row is a flex
-// line whose middle element is a bottom-dotted spacer that absorbs the
-// free space — the classic table-of-contents treatment.
+// Rows live inside a soft rounded slab; dotted leader between the
+// chemical name and value (table-of-contents treatment), values in
+// tabular numerals.
 
 import type { AnalysisSection } from '../../../lib/types/sanity'
 
@@ -16,7 +16,7 @@ const { section } = Astro.props
 
 <section class="analysis">
   {section.heading && <h2>{section.heading}</h2>}
-  <dl class="analysis__rows">
+  <dl class="analysis__slab">
     {section.rows.map((row) => (
       <div class="analysis__row">
         <dt>{row.label}</dt>
@@ -29,35 +29,59 @@ const { section } = Astro.props
 
 <style>
   .analysis h2 {
-    font-size: var(--text-3xl);
-    color: var(--color-green-dark);
-    margin-bottom: var(--space-4);
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
   }
 
-  .analysis__rows {
-    max-width: var(--max-width-md);
+  .analysis__slab {
+    background: var(--color-cream);
+    border-radius: var(--radius-3xl);
+    padding: var(--space-12) var(--space-12);
+    max-width: var(--max-width-lg);
   }
 
   .analysis__row {
     display: flex;
     align-items: baseline;
-    gap: var(--space-2);
-    padding: var(--space-2) 0;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+  }
+
+  .analysis__row + .analysis__row {
+    border-top: 1px solid var(--border-subtle);
   }
 
   .analysis__row dt {
     color: var(--color-text-primary);
     font-weight: var(--font-medium);
+    font-size: var(--text-lg);
   }
 
   .analysis__leader {
     flex: 1;
-    border-bottom: 2px dotted var(--color-text-muted);
-    transform: translateY(-4px);
+    border-bottom: 2px dotted color-mix(in srgb, var(--product-color, var(--color-green)) 45%, transparent);
+    transform: translateY(-5px);
   }
 
   .analysis__row dd {
     font-variant-numeric: tabular-nums;
+    font-size: var(--text-lg);
+    font-weight: var(--font-semi);
     color: var(--color-text-primary);
+  }
+
+  @media (max-width: 767px) {
+    .analysis h2 {
+      margin-bottom: var(--space-6);
+    }
+
+    .analysis__slab {
+      padding: var(--space-6);
+    }
   }
 </style>
