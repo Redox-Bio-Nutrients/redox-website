@@ -92,6 +92,8 @@ export interface ProductCard {
   tagline?: string
   markets: Market[]
   image?: SanityImage
+  /** heroImage + backgrounds pool — pick one at random per load */
+  backgrounds?: SanityImage[]
 }
 
 export interface Product extends ProductCard {

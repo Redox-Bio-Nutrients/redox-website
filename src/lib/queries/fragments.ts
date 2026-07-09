@@ -24,7 +24,10 @@ export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   "slug": slug.current,
   tagline,
   markets,
-  "image": image ${IMAGE_FRAGMENT}
+  "image": image ${IMAGE_FRAGMENT},
+  // background pool: heroImage + backgrounds — cards and heroes pick
+  // one at random client-side on each load
+  "backgrounds": array::compact([heroImage ${IMAGE_FRAGMENT}] + coalesce(backgrounds[] ${IMAGE_FRAGMENT}, []))
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{

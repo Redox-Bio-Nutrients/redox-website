@@ -6,6 +6,7 @@
 // are references so the relationship stays queryable in both directions.
 
 import { defineField, defineType } from 'sanity'
+import { BulkImageInput } from '../../components/BulkImageInput'
 
 export const product = defineType({
   name: 'product',
@@ -59,6 +60,21 @@ export const product = defineType({
       description: 'The packaging/product shot — cards and the product page sidebar.',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
+    defineField({
+      name: 'backgrounds',
+      title: 'Background Imagery',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+        },
+      ],
+      description:
+        'Crop/field photography pool — one image is shown at random behind the product hero and its catalog card on every page load. The Hero Image is included in the pool automatically.',
+      components: { input: BulkImageInput },
     }),
     defineField({
       name: 'heroImage',
