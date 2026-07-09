@@ -12,8 +12,9 @@ interface Props {
 }
 
 const { product } = Astro.props
+// fit('max') preserves the full image — packaging shots are never cropped
 const imageUrl = product.image
-  ? urlFor(product.image).width(800).height(640).fit('crop').url()
+  ? urlFor(product.image).width(800).fit('max').url()
   : null
 ---
 
@@ -42,9 +43,10 @@ const imageUrl = product.image
     aspect-ratio: 5 / 4;
     border-radius: var(--radius-3xl);
     overflow: hidden;
+    /* Quiet surface field — theme-aware, no hard spotlight */
     background:
-      radial-gradient(90% 90% at 70% 20%, rgb(255 255 255 / 0.7), transparent 60%),
-      var(--color-cream);
+      radial-gradient(100% 100% at 50% 0%, color-mix(in srgb, var(--color-text-primary) 4%, transparent), transparent 70%),
+      var(--bg-surface);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
@@ -56,7 +58,8 @@ const imageUrl = product.image
   .card__media img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* whole product visible, floating on the field */
+    padding: var(--space-10);
   }
 
   .card__placeholder {
@@ -93,7 +96,7 @@ const imageUrl = product.image
   }
 
   .card__body {
-    padding: var(--space-5) var(--space-2) 0;
+    padding: var(--space-6) var(--space-2) 0;
   }
 
   .card__body h3 {

@@ -100,7 +100,7 @@ export interface Product extends ProductCard {
   sections?: ProductSection[]
   crops?: string[]
   relatedProducts?: ProductCard[]
-  documents?: { title?: string; url: string }[]
+  documents?: { title?: string; url: string; isUpload?: boolean; filename?: string }[]
   technologies?: TechnologyCard[]
   seo?: Seo
 }

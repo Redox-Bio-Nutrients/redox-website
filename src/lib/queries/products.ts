@@ -34,7 +34,15 @@ export async function getProduct(slug: string): Promise<Product | null> {
       sections[]{ ... },
       crops,
       "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
-      "documents": documents[]{ title, "url": asset->url },
+      // url resolves to whichever source the editor used; isUpload
+      // lets the frontend build a forced-download variant for Sanity
+      // CDN assets (?dl=)
+      "documents": documents[]{
+        title,
+        "url": coalesce(externalUrl, file.asset->url),
+        "isUpload": defined(file.asset),
+        "filename": file.asset->originalFilename
+      },
       "technologies": technologies[]-> ${TECHNOLOGY_CARD_FRAGMENT},
       ${SEO_FRAGMENT}
     }`,

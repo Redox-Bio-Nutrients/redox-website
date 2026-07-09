@@ -80,6 +80,25 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
       <slot />
     </main>
     <Footer />
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top">
+      ↑
+    </button>
+
+    <script>
+      // Back to top — fades in after a screen's worth of scrolling.
+      const btn = document.getElementById('back-to-top')
+      if (btn) {
+        btn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        })
+        const toggle = () => {
+          btn.classList.toggle('is-visible', window.scrollY > window.innerHeight)
+        }
+        window.addEventListener('scroll', toggle, { passive: true })
+        toggle()
+      }
+    </script>
   </body>
 </html>
 
@@ -92,5 +111,40 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
 
   main {
     flex: 1;
+  }
+
+  .back-to-top {
+    position: fixed;
+    right: var(--space-6);
+    bottom: var(--space-6);
+    z-index: var(--z-overlay);
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border: var(--glass-border);
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-lg);
+    color: var(--color-text-primary);
+    font-size: var(--text-xl);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .back-to-top.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .back-to-top:hover {
+    color: var(--color-green-dark);
+    box-shadow: var(--shadow-xl);
   }
 </style>

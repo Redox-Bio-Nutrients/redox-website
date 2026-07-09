@@ -43,11 +43,21 @@ const relatedCards = (product.relatedProducts ?? []).map((p) => ({
   thumb: p.image ? imgUrl(p.image).width(160).height(160).fit('crop').url() : null,
 }))
 
-// Sidebar product shot — taller crop than the hero so the bag/bottle
-// reads as packaging, not landscape
-const sidebarImageUrl = product.image
-  ? urlFor(product.image).width(600).height(680).fit('crop').url()
+// Packaging shot floats on the right side of the hero — full image,
+// never cropped
+const productShotUrl = product.image
+  ? urlFor(product.image).width(900).fit('max').url()
   : null
+
+// Sanity CDN assets force a download via ?dl=<filename>; external CDN
+// links get the download attribute (honored when same-origin, and a
+// plain open otherwise)
+const documents = (product.documents ?? []).map((doc) => ({
+  ...doc,
+  downloadUrl: doc.isUpload
+    ? `${doc.url}?dl=${encodeURIComponent(doc.filename ?? doc.title ?? 'download')}`
+    : doc.url,
+}))
 ---
 
 <BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
@@ -65,16 +75,18 @@ const sidebarImageUrl = product.image
     <div class="hero__scrim" aria-hidden="true"></div>
 
     <div class="hero__content">
-      <h1 class="hero__title">{product.title}</h1>
-      <hr class="hero__rule" />
-      <div class="hero__meta">
-        {product.tagline && <p class="hero__tagline">{product.tagline}</p>}
-        <nav class="hero__markets" aria-label="Markets">
-          {marketLinks.map((m) => (
-            <a href={m.href}>{m.label}</a>
-          ))}
-        </nav>
-        <a class="hero__cta" href="#content">Explore ↓</a>
+      <div class="hero__text">
+        <h1 class="hero__title">{product.title}</h1>
+        <hr class="hero__rule" />
+        <div class="hero__meta">
+          {product.tagline && <p class="hero__tagline">{product.tagline}</p>}
+          <nav class="hero__markets" aria-label="Markets">
+            {marketLinks.map((m) => (
+              <a href={m.href}>{m.label}</a>
+            ))}
+          </nav>
+          <a class="hero__cta" href="#content">Explore ↓</a>
+        </div>
       </div>
     </div>
   </header>
@@ -89,12 +101,10 @@ const sidebarImageUrl = product.image
     <aside class="sidebar" aria-label="Product resources">
       <div class="sidebar__inner">
         <figure class="sidebar__product">
-          {sidebarImageUrl ? (
+          {productShotUrl ? (
             <img
-              src={sidebarImageUrl}
+              src={productShotUrl}
               alt={product.image?.alt ?? product.title}
-              width="600"
-              height="680"
               loading="lazy"
             />
           ) : (
@@ -104,20 +114,29 @@ const sidebarImageUrl = product.image
           )}
         </figure>
 
-        {product.documents && product.documents.length > 0 && (
+        {documents.length > 0 && (
           <section class="sidebar__group">
             <h2>Resources</h2>
             <ul>
-              {product.documents.map((doc) => (
-                <li>
+              {documents.map((doc) => (
+                <li class="sidebar__doc">
                   <a
-                    class="sidebar__doc"
+                    class="sidebar__doc-view"
                     href={doc.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    title={`Open ${doc.title ?? 'document'}`}
                   >
-                    <span class="sidebar__doc-icon" aria-hidden="true">↓</span>
-                    <span>{doc.title ?? 'Download'}</span>
+                    {doc.title ?? 'Document'}
+                  </a>
+                  <a
+                    class="sidebar__doc-icon"
+                    href={doc.downloadUrl}
+                    download={doc.filename ?? true}
+                    aria-label={`Download ${doc.title ?? 'document'}`}
+                    title="Download"
+                  >
+                    ↓
                   </a>
                 </li>
               ))}
@@ -237,6 +256,10 @@ const sidebarImageUrl = product.image
     padding: var(--space-32) var(--space-8) var(--space-12);
   }
 
+  .hero__text {
+    width: 100%;
+  }
+
   .hero__title {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
@@ -321,34 +344,37 @@ const sidebarImageUrl = product.image
     gap: var(--space-8);
   }
 
-  /* Product shot */
+  /* Product shot — compact, full image, never cropped */
   .sidebar__product {
-    margin: calc(var(--space-8) * -1) calc(var(--space-6) * -1) 0;
-    /* bleed to the panel edges; panel radius clips the top corners */
-    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4);
   }
 
   .sidebar__product img {
-    width: 100%;
-    aspect-ratio: 600 / 680;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 300px;
+    width: auto;
+    height: auto;
     display: block;
   }
 
   .sidebar__product-ph {
-    aspect-ratio: 600 / 680;
+    width: 100%;
+    aspect-ratio: 3 / 2;
     display: grid;
     place-items: center;
+    border-radius: var(--radius-lg);
     background:
       radial-gradient(110% 90% at 80% 10%, rgb(255 255 255 / 0.14), transparent 60%),
-      radial-gradient(90% 110% at 10% 100%, rgb(0 0 0 / 0.25), transparent 55%),
       var(--product-color);
   }
 
   .sidebar__product-ph span {
     font-family: var(--font-serif);
-    font-size: var(--text-3xl);
+    font-size: var(--text-xl);
     color: var(--color-white);
     opacity: 0.85;
   }
@@ -374,7 +400,6 @@ const sidebarImageUrl = product.image
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
     background: var(--bg-raised);
     border-radius: var(--radius-lg);
     font-size: var(--text-sm);
@@ -383,22 +408,44 @@ const sidebarImageUrl = product.image
     transition: box-shadow 0.15s ease, transform 0.15s ease;
   }
 
+  .sidebar__link {
+    padding: var(--space-3) var(--space-4);
+  }
+
   .sidebar__doc:hover,
   .sidebar__link:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
   }
 
+  /* Doc row: title opens in a new tab, the ↓ button forces download */
+  .sidebar__doc-view {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-3) 0 var(--space-3) var(--space-4);
+    color: inherit;
+  }
+
+  .sidebar__doc-view:hover {
+    text-decoration: underline;
+  }
+
   .sidebar__doc-icon {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
+    margin-right: var(--space-2);
     border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--product-color) 14%, var(--color-white));
+    background: color-mix(in srgb, var(--product-color) 14%, var(--bg-raised));
     color: var(--product-color);
     font-size: var(--text-sm);
+    transition: background 0.15s ease;
+  }
+
+  .sidebar__doc-icon:hover {
+    background: color-mix(in srgb, var(--product-color) 28%, var(--bg-raised));
   }
 
   /* Crop tags */
