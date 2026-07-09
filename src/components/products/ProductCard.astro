@@ -3,6 +3,9 @@
 //
 // Biorg-style card: soft rounded panel, product imagery on a quiet
 // tinted field, minimal type, floating "+" affordance on hover.
+// When the product has a backgrounds pool, one image renders as a
+// cover background behind the packaging shot — randomized per load
+// by the script below, same pool the product page hero draws from.
 
 import { urlFor } from '../../lib/sanity'
 import type { ProductCard } from '../../lib/types/sanity'
@@ -16,10 +19,23 @@ const { product } = Astro.props
 const imageUrl = product.image
   ? urlFor(product.image).width(800).fit('max').url()
   : null
+
+const bgPool = (product.backgrounds ?? []).map((img) =>
+  urlFor(img).width(1000).height(800).fit('crop').url(),
+)
 ---
 
 <a href={`/products/${product.slug}`} class="card">
   <div class="card__media">
+    {bgPool.length > 0 && (
+      <div
+        class="card__bg"
+        data-bg-pool={JSON.stringify(bgPool)}
+        style={`background-image: url(${bgPool[0]})`}
+        aria-hidden="true"
+      >
+      </div>
+    )}
     {imageUrl ? (
       <img src={imageUrl} alt={product.image?.alt ?? product.title} width="800" height="640" loading="lazy" />
     ) : (
@@ -32,6 +48,17 @@ const imageUrl = product.image
     {product.tagline && <p>{product.tagline}</p>}
   </div>
 </a>
+
+<script>
+  // Randomize each card's background from its pool on every load.
+  // Bundled scripts are deduped by Astro — this runs once per page.
+  document.querySelectorAll<HTMLElement>('.card__bg[data-bg-pool]').forEach((el) => {
+    const pool: string[] = JSON.parse(el.dataset.bgPool || '[]')
+    if (pool.length > 1) {
+      el.style.backgroundImage = `url(${pool[Math.floor(Math.random() * pool.length)]})`
+    }
+  })
+</script>
 
 <style>
   .card {
@@ -55,11 +82,29 @@ const imageUrl = product.image
     transform: translateY(-4px);
   }
 
+  /* Randomized imagery behind the packaging shot, with a soft scrim
+   * so the contained product stays legible over any photo */
+  .card__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .card__bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.3));
+  }
+
   .card__media img {
+    position: relative; /* above the background layer */
     width: 100%;
     height: 100%;
     object-fit: contain; /* whole product visible, floating on the field */
     padding: var(--space-10);
+    filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.3));
   }
 
   .card__placeholder {

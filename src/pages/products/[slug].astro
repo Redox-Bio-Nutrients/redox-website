@@ -26,11 +26,13 @@ if (!product) {
 }
 
 const color = product.primaryColor ?? '#2E6B3E'
-// Hero uses the dedicated wide lifestyle image; the packaging shot
-// (product.image) stays in cards and the sidebar.
-const heroImageUrl = product.heroImage
-  ? urlFor(product.heroImage).width(2400).height(1400).fit('crop').url()
-  : null
+// Background pool: heroImage + the backgrounds gallery. The server
+// renders the first image so the page never flashes empty; an inline
+// script swaps in a random pick before paint on every load.
+const bgPool = (product.backgrounds ?? []).map((img) =>
+  urlFor(img).width(2400).height(1400).fit('crop').url(),
+)
+const heroImageUrl = bgPool[0] ?? null
 const marketLinks = product.markets.map((m) =>
   m === 'agriculture'
     ? { label: 'Agriculture', href: '/agriculture' }
@@ -64,15 +66,28 @@ const documents = (product.documents ?? []).map((doc) => ({
   <header class="hero" style={`--product-color: ${color}`}>
     {heroImageUrl ? (
       <img
+        id="hero-bg"
         class="hero__bg"
         src={heroImageUrl}
         alt={product.heroImage?.alt ?? ''}
         loading="eager"
+        data-bg-pool={JSON.stringify(bgPool)}
       />
     ) : (
       <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
     )}
     <div class="hero__scrim" aria-hidden="true"></div>
+    <script is:inline>
+      // Randomize the hero background per load — runs during parse,
+      // before the browser paints the image, so there's no swap flash.
+      ;(() => {
+        const img = document.getElementById('hero-bg')
+        const pool = img ? JSON.parse(img.dataset.bgPool || '[]') : []
+        if (pool.length > 1) {
+          img.src = pool[Math.floor(Math.random() * pool.length)]
+        }
+      })()
+    </script>
 
     <div class="hero__content">
       <div class="hero__text">

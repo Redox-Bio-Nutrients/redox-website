@@ -28,6 +28,7 @@ export async function getProduct(slug: string): Promise<Product | null> {
       markets,
       "image": image ${IMAGE_FRAGMENT},
       "heroImage": heroImage ${IMAGE_FRAGMENT},
+      "backgrounds": array::compact([heroImage ${IMAGE_FRAGMENT}] + coalesce(backgrounds[] ${IMAGE_FRAGMENT}, [])),
       primaryColor,
       // sections is a discriminated union — spread everything and let
       // the per-_type frontend renderers pick their fields
