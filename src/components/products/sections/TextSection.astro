@@ -1,5 +1,8 @@
 ---
 // src/components/products/sections/TextSection.astro
+//
+// Editorial two-column: heading sits left, prose right (reference:
+// Lapalma "MEET PLUS" section). Collapses on mobile.
 
 import { PortableText } from 'astro-portabletext'
 import type { TextSection } from '../../../lib/types/sanity'
@@ -19,19 +22,46 @@ const { section } = Astro.props
 </section>
 
 <style>
+  .text-section {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+
   .text-section h2 {
-    font-size: var(--text-3xl);
-    color: var(--color-green-dark);
-    margin-bottom: var(--space-4);
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    position: sticky;
+    top: var(--space-24);
+  }
+
+  .text-section__body {
+    font-size: var(--text-lg);
   }
 
   .text-section__body :global(p) {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
     line-height: var(--leading-relaxed);
     color: var(--color-text-secondary);
   }
 
   .text-section__body :global(p:last-child) {
     margin-bottom: 0;
+  }
+
+  @media (max-width: 767px) {
+    .text-section {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+
+    .text-section h2 {
+      position: static;
+    }
   }
 </style>

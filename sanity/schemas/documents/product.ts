@@ -56,6 +56,16 @@ export const product = defineType({
       name: 'image',
       title: 'Product Image',
       type: 'image',
+      description: 'The packaging/product shot — cards and the product page sidebar.',
+      options: { hotspot: true },
+      fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
+    defineField({
+      name: 'heroImage',
+      title: 'Hero Image',
+      type: 'image',
+      description:
+        'Wide lifestyle/field imagery for the product page hero. Falls back to a gradient of the primary color when empty.',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
@@ -79,17 +89,73 @@ export const product = defineType({
         { type: 'calloutSection' },
         { type: 'bulletSection' },
         { type: 'analysisSection' },
+        { type: 'chartSection' },
       ],
+    }),
+    defineField({
+      name: 'crops',
+      title: 'Crops / Use Cases',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'e.g. "Tree Fruit", "Almonds", "Vegetables" — shown in the product page sidebar.',
+      options: { layout: 'tags' },
+    }),
+    defineField({
+      name: 'relatedProducts',
+      title: 'Related Products',
+      type: 'array',
+      of: [{ type: 'reference', to: [{ type: 'product' }] }],
+      description: '"Pairs well with" — shown in the product page sidebar.',
+      validation: (rule) => rule.max(3).warning('Sidebar fits 3 related products best.'),
     }),
     defineField({
       name: 'documents',
       title: 'Documents',
       type: 'array',
-      description: 'Labels, SDS sheets, spec sheets.',
+      description: 'Labels, SDS sheets, spec sheets — upload a file OR paste a CDN link.',
       of: [
         {
-          type: 'file',
-          fields: [{ name: 'title', type: 'string', title: 'Document Title' }],
+          type: 'object',
+          name: 'productDocument',
+          title: 'Document',
+          fields: [
+            defineField({
+              name: 'title',
+              title: 'Document Title',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'file',
+              title: 'File Upload',
+              type: 'file',
+              description: 'Upload to Sanity — use this OR the external link below.',
+            }),
+            defineField({
+              name: 'externalUrl',
+              title: 'External Link',
+              type: 'url',
+              description: 'Full URL to a file hosted elsewhere (CDN, Dropbox, etc.).',
+              validation: (rule) => rule.uri({ scheme: ['http', 'https'] }),
+            }),
+          ],
+          validation: (rule) =>
+            rule.custom((doc: { file?: { asset?: unknown }; externalUrl?: string }) => {
+              const hasFile = Boolean(doc?.file?.asset)
+              const hasUrl = Boolean(doc?.externalUrl)
+              if (!hasFile && !hasUrl) return 'Add a file upload or an external link.'
+              if (hasFile && hasUrl) return 'Use either a file upload or an external link, not both.'
+              return true
+            }),
+          preview: {
+            select: { title: 'title', url: 'externalUrl', file: 'file.asset' },
+            prepare({ title, url, file }) {
+              return {
+                title: title || 'Document',
+                subtitle: file ? 'Uploaded file' : url ? 'External link' : 'Empty',
+              }
+            },
+          },
         },
       ],
     }),

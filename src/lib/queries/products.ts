@@ -27,11 +27,22 @@ export async function getProduct(slug: string): Promise<Product | null> {
       tagline,
       markets,
       "image": image ${IMAGE_FRAGMENT},
+      "heroImage": heroImage ${IMAGE_FRAGMENT},
       primaryColor,
       // sections is a discriminated union — spread everything and let
       // the per-_type frontend renderers pick their fields
       sections[]{ ... },
-      "documents": documents[]{ title, "url": asset->url },
+      crops,
+      "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
+      // url resolves to whichever source the editor used; isUpload
+      // lets the frontend build a forced-download variant for Sanity
+      // CDN assets (?dl=)
+      "documents": documents[]{
+        title,
+        "url": coalesce(externalUrl, file.asset->url),
+        "isUpload": defined(file.asset),
+        "filename": file.asset->originalFilename
+      },
       "technologies": technologies[]-> ${TECHNOLOGY_CARD_FRAGMENT},
       ${SEO_FRAGMENT}
     }`,

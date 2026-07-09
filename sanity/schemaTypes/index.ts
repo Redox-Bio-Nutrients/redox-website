@@ -11,6 +11,7 @@ import {
   analysisSection,
   bulletSection,
   calloutSection,
+  chartSection,
   textSection,
 } from '../schemas/objects/productSections'
 
@@ -35,6 +36,7 @@ export const schemaTypes = [
   calloutSection,
   bulletSection,
   analysisSection,
+  chartSection,
   // catalog
   product,
   technology,

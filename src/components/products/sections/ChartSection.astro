@@ -1,0 +1,170 @@
+---
+// src/components/products/sections/ChartSection.astro
+//
+// Trial bar chart rendered natively (no chart library): horizontal
+// bars scale with the section width, so it works at every viewport.
+// Highlighted rows (the treated result) wear the product color;
+// controls are a neutral reference gray. Every bar carries a direct
+// value label in text ink — identity and magnitude never rely on
+// color alone. The markup is real text, so screen readers get the
+// data without a separate table.
+
+import type { ChartSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: ChartSection
+}
+
+const { section } = Astro.props
+const values = section.rows.map((r) => r.value)
+const max = Math.max(...values)
+const min = Math.min(...values)
+
+// When trial values sit within a narrow band (the usual case — "same
+// yield, less nitrogen"), a zero baseline renders near-identical bars
+// and buries the comparison. Zoom the baseline to spread the
+// difference, and disclose it under the plot so the chart stays honest.
+const range = max - min
+const zoomed = range > 0 && range / max < 0.3
+const base = zoomed ? Math.max(0, min - range * 0.6) : 0
+const denominator = max - base || 1
+
+// Bar colors: highlighted rows (the treated result) always wear the
+// product color; supporting rows cycle through the validated chart
+// accents so multi-arm trials read with variety.
+const supportColors = ['var(--chart-2)', 'var(--chart-3)']
+let supportIdx = 0
+const rows = section.rows.map((r) => ({
+  ...r,
+  pct: Math.max(((r.value - base) / denominator) * 100, 6),
+  color: r.highlight
+    ? 'var(--product-color, var(--color-green))'
+    : supportColors[supportIdx++ % supportColors.length],
+}))
+---
+
+<section class="chart">
+  <header class="chart__header">
+    <h2>{section.heading}</h2>
+    {section.source && <p class="chart__source">{section.source}</p>}
+  </header>
+
+  <div class="chart__plot" role="list">
+    {rows.map((row) => (
+      <div class="chart__row" role="listitem">
+        <span class="chart__label">{row.label}</span>
+        <div class="chart__track">
+          <div
+            class:list={['chart__bar', { 'chart__bar--highlight': row.highlight }]}
+            style={`width: ${row.pct}%; background: ${row.color}`}
+          >
+          </div>
+          <span class="chart__value">
+            {row.value.toLocaleString()}{section.unit && ` ${section.unit}`}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {(section.footnote || zoomed) && (
+    <p class="chart__footnote">
+      {section.footnote}
+      {zoomed && (
+        <span class="chart__scale-note">
+          {section.footnote && ' · '}Axis zoomed to show difference — baseline {base.toFixed(1)}{section.unit && ` ${section.unit}`}
+        </span>
+      )}
+    </p>
+  )}
+</section>
+
+<style>
+  .chart__header {
+    margin-bottom: var(--space-8);
+  }
+
+  .chart__header h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+  }
+
+  .chart__source {
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .chart__plot {
+    background: var(--color-cream);
+    border-radius: var(--radius-3xl);
+    padding: var(--space-10) var(--space-10);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .chart__label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+  }
+
+  .chart__track {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .chart__bar {
+    height: 28px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0; /* flat baseline, rounded data end */
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .chart__bar--highlight {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--product-color, var(--color-green)) 30%, transparent);
+  }
+
+  .chart__row:hover .chart__bar {
+    filter: brightness(1.06);
+  }
+
+  .chart__value {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+  }
+
+  .chart__footnote {
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: var(--leading-snug);
+  }
+
+  .chart__scale-note {
+    opacity: 0.85;
+  }
+
+  @media (max-width: 767px) {
+    .chart__plot {
+      padding: var(--space-6);
+      gap: var(--space-5);
+    }
+
+    .chart__bar {
+      height: 22px;
+    }
+  }
+</style>
