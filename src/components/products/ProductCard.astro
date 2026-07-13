@@ -20,9 +20,10 @@ const imageUrl = product.image
   ? urlFor(product.image).width(800).fit('max').url()
   : null
 
-const bgPool = (product.backgrounds ?? []).map((img) =>
-  urlFor(img).width(1000).height(800).fit('crop').url(),
-)
+const bgPool = (product.backgrounds ?? []).map((img) => ({
+  url: urlFor(img).width(1000).height(800).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
+}))
 ---
 
 <a href={`/products/${product.slug}`} class="card">
@@ -31,9 +32,10 @@ const bgPool = (product.backgrounds ?? []).map((img) =>
       <div
         class="card__bg"
         data-bg-pool={JSON.stringify(bgPool)}
-        style={`background-image: url(${bgPool[0]})`}
+        style={bgPool[0].lqip ? `background-image: url(${bgPool[0].lqip})` : undefined}
         aria-hidden="true"
       >
+        <img class="card__bg-img" src={bgPool[0].url} alt="" loading="lazy" />
       </div>
     )}
     {imageUrl ? (
@@ -51,12 +53,25 @@ const bgPool = (product.backgrounds ?? []).map((img) =>
 
 <script>
   // Randomize each card's background from its pool on every load.
-  // Bundled scripts are deduped by Astro — this runs once per page.
+  // The container paints the pick's blurred LQIP instantly; the full
+  // image fades in over it. Bundled scripts are deduped by Astro —
+  // this runs once per page.
+  interface PoolEntry {
+    url: string
+    lqip: string | null
+  }
+
   document.querySelectorAll<HTMLElement>('.card__bg[data-bg-pool]').forEach((el) => {
-    const pool: string[] = JSON.parse(el.dataset.bgPool || '[]')
+    const pool: PoolEntry[] = JSON.parse(el.dataset.bgPool || '[]')
+    const img = el.querySelector<HTMLImageElement>('.card__bg-img')
+    if (!img || pool.length === 0) return
     if (pool.length > 1) {
-      el.style.backgroundImage = `url(${pool[Math.floor(Math.random() * pool.length)]})`
+      const pick = pool[Math.floor(Math.random() * pool.length)]
+      if (pick.lqip) el.style.backgroundImage = `url(${pick.lqip})`
+      img.src = pick.url
     }
+    const reveal = () => img.classList.add('is-loaded')
+    img.complete && img.naturalWidth ? reveal() : img.addEventListener('load', reveal)
   })
 </script>
 
@@ -87,8 +102,23 @@ const bgPool = (product.backgrounds ?? []).map((img) =>
   .card__bg {
     position: absolute;
     inset: 0;
+    /* LQIP paints here instantly; the img fades in over it */
     background-size: cover;
     background-position: center;
+  }
+
+  .card__bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .card__bg-img.is-loaded {
+    opacity: 1;
   }
 
   .card__bg::after {
@@ -98,7 +128,9 @@ const bgPool = (product.backgrounds ?? []).map((img) =>
     background: linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.3));
   }
 
-  .card__media img {
+  /* Direct child only — the packaging shot. The background image
+   * nested in .card__bg must NOT inherit this padding/contain. */
+  .card__media > img {
     position: relative; /* above the background layer */
     width: 100%;
     height: 100%;

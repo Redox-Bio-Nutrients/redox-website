@@ -29,10 +29,11 @@ const color = product.primaryColor ?? '#2E6B3E'
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.
-const bgPool = (product.backgrounds ?? []).map((img) =>
-  urlFor(img).width(2400).height(1400).fit('crop').url(),
-)
-const heroImageUrl = bgPool[0] ?? null
+const bgPool = (product.backgrounds ?? []).map((img) => ({
+  url: urlFor(img).width(2400).height(1400).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
+}))
+const heroImage = bgPool[0] ?? null
 const marketLinks = product.markets.map((m) =>
   m === 'agriculture'
     ? { label: 'Agriculture', href: '/agriculture' }
@@ -64,28 +65,44 @@ const documents = (product.documents ?? []).map((doc) => ({
 
 <BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
   <header class="hero" style={`--product-color: ${color}`}>
-    {heroImageUrl ? (
-      <img
-        id="hero-bg"
-        class="hero__bg"
-        src={heroImageUrl}
-        alt={product.heroImage?.alt ?? ''}
-        loading="eager"
-        data-bg-pool={JSON.stringify(bgPool)}
-      />
+    {heroImage ? (
+      <>
+        <div
+          id="hero-lqip"
+          class="hero__lqip"
+          style={heroImage.lqip ? `background-image: url(${heroImage.lqip})` : undefined}
+          aria-hidden="true"
+        >
+        </div>
+        <img
+          id="hero-bg"
+          class="hero__bg"
+          src={heroImage.url}
+          alt={product.heroImage?.alt ?? ''}
+          loading="eager"
+          data-bg-pool={JSON.stringify(bgPool)}
+        />
+      </>
     ) : (
       <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
     )}
     <div class="hero__scrim" aria-hidden="true"></div>
     <script is:inline>
       // Randomize the hero background per load — runs during parse,
-      // before the browser paints the image, so there's no swap flash.
+      // before first paint. The pick's LQIP placeholder shows blurred
+      // and instant; the full image fades in over it once loaded.
       ;(() => {
         const img = document.getElementById('hero-bg')
-        const pool = img ? JSON.parse(img.dataset.bgPool || '[]') : []
+        if (!img) return
+        const pool = JSON.parse(img.dataset.bgPool || '[]')
         if (pool.length > 1) {
-          img.src = pool[Math.floor(Math.random() * pool.length)]
+          const pick = pool[Math.floor(Math.random() * pool.length)]
+          img.src = pick.url
+          const lqip = document.getElementById('hero-lqip')
+          if (lqip && pick.lqip) lqip.style.backgroundImage = `url(${pick.lqip})`
         }
+        const reveal = () => img.classList.add('is-loaded')
+        img.complete && img.naturalWidth ? reveal() : img.addEventListener('load', reveal)
       })()
     </script>
 
@@ -238,12 +255,29 @@ const documents = (product.documents ?? []).map((doc) => ({
     color: var(--color-white);
   }
 
+  /* Blurred LQIP placeholder — instant paint while the image loads */
+  .hero__lqip {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(18px);
+    transform: scale(1.1); /* hide blur edge bleed */
+    background-color: var(--product-color);
+  }
+
   .hero__bg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .hero__bg.is-loaded {
+    opacity: 1;
   }
 
   .hero__bg--gradient {

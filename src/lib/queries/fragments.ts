@@ -8,7 +8,10 @@
 export const IMAGE_FRAGMENT = /* groq */ `{
   asset,
   alt,
-  hotspot
+  hotspot,
+  // tiny blurred placeholder (base64) — painted instantly while the
+  // full image loads (blur-up)
+  "lqip": asset->metadata.lqip
 }`
 
 export const SEO_FRAGMENT = /* groq */ `seo {
@@ -18,6 +21,18 @@ export const SEO_FRAGMENT = /* groq */ `seo {
   noIndex
 }`
 
+// Background pool, in priority order: the product's own backgrounds
+// gallery (plus its hero) → its dedicated hero image (a set hero wins
+// over the shared pool — no rotation) → the site-wide shared pool
+// (backgroundPool singleton). Cards and heroes pick one at random
+// client-side on each load.
+export const BG_POOL_FRAGMENT = /* groq */ `select(
+  count(coalesce(backgrounds, [])) > 0 =>
+    array::compact([heroImage ${IMAGE_FRAGMENT}] + backgrounds[] ${IMAGE_FRAGMENT}),
+  defined(heroImage) => [heroImage ${IMAGE_FRAGMENT}],
+  *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+)`
+
 export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   _id,
   title,
@@ -25,9 +40,7 @@ export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   tagline,
   markets,
   "image": image ${IMAGE_FRAGMENT},
-  // background pool: heroImage + backgrounds — cards and heroes pick
-  // one at random client-side on each load
-  "backgrounds": array::compact([heroImage ${IMAGE_FRAGMENT}] + coalesce(backgrounds[] ${IMAGE_FRAGMENT}, []))
+  "backgrounds": ${BG_POOL_FRAGMENT}
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{

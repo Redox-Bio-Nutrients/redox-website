@@ -26,6 +26,7 @@ import { author } from '../schemas/documents/author'
 import { podcastEpisode } from '../schemas/documents/podcastEpisode'
 import { universityResource } from '../schemas/documents/universityResource'
 import { page } from '../schemas/documents/page'
+import { backgroundPool } from '../schemas/documents/backgroundPool'
 
 export const schemaTypes = [
   // objects
@@ -52,4 +53,6 @@ export const schemaTypes = [
   universityResource,
   // generic pages
   page,
+  // site-level
+  backgroundPool,
 ]

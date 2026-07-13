@@ -14,6 +14,8 @@ export interface SanityImage {
   asset: { _ref: string; _type: 'reference' }
   alt?: string
   hotspot?: { x: number; y: number; height: number; width: number }
+  /** base64 blurred placeholder for blur-up loading */
+  lqip?: string
 }
 
 export interface Seo {
