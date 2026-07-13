@@ -80,4 +80,14 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
 
       S.documentTypeListItem('page').title('Pages'),
+
+      // Site-level singleton — one shared document, no list
+      S.listItem()
+        .title('Background Imagery')
+        .child(
+          S.document()
+            .schemaType('backgroundPool')
+            .documentId('backgroundPool')
+            .title('Background Imagery'),
+        ),
     ])

@@ -2,7 +2,7 @@
 
 import { sanityFetch } from '../sanity'
 import type { Market, Product, ProductCard } from '../types/sanity'
-import { IMAGE_FRAGMENT, PRODUCT_CARD_FRAGMENT, SEO_FRAGMENT, TECHNOLOGY_CARD_FRAGMENT } from './fragments'
+import { BG_POOL_FRAGMENT, IMAGE_FRAGMENT, PRODUCT_CARD_FRAGMENT, SEO_FRAGMENT, TECHNOLOGY_CARD_FRAGMENT } from './fragments'
 
 export async function getProductsByMarket(market: Market): Promise<ProductCard[]> {
   return sanityFetch(
@@ -28,7 +28,7 @@ export async function getProduct(slug: string): Promise<Product | null> {
       markets,
       "image": image ${IMAGE_FRAGMENT},
       "heroImage": heroImage ${IMAGE_FRAGMENT},
-      "backgrounds": array::compact([heroImage ${IMAGE_FRAGMENT}] + coalesce(backgrounds[] ${IMAGE_FRAGMENT}, [])),
+      "backgrounds": ${BG_POOL_FRAGMENT},
       primaryColor,
       // sections is a discriminated union — spread everything and let
       // the per-_type frontend renderers pick their fields
