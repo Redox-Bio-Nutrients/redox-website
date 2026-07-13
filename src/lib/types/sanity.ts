@@ -101,6 +101,8 @@ export interface ProductCard {
 export interface Product extends ProductCard {
   primaryColor?: string
   heroImage?: SanityImage
+  /** optional dedicated pool for callout sections; falls back to backgrounds */
+  calloutBackgrounds?: SanityImage[]
   sections?: ProductSection[]
   crops?: string[]
   relatedProducts?: ProductCard[]

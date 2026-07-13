@@ -1,0 +1,74 @@
+---
+// src/components/ui/PoolBackground.astro
+//
+// WHY: One reusable randomized-imagery layer. Drop it inside any
+// position:relative container and pass a pool of {url, lqip} entries —
+// it paints the pick's blurred LQIP instantly, fades the full image in,
+// and re-randomizes on every page load. Used by product callouts;
+// built for reuse on future sections/pages.
+
+export interface PoolEntry {
+  url: string
+  lqip: string | null
+}
+
+interface Props {
+  pool: PoolEntry[]
+}
+
+const { pool } = Astro.props
+---
+
+{pool.length > 0 && (
+  <div
+    class="pool-bg"
+    data-bg-pool={JSON.stringify(pool)}
+    style={pool[0].lqip ? `background-image: url(${pool[0].lqip})` : undefined}
+    aria-hidden="true"
+  >
+    <img class="pool-bg__img" src={pool[0].url} alt="" loading="lazy" />
+  </div>
+)}
+
+<script>
+  interface PoolEntry {
+    url: string
+    lqip: string | null
+  }
+
+  document.querySelectorAll<HTMLElement>('.pool-bg[data-bg-pool]').forEach((el) => {
+    const pool: PoolEntry[] = JSON.parse(el.dataset.bgPool || '[]')
+    const img = el.querySelector<HTMLImageElement>('.pool-bg__img')
+    if (!img || pool.length === 0) return
+    if (pool.length > 1) {
+      const pick = pool[Math.floor(Math.random() * pool.length)]
+      if (pick.lqip) el.style.backgroundImage = `url(${pick.lqip})`
+      img.src = pick.url
+    }
+    const reveal = () => img.classList.add('is-loaded')
+    img.complete && img.naturalWidth ? reveal() : img.addEventListener('load', reveal)
+  })
+</script>
+
+<style>
+  .pool-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .pool-bg__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .pool-bg__img.is-loaded {
+    opacity: 1;
+  }
+</style>

@@ -41,6 +41,9 @@ const columns = section.columns ?? 1
 
   .bullets__list li {
     position: relative;
+    display: flex;
+    align-items: center; /* text block vertically centered in the tile */
+    min-height: 100%;
     padding: var(--space-6) var(--space-6) var(--space-6) var(--space-12);
     background: var(--color-cream);
     border-radius: var(--radius-2xl);
@@ -49,11 +52,12 @@ const columns = section.columns ?? 1
     line-height: var(--leading-relaxed);
   }
 
+  /* Dot centered on the tile, not the first text line */
   .bullets__list li::before {
     content: '';
     position: absolute;
     left: var(--space-6);
-    top: calc(var(--space-6) + 0.5em);
+    top: 50%;
     width: 10px;
     height: 10px;
     border-radius: var(--radius-full);
