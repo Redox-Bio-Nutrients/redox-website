@@ -29,6 +29,7 @@ export async function getProduct(slug: string): Promise<Product | null> {
       "image": image ${IMAGE_FRAGMENT},
       "heroImage": heroImage ${IMAGE_FRAGMENT},
       "backgrounds": ${BG_POOL_FRAGMENT},
+      "calloutBackgrounds": calloutBackgrounds[] ${IMAGE_FRAGMENT},
       primaryColor,
       // sections is a discriminated union — spread everything and let
       // the per-_type frontend renderers pick their fields

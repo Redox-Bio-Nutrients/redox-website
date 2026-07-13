@@ -77,6 +77,21 @@ export const product = defineType({
       components: { input: BulkImageInput },
     }),
     defineField({
+      name: 'calloutBackgrounds',
+      title: 'Callout Imagery',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+        },
+      ],
+      description:
+        "Optional pool used ONLY behind this product's callout sections — for highlighting specific crops (or avoiding others). When empty, callouts draw from Background Imagery / the shared pool.",
+      components: { input: BulkImageInput },
+    }),
+    defineField({
       name: 'heroImage',
       title: 'Hero Image',
       type: 'image',

@@ -1,9 +1,10 @@
 ---
 // src/components/products/sections/AnalysisSection.astro
 //
-// Rows live inside a soft rounded slab; dotted leader between the
-// chemical name and value (table-of-contents treatment), values in
-// tabular numerals.
+// Rows live inside a soft rounded slab; dotted leader in the product
+// color between the chemical name and value, values in tabular
+// numerals. No separator rules between rows — the leaders carry the
+// line-by-line rhythm.
 
 import type { AnalysisSection } from '../../../lib/types/sanity'
 
@@ -52,10 +53,6 @@ const { section } = Astro.props
     padding: var(--space-4) 0;
   }
 
-  .analysis__row + .analysis__row {
-    border-top: 1px solid var(--border-subtle);
-  }
-
   .analysis__row dt {
     color: var(--color-text-primary);
     font-weight: var(--font-medium);
@@ -64,7 +61,7 @@ const { section } = Astro.props
 
   .analysis__leader {
     flex: 1;
-    border-bottom: 2px dotted color-mix(in srgb, var(--product-color, var(--color-green)) 45%, transparent);
+    border-bottom: 2px dotted var(--product-color, var(--color-green));
     transform: translateY(-5px);
   }
 

@@ -5,7 +5,7 @@
 // section kind: add the schema object, the type, a component, and a
 // case here.
 
-import type { ProductSection } from '../../lib/types/sanity'
+import type { ProductSection, SanityImage } from '../../lib/types/sanity'
 import TextSection from './sections/TextSection.astro'
 import CalloutSection from './sections/CalloutSection.astro'
 import BulletSection from './sections/BulletSection.astro'
@@ -15,9 +15,11 @@ import ChartSection from './sections/ChartSection.astro'
 interface Props {
   sections: ProductSection[]
   productColor?: string
+  /** background imagery pool — callout sections draw a random image */
+  backgrounds?: SanityImage[]
 }
 
-const { sections, productColor } = Astro.props
+const { sections, productColor, backgrounds } = Astro.props
 ---
 
 <div class="product-sections">
@@ -29,7 +31,7 @@ const { sections, productColor } = Astro.props
         case 'textSection':
           return <TextSection section={section} />
         case 'calloutSection':
-          return <CalloutSection section={section} productColor={productColor} />
+          return <CalloutSection section={section} productColor={productColor} backgrounds={backgrounds} />
         case 'bulletSection':
           return <BulletSection section={section} />
         case 'analysisSection':

@@ -126,7 +126,15 @@ const documents = (product.documents ?? []).map((doc) => ({
   <div class="layout" id="content" style={`--product-color: ${color}`}>
     <div class="layout__main">
       {product.sections && product.sections.length > 0 && (
-        <ProductSections sections={product.sections} productColor={color} />
+        <ProductSections
+          sections={product.sections}
+          productColor={color}
+          backgrounds={
+            product.calloutBackgrounds?.length
+              ? product.calloutBackgrounds
+              : product.backgrounds
+          }
+        />
       )}
     </div>
 
