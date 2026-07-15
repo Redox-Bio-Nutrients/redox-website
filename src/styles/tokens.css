@@ -96,6 +96,9 @@
   --radius-xl:  1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2.5rem;   /* large rounded content slabs */
+  /* Asymmetric "leaf" radius — rounded TL/BR, squared TR/BL.
+   * Trialing on catalog cards; apply to other slabs if adopted. */
+  --radius-leaf: var(--radius-3xl) 0 var(--radius-3xl) 0;
   --radius-full:9999px;
 
   --border-thin:   1px;
@@ -106,6 +109,12 @@
   --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl:  0 24px 48px -12px rgb(0 0 0 / 0.18);
+
+  /* ── Imagery scrim ──────────────────────────────────────────────
+   * Overlay on background photos behind product shots. Light theme
+   * keeps it airy; dark theme deepens it (remapped below) so imagery
+   * recedes behind text/product. */
+  --img-scrim: linear-gradient(180deg, rgb(0 0 0 / 0.02), rgb(0 0 0 / 0.14));
 
   /* ── Chart accents ──────────────────────────────────────────────
    * Supporting categorical hues for trial charts (slot 1 is always
@@ -162,6 +171,8 @@
 
   --glass-bg:     rgb(18 20 17 / 0.55);
   --glass-border: 1px solid rgb(255 255 255 / 0.14);
+
+  --img-scrim: linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.3));
 
   --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.55);
 }

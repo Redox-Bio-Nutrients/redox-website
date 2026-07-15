@@ -45,6 +45,7 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     )}
     <span class="card__plus" aria-hidden="true">+</span>
   </div>
+  <span class="card__leaves" aria-hidden="true"></span>
   <div class="card__body">
     <h3>{product.title}</h3>
     {product.tagline && <p>{product.tagline}</p>}
@@ -78,12 +79,66 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
 <style>
   .card {
     display: block;
+    position: relative;
+  }
+
+  /* Leaf overlay: mirrors the media box but does NOT clip, so the
+   * leaves can break the card border. Two pointed-oval leaves bloom
+   * from the media's bottom-left corner on hover (tips at the pivot). */
+  .card__leaves {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    aspect-ratio: 5 / 4; /* same footprint as the media */
+    z-index: 2; /* above the imagery */
+    pointer-events: none;
+  }
+
+  .card__leaves::before,
+  .card__leaves::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    /* vertical pointed oval — tips at bottom-left (the pivot) and top-right */
+    border-radius: 100% 0 100% 0;
+    transform-origin: 0 100%;
+    opacity: 0;
+    transform: rotate(6deg) scale(0.4);
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  /* Primary leaf — tall, standing */
+  .card__leaves::before {
+    width: 26%;
+    height: 55%;
+    background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
+  }
+
+  /* Secondary leaf — smaller, lighter greens, more translucent */
+  .card__leaves::after {
+    width: 17%;
+    height: 36%;
+    background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
+  }
+
+  .card:hover .card__leaves::before {
+    opacity: 0.92;
+    transform: rotate(8deg) scale(1);
+  }
+
+  .card:hover .card__leaves::after {
+    opacity: 0.65;
+    transform: rotate(-32deg) scale(1);
+    transition-delay: 0.06s;
   }
 
   .card__media {
     position: relative;
+    z-index: 1; /* above the leaf */
     aspect-ratio: 5 / 4;
-    border-radius: var(--radius-3xl);
+    border-radius: var(--radius-leaf);
     overflow: hidden;
     /* Quiet surface field — theme-aware, no hard spotlight */
     background:
@@ -125,7 +180,7 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.3));
+    background: var(--img-scrim);
   }
 
   /* Direct child only — the packaging shot. The background image
