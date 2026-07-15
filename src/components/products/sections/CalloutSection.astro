@@ -56,9 +56,50 @@ const hasBg = pool.length > 0
 <style>
   .callout {
     position: relative;
-    border-radius: var(--radius-3xl);
+    /* leaf radius: rounded TL/BR, right-angled TR/BL */
+    border-radius: var(--radius-leaf);
+    /* no overflow clip here — the leaf sprig spills past the border;
+     * background layers clip themselves to the radius instead */
+  }
+
+  .callout :global(.pool-bg),
+  .callout__overlay,
+  .callout__wash {
+    border-radius: inherit;
     overflow: hidden;
   }
+
+  /* ── Leaf sprig — permanent fixture at the top-right corner ──── */
+  .callout::before,
+  .callout::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 3; /* overlays the box, panel, and text */
+    /* pointed corners at top-right/bottom-left so the tip actually
+     * meets the pivot (top-right); TL/BR stay rounded (the oval belly) */
+    border-radius: 100% 0 100% 0;
+    transform-origin: 100% 0;
+    pointer-events: none;
+  }
+
+  .callout::before {
+    width: clamp(80px, 12%, 150px);
+    aspect-ratio: 1 / 2.1;
+    background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
+    opacity: 0.92;
+    transform: rotate(8deg);
+  }
+
+  .callout::after {
+    width: clamp(52px, 8%, 100px);
+    aspect-ratio: 1 / 2.1;
+    background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
+    opacity: 0.65;
+    transform: rotate(-32deg);
+  }
+
 
   /* ── Solid ──────────────────────────────────────────────────── */
   .callout--solid {
@@ -82,7 +123,8 @@ const hasBg = pool.length > 0
   }
 
   .callout--solid .callout__panel {
-    padding: var(--space-16) var(--space-12);
+    /* extra right padding keeps content clear of the corner sprig */
+    padding: var(--space-16) clamp(99px, 16.2%, 180px) var(--space-16) var(--space-12);
   }
 
   .callout--solid h2 {
@@ -109,7 +151,8 @@ const hasBg = pool.length > 0
     -webkit-backdrop-filter: var(--glass-blur);
     border: var(--glass-border);
     border-radius: var(--radius-2xl);
-    padding: var(--space-12) var(--space-10);
+    /* extra right padding keeps content clear of the corner sprig */
+    padding: var(--space-12) clamp(99px, 16.2%, 180px) var(--space-12) var(--space-10);
     box-shadow: var(--shadow-xl);
   }
 
@@ -152,7 +195,7 @@ const hasBg = pool.length > 0
 
   @media (max-width: 767px) {
     .callout--solid .callout__panel {
-      padding: var(--space-10) var(--space-6);
+      padding: var(--space-10) 86px var(--space-10) var(--space-6);
     }
 
     .callout--tint {
@@ -160,7 +203,7 @@ const hasBg = pool.length > 0
     }
 
     .callout__panel--glass {
-      padding: var(--space-8) var(--space-6);
+      padding: var(--space-8) 86px var(--space-8) var(--space-6);
     }
   }
 </style>
