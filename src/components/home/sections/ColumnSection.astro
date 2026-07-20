@@ -1,0 +1,179 @@
+---
+// src/components/home/sections/ColumnSection.astro
+//
+// A 1-3 column flexible section. Two independent concerns, kept
+// deliberately separate: the SECTION background can bleed to the full
+// viewport width (color or image), while the CONTENT inside always
+// aligns to --content-width — the same column width used on product
+// pages — so pages stay visually consistent regardless of how a given
+// section is themed.
+
+import { PortableText } from 'astro-portabletext'
+import { urlFor } from '../../../lib/sanity'
+import type { HomeColumnSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: HomeColumnSection
+}
+
+const { section } = Astro.props
+const bgType = section.backgroundType ?? 'none'
+const bgImageUrl =
+  bgType === 'image' && section.backgroundImage
+    ? urlFor(section.backgroundImage).width(2400).fit('max').auto('format').quality(75).url()
+    : null
+---
+
+<section
+  class:list={['columns', `columns--bg-${bgType}`]}
+  style={bgType === 'color' && section.backgroundColor ? `--section-bg: ${section.backgroundColor}` : undefined}
+>
+  {bgImageUrl && (
+    <img class="columns__bg" src={bgImageUrl} alt="" aria-hidden="true" loading="lazy" />
+  )}
+  {bgType === 'image' && <div class="columns__scrim" aria-hidden="true"></div>}
+
+  <div class="columns__inner">
+    {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
+    <div class="columns__grid" style={`--column-count: ${section.columns}`}>
+      {section.items.map((item) => (
+        <div class="column">
+          {item.image && (
+            <img
+              class="column__image"
+              src={urlFor(item.image).width(600).height(450).fit('crop').auto('format').quality(75).url()}
+              alt={item.image.alt ?? ''}
+              loading="lazy"
+            />
+          )}
+          {item.heading && <h3 class="column__heading">{item.heading}</h3>}
+          {item.body && (
+            <div class="column__body">
+              <PortableText value={item.body} />
+            </div>
+          )}
+          {item.cta && (
+            <a
+              class="column__cta"
+              href={item.cta.href}
+              target={item.cta.external ? '_blank' : undefined}
+              rel={item.cta.external ? 'noopener noreferrer' : undefined}
+            >
+              {item.cta.label} →
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .columns {
+    position: relative;
+    /* No max-width here on purpose — a section is a direct block child
+     * of <main>, which is unconstrained, so it naturally spans the
+     * full viewport width when a background is set. */
+  }
+
+  .columns--bg-color {
+    background: var(--section-bg);
+  }
+
+  .columns__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  .columns__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--img-scrim);
+  }
+
+  .columns__inner {
+    position: relative;
+    z-index: 1;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .columns__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+  }
+
+  .columns--bg-color .columns__heading,
+  .columns--bg-image .columns__heading {
+    color: var(--color-white);
+  }
+
+  .columns__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--column-count), 1fr);
+    gap: var(--space-10);
+  }
+
+  .column__image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-2xl);
+    margin-bottom: var(--space-5);
+  }
+
+  .column__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .columns--bg-color .column__heading,
+  .columns--bg-image .column__heading {
+    color: var(--color-white);
+  }
+
+  .column__body :global(p) {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-3);
+  }
+
+  .columns--bg-color .column__body :global(p),
+  .columns--bg-image .column__body :global(p) {
+    color: rgb(255 255 255 / 0.85);
+  }
+
+  .column__cta {
+    display: inline-block;
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: inherit;
+    border-bottom: 1px solid currentColor;
+  }
+
+  @media (max-width: 767px) {
+    .columns__inner {
+      padding: var(--space-16) var(--space-6);
+    }
+
+    .columns__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+  }
+</style>

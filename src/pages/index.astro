@@ -1,35 +1,48 @@
 ---
 // src/pages/index.astro
-// Placeholder homepage — real hero/sections come with the homepage build.
+//
+// Renders the Homepage singleton's modular section array. Falls back
+// to a plain placeholder if no Homepage document has been published
+// yet, so the build never produces a blank page.
 
 import BaseLayout from '../layouts/BaseLayout.astro'
+import HomeSections from '../components/home/HomeSections.astro'
+import { getHomepage } from '../lib/queries'
 import { site } from '../config/site'
+
+const homepage = await getHomepage()
+const hasSections = (homepage?.sections?.length ?? 0) > 0
 ---
 
 <BaseLayout
   title="Home"
   description="Redox Bio-Nutrients — improving soil, water, and plant health through innovative bio-nutrient technology."
+  seo={homepage?.seo}
 >
-  <section class="hero">
-    <h1>{site.name}</h1>
-    <p>Improving soil, water, and plant health.</p>
-  </section>
+  {hasSections ? (
+    <HomeSections sections={homepage!.sections!} />
+  ) : (
+    <section class="hero-fallback">
+      <h1>{site.name}</h1>
+      <p>Improving soil, water, and plant health.</p>
+    </section>
+  )}
 </BaseLayout>
 
 <style>
-  .hero {
+  .hero-fallback {
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-24) var(--space-6);
     text-align: center;
   }
 
-  .hero h1 {
+  .hero-fallback h1 {
     font-size: var(--text-5xl);
     color: var(--color-green-dark);
   }
 
-  .hero p {
+  .hero-fallback p {
     margin-top: var(--space-4);
     font-size: var(--text-xl);
     color: var(--color-text-secondary);

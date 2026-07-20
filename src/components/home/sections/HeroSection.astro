@@ -1,0 +1,148 @@
+---
+// src/components/home/sections/HeroSection.astro
+//
+// Big image-led header — same visual language as the product page
+// hero (Lapalma reference: full-bleed image, bottom-aligned display
+// title, hairline rule, quiet meta row). Falls back to a brand-green
+// gradient when no image is set, since the homepage hero has no
+// per-product color to draw from.
+
+import { urlFor } from '../../../lib/sanity'
+import type { HomeHeroSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: HomeHeroSection
+}
+
+const { section } = Astro.props
+const imageUrl = section.backgroundImage
+  ? urlFor(section.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
+  : null
+---
+
+<header class="hero">
+  {imageUrl ? (
+    <img class="hero__bg" src={imageUrl} alt={section.backgroundImage?.alt ?? ''} loading="eager" />
+  ) : (
+    <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
+  )}
+  <div class="hero__scrim" aria-hidden="true"></div>
+
+  <div class="hero__content">
+    <h1 class="hero__title">{section.heading}</h1>
+    <hr class="hero__rule" />
+    <div class="hero__meta">
+      {section.subheading && <p class="hero__subheading">{section.subheading}</p>}
+      {section.cta && (
+        <a
+          class="hero__cta"
+          href={section.cta.href}
+          target={section.cta.external ? '_blank' : undefined}
+          rel={section.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          {section.cta.label} →
+        </a>
+      )}
+    </div>
+  </div>
+</header>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: min(85vh, 880px);
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    color: var(--color-white);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__bg--gradient {
+    background:
+      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.16), transparent 60%),
+      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.35), transparent 55%),
+      var(--color-green-dark);
+  }
+
+  .hero__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(0 0 0 / 0.18) 0%,
+      rgb(0 0 0 / 0.05) 40%,
+      rgb(0 0 0 / 0.45) 100%
+    );
+  }
+
+  .hero__content {
+    position: relative;
+    width: min(var(--max-width-2xl), 100%);
+    margin: 0 auto;
+    padding: var(--space-32) var(--space-8) var(--space-12);
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .hero__rule {
+    border: none;
+    border-top: 1px solid rgb(255 255 255 / 0.4);
+    margin: var(--space-8) 0 var(--space-6);
+  }
+
+  .hero__meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-10);
+  }
+
+  .hero__subheading {
+    max-width: 44ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .hero__cta {
+    font-size: var(--text-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid rgb(255 255 255 / 0.5);
+    transition: border-color 0.15s ease;
+  }
+
+  .hero__cta:hover {
+    border-color: var(--color-white);
+  }
+
+  @media (max-width: 767px) {
+    .hero {
+      min-height: 70vh;
+    }
+
+    .hero__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+  }
+</style>

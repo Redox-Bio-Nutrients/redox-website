@@ -1,0 +1,44 @@
+---
+// src/components/home/HomeSections.astro
+//
+// Dispatcher: switches on each homepage section's _type to pick its
+// renderer. Adding a new section kind = add the schema object, the
+// type, a component, and a case here — same pattern as ProductSections.
+
+import type { HomeSection } from '../../lib/types/sanity'
+import HeroSection from './sections/HeroSection.astro'
+import ColumnSection from './sections/ColumnSection.astro'
+
+interface Props {
+  sections: HomeSection[]
+}
+
+const { sections } = Astro.props
+---
+
+<div class="home-sections">
+  {sections.map((section) => {
+    switch (section._type) {
+      case 'homeHeroSection':
+        return <HeroSection section={section} />
+      case 'homeColumnSection':
+        return <ColumnSection section={section} />
+      default:
+        return null
+    }
+  })}
+</div>
+
+<style>
+  .home-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-24);
+  }
+
+  @media (max-width: 767px) {
+    .home-sections {
+      gap: var(--space-16);
+    }
+  }
+</style>

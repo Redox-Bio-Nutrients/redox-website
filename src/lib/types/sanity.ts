@@ -230,3 +230,43 @@ export interface Page {
   body?: PortableTextBlock[]
   seo?: Seo
 }
+
+// ── Homepage (modular page-builder sections) ───────────────────────
+
+export interface HomeHeroSection {
+  _type: 'homeHeroSection'
+  _key: string
+  heading: string
+  subheading?: string
+  backgroundImage?: SanityImage
+  cta?: Cta
+}
+
+export interface ColumnItem {
+  _key: string
+  image?: SanityImage
+  heading?: string
+  body?: PortableTextBlock[]
+  cta?: Cta
+}
+
+export type SectionBackgroundType = 'none' | 'color' | 'image'
+
+export interface HomeColumnSection {
+  _type: 'homeColumnSection'
+  _key: string
+  heading?: string
+  columns: 1 | 2 | 3
+  items: ColumnItem[]
+  backgroundType?: SectionBackgroundType
+  backgroundColor?: string
+  backgroundImage?: SanityImage
+}
+
+export type HomeSection = HomeHeroSection | HomeColumnSection
+
+export interface Homepage {
+  _id: string
+  sections?: HomeSection[]
+  seo?: Seo
+}
