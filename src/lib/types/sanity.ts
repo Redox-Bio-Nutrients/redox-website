@@ -244,6 +244,25 @@ export interface HomeHeroSection {
   cta?: Cta
 }
 
+/** A single slide of a Hero Carousel — same shape as HomeHeroSection
+ * minus the discriminant, since a slide is just "a hero" repeated. */
+export interface HeroSlide {
+  _key: string
+  heading: string
+  subheading?: string
+  backgroundImage?: SanityImage
+  backgroundVideoUrl?: string
+  cta?: Cta
+}
+
+export interface HomeHeroCarouselSection {
+  _type: 'homeHeroCarouselSection'
+  _key: string
+  slides: HeroSlide[]
+  autoplay?: boolean
+  interval?: number
+}
+
 export interface ColumnItem {
   _key: string
   image?: SanityImage
@@ -265,7 +284,7 @@ export interface HomeColumnSection {
   backgroundImage?: SanityImage
 }
 
-export type HomeSection = HomeHeroSection | HomeColumnSection
+export type HomeSection = HomeHeroSection | HomeHeroCarouselSection | HomeColumnSection
 
 export interface Homepage {
   _id: string

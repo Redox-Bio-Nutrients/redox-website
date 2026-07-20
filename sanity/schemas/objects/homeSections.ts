@@ -10,18 +10,17 @@
 
 import { defineField, defineType } from 'sanity'
 
-// ── Hero — big image-led header, same visual language as product pages ──
-
-export const homeHeroSection = defineType({
-  name: 'homeHeroSection',
-  title: 'Hero',
-  type: 'object',
-  fields: [
+// Shared by the single Hero and each slide of the Hero Carousel — same
+// content shape either way (heading/subheading/media/CTA), so a slide
+// is just "a hero" repeated. Factored out to avoid maintaining two
+// copies of these field definitions.
+function heroContentFields() {
+  return [
     defineField({
       name: 'heading',
       title: 'Heading',
       type: 'string',
-      validation: (rule) => rule.required(),
+      validation: (rule: any) => rule.required(),
     }),
     defineField({
       name: 'subheading',
@@ -36,7 +35,7 @@ export const homeHeroSection = defineType({
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
       description:
-        'Full-bleed hero image. Falls back to a brand-green gradient when empty. Also used as the video poster frame if a Background Video is set.',
+        'Full-bleed image. Falls back to a brand-green gradient when empty. Also used as the video poster frame if a Background Video is set.',
     }),
     defineField({
       name: 'backgroundVideo',
@@ -51,11 +50,72 @@ export const homeHeroSection = defineType({
       title: 'Call to Action',
       type: 'cta',
     }),
-  ],
+  ]
+}
+
+// ── Hero — big image-led header, same visual language as product pages ──
+
+export const homeHeroSection = defineType({
+  name: 'homeHeroSection',
+  title: 'Hero',
+  type: 'object',
+  fields: heroContentFields(),
   preview: {
     select: { title: 'heading' },
     prepare({ title }) {
       return { title: title || 'Hero', subtitle: 'Hero' }
+    },
+  },
+})
+
+// ── Hero Carousel — same visual treatment, cycles through slides ────
+
+export const homeHeroCarouselSection = defineType({
+  name: 'homeHeroCarouselSection',
+  title: 'Hero Carousel',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'slides',
+      title: 'Slides',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'heroSlide',
+          title: 'Slide',
+          fields: heroContentFields(),
+          preview: {
+            select: { title: 'heading', media: 'backgroundImage' },
+          },
+        },
+      ],
+      description: 'Use the single Hero instead if you only need one slide.',
+      validation: (rule) => rule.required().min(2).max(6),
+    }),
+    defineField({
+      name: 'autoplay',
+      title: 'Autoplay',
+      type: 'boolean',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'interval',
+      title: 'Autoplay Interval (seconds)',
+      type: 'number',
+      initialValue: 6,
+      hidden: ({ parent }) => !parent?.autoplay,
+      validation: (rule) => rule.min(3).max(30),
+    }),
+  ],
+  preview: {
+    select: { slides: 'slides' },
+    prepare({ slides }) {
+      const count = slides?.length ?? 0
+      return {
+        title: 'Hero Carousel',
+        subtitle: `${count} slide${count === 1 ? '' : 's'}`,
+      }
     },
   },
 })

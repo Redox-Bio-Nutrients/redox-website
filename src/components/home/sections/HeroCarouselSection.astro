@@ -1,0 +1,376 @@
+---
+// src/components/home/sections/HeroCarouselSection.astro
+//
+// Same visual treatment as the single Hero (image/video priority,
+// flat dark overlay, centered content, pill CTA) but cycling through
+// 2-6 slides. Slides are absolutely stacked and crossfaded — no
+// external carousel library, consistent with the rest of the site's
+// hand-rolled interactivity (background randomizer, chart bars,
+// back-to-top). Slide headings render as h2 (not h1) since a page
+// should have one h1, and a carousel isn't "the" page title the way a
+// single hero's heading is.
+
+import { urlFor } from '../../../lib/sanity'
+import type { HomeHeroCarouselSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: HomeHeroCarouselSection
+}
+
+const { section } = Astro.props
+const slides = section.slides ?? []
+const autoplay = section.autoplay ?? true
+const interval = section.interval ?? 6
+---
+
+<div class="hero-carousel" data-autoplay={String(autoplay)} data-interval={interval}>
+  <div class="hero-carousel__track">
+    {slides.map((slide, i) => {
+      const imageUrl = slide.backgroundImage
+        ? urlFor(slide.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
+        : null
+      const videoUrl = slide.backgroundVideoUrl ?? null
+      const hasMedia = Boolean(videoUrl || imageUrl)
+      return (
+        <div class:list={['hero-carousel__slide', { 'is-active': i === 0 }]} data-index={i}>
+          {videoUrl ? (
+            <video
+              class="hero-carousel__bg"
+              src={videoUrl}
+              poster={imageUrl ?? undefined}
+              muted
+              loop
+              playsinline
+              preload={i === 0 ? 'auto' : 'none'}
+            />
+          ) : imageUrl ? (
+            <img
+              class="hero-carousel__bg"
+              src={imageUrl}
+              alt={slide.backgroundImage?.alt ?? ''}
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          ) : (
+            <div class="hero-carousel__bg hero-carousel__bg--gradient" aria-hidden="true"></div>
+          )}
+          {hasMedia && <div class="hero-carousel__overlay" aria-hidden="true"></div>}
+
+          <div class="hero-carousel__content">
+            <h2 class="hero-carousel__title">{slide.heading}</h2>
+            <div class="hero-carousel__meta">
+              {slide.subheading && <p class="hero-carousel__subheading">{slide.subheading}</p>}
+              {slide.cta && (
+                <a
+                  class="hero-carousel__cta"
+                  href={slide.cta.href}
+                  target={slide.cta.external ? '_blank' : undefined}
+                  rel={slide.cta.external ? 'noopener noreferrer' : undefined}
+                >
+                  <span>{slide.cta.label}</span>
+                  <span class="hero-carousel__cta-arrow" aria-hidden="true">→</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )
+    })}
+  </div>
+
+  {slides.length > 1 && (
+    <>
+      <button type="button" class="hero-carousel__arrow hero-carousel__arrow--prev" aria-label="Previous slide">‹</button>
+      <button type="button" class="hero-carousel__arrow hero-carousel__arrow--next" aria-label="Next slide">›</button>
+      <div class="hero-carousel__dots" role="tablist" aria-label="Slides">
+        {slides.map((_, i) => (
+          <button
+            type="button"
+            class:list={['hero-carousel__dot', { 'is-active': i === 0 }]}
+            data-index={i}
+            role="tab"
+            aria-selected={i === 0}
+            aria-label={`Go to slide ${i + 1}`}
+          />
+        ))}
+      </div>
+    </>
+  )}
+</div>
+
+<script>
+  interface CarouselEls {
+    root: HTMLElement
+    slides: HTMLElement[]
+    dots: HTMLButtonElement[]
+  }
+
+  function playVideoIn(slide: HTMLElement) {
+    slide.querySelector('video')?.play().catch(() => {})
+  }
+  function pauseVideoIn(slide: HTMLElement) {
+    slide.querySelector('video')?.pause()
+  }
+
+  function initCarousel(root: HTMLElement) {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('.hero-carousel__slide'))
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('.hero-carousel__dot'))
+    if (slides.length < 2) return
+
+    const prevBtn = root.querySelector<HTMLButtonElement>('.hero-carousel__arrow--prev')
+    const nextBtn = root.querySelector<HTMLButtonElement>('.hero-carousel__arrow--next')
+    const autoplay = root.dataset.autoplay === 'true'
+    const interval = Math.max(3, Number(root.dataset.interval) || 6) * 1000
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let index = 0
+    let timer: ReturnType<typeof setInterval> | null = null
+
+    function goTo(next: number) {
+      const target = (next + slides.length) % slides.length
+      if (target === index) return
+      slides[index].classList.remove('is-active')
+      pauseVideoIn(slides[index])
+      dots[index]?.classList.remove('is-active')
+      dots[index]?.setAttribute('aria-selected', 'false')
+      index = target
+      slides[index].classList.add('is-active')
+      playVideoIn(slides[index])
+      dots[index]?.classList.add('is-active')
+      dots[index]?.setAttribute('aria-selected', 'true')
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer)
+      timer = null
+    }
+
+    function start() {
+      if (!autoplay || reduceMotion) return
+      stop()
+      timer = setInterval(() => goTo(index + 1), interval)
+    }
+
+    prevBtn?.addEventListener('click', () => {
+      goTo(index - 1)
+      start()
+    })
+    nextBtn?.addEventListener('click', () => {
+      goTo(index + 1)
+      start()
+    })
+    dots.forEach((dot, i) =>
+      dot.addEventListener('click', () => {
+        goTo(i)
+        start()
+      }),
+    )
+
+    root.addEventListener('mouseenter', stop)
+    root.addEventListener('mouseleave', start)
+    root.addEventListener('focusin', stop)
+    root.addEventListener('focusout', start)
+
+    playVideoIn(slides[index])
+    start()
+  }
+
+  document.querySelectorAll<HTMLElement>('.hero-carousel').forEach(initCarousel)
+</script>
+
+<style>
+  .hero-carousel {
+    position: relative;
+    min-height: min(85vh, 880px);
+    overflow: hidden;
+    color: var(--color-white);
+  }
+
+  .hero-carousel__track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: min(85vh, 880px);
+  }
+
+  .hero-carousel__slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease;
+  }
+
+  .hero-carousel__slide.is-active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+  }
+
+  .hero-carousel__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-carousel__bg--gradient {
+    background:
+      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.16), transparent 60%),
+      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.35), transparent 55%),
+      var(--color-green-dark);
+  }
+
+  .hero-carousel__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.42);
+  }
+
+  .hero-carousel__content {
+    position: relative;
+    width: min(var(--max-width-2xl), 100%);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-8);
+  }
+
+  .hero-carousel__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .hero-carousel__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-top: var(--space-8);
+  }
+
+  .hero-carousel__subheading {
+    max-width: 44ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .hero-carousel__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .hero-carousel__cta:hover {
+    background: rgb(255 255 255 / 0.28);
+    transform: translateY(-1px);
+  }
+
+  .hero-carousel__cta-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .hero-carousel__cta:hover .hero-carousel__cta-arrow {
+    transform: translateX(3px);
+  }
+
+  /* Controls */
+  .hero-carousel__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    color: var(--color-white);
+    font-size: var(--text-2xl);
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .hero-carousel__arrow:hover {
+    background: rgb(255 255 255 / 0.28);
+  }
+
+  .hero-carousel__arrow--prev {
+    left: var(--space-6);
+  }
+
+  .hero-carousel__arrow--next {
+    right: var(--space-6);
+  }
+
+  .hero-carousel__dots {
+    position: absolute;
+    bottom: var(--space-8);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .hero-carousel__dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.5);
+    cursor: pointer;
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+
+  .hero-carousel__dot.is-active {
+    width: 24px;
+    background: var(--color-white);
+  }
+
+  @media (max-width: 767px) {
+    .hero-carousel,
+    .hero-carousel__track {
+      min-height: 70vh;
+    }
+
+    .hero-carousel__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+
+    .hero-carousel__arrow {
+      width: 36px;
+      height: 36px;
+      font-size: var(--text-xl);
+    }
+
+    .hero-carousel__dots {
+      bottom: var(--space-5);
+    }
+  }
+</style>

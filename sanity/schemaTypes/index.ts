@@ -14,7 +14,11 @@ import {
   chartSection,
   textSection,
 } from '../schemas/objects/productSections'
-import { homeHeroSection, homeColumnSection } from '../schemas/objects/homeSections'
+import {
+  homeHeroSection,
+  homeHeroCarouselSection,
+  homeColumnSection,
+} from '../schemas/objects/homeSections'
 
 // Documents
 import { product } from '../schemas/documents/product'
@@ -41,6 +45,7 @@ export const schemaTypes = [
   analysisSection,
   chartSection,
   homeHeroSection,
+  homeHeroCarouselSection,
   homeColumnSection,
   // catalog
   product,

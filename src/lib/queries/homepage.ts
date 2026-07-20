@@ -22,6 +22,16 @@ export async function getHomepage(): Promise<Homepage | null> {
         "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
         "backgroundVideoUrl": backgroundVideo.asset->url,
         cta,
+        "slides": slides[]{
+          _key,
+          heading,
+          subheading,
+          "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
+          "backgroundVideoUrl": backgroundVideo.asset->url,
+          cta
+        },
+        autoplay,
+        interval,
         columns,
         "items": items[]{
           _key,
