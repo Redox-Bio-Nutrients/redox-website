@@ -35,7 +35,16 @@ export const homeHeroSection = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
-      description: 'Full-bleed hero image. Falls back to a brand-green gradient when empty.',
+      description:
+        'Full-bleed hero image. Falls back to a brand-green gradient when empty. Also used as the video poster frame if a Background Video is set.',
+    }),
+    defineField({
+      name: 'backgroundVideo',
+      title: 'Background Video',
+      type: 'file',
+      options: { accept: 'video/*' },
+      description:
+        'Optional — takes priority over Background Image when set. Use a short, looped, silent-friendly clip (mp4).',
     }),
     defineField({
       name: 'cta',

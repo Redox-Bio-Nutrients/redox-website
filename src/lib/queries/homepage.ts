@@ -20,6 +20,7 @@ export async function getHomepage(): Promise<Homepage | null> {
         heading,
         subheading,
         "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
+        "backgroundVideoUrl": backgroundVideo.asset->url,
         cta,
         columns,
         "items": items[]{

@@ -1,11 +1,12 @@
 ---
 // src/components/home/sections/HeroSection.astro
 //
-// Big image-led header — same visual language as the product page
-// hero (Lapalma reference: full-bleed image, bottom-aligned display
-// title, hairline rule, quiet meta row). Falls back to a brand-green
-// gradient when no image is set, since the homepage hero has no
-// per-product color to draw from.
+// Big image-led header — same full-bleed scale as the product page
+// hero, but content is vertically centered (not bottom-aligned) since
+// the homepage hero isn't tied to a fixed product-name anchor point.
+// Priority: video > image > brand-green gradient. Any real uploaded
+// media gets a flat dark overlay for text legibility; the gradient
+// fallback has its own built-in contrast and skips it.
 
 import { urlFor } from '../../../lib/sanity'
 import type { HomeHeroSection } from '../../../lib/types/sanity'
@@ -18,19 +19,30 @@ const { section } = Astro.props
 const imageUrl = section.backgroundImage
   ? urlFor(section.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
+const videoUrl = section.backgroundVideoUrl ?? null
+const hasMedia = Boolean(videoUrl || imageUrl)
 ---
 
 <header class="hero">
-  {imageUrl ? (
+  {videoUrl ? (
+    <video
+      class="hero__bg"
+      src={videoUrl}
+      poster={imageUrl ?? undefined}
+      autoplay
+      muted
+      loop
+      playsinline
+    />
+  ) : imageUrl ? (
     <img class="hero__bg" src={imageUrl} alt={section.backgroundImage?.alt ?? ''} loading="eager" />
   ) : (
     <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
   )}
-  <div class="hero__scrim" aria-hidden="true"></div>
+  {hasMedia && <div class="hero__overlay" aria-hidden="true"></div>}
 
   <div class="hero__content">
     <h1 class="hero__title">{section.heading}</h1>
-    <hr class="hero__rule" />
     <div class="hero__meta">
       {section.subheading && <p class="hero__subheading">{section.subheading}</p>}
       {section.cta && (
@@ -40,7 +52,8 @@ const imageUrl = section.backgroundImage
           target={section.cta.external ? '_blank' : undefined}
           rel={section.cta.external ? 'noopener noreferrer' : undefined}
         >
-          {section.cta.label} →
+          <span>{section.cta.label}</span>
+          <span class="hero__cta-arrow" aria-hidden="true">→</span>
         </a>
       )}
     </div>
@@ -52,7 +65,7 @@ const imageUrl = section.backgroundImage
     position: relative;
     min-height: min(85vh, 880px);
     display: flex;
-    align-items: flex-end;
+    align-items: center; /* vertical center regardless of content height */
     overflow: hidden;
     color: var(--color-white);
   }
@@ -72,22 +85,20 @@ const imageUrl = section.backgroundImage
       var(--color-green-dark);
   }
 
-  .hero__scrim {
+  /* Flat dark wash over any uploaded image/video so centered text
+   * stays legible regardless of what's underneath. The gradient
+   * fallback already has its own built-in contrast and skips this. */
+  .hero__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgb(0 0 0 / 0.18) 0%,
-      rgb(0 0 0 / 0.05) 40%,
-      rgb(0 0 0 / 0.45) 100%
-    );
+    background: rgb(0 0 0 / 0.42);
   }
 
   .hero__content {
     position: relative;
     width: min(var(--max-width-2xl), 100%);
     margin: 0 auto;
-    padding: var(--space-32) var(--space-8) var(--space-12);
+    padding: var(--space-16) var(--space-8);
   }
 
   .hero__title {
@@ -99,18 +110,12 @@ const imageUrl = section.backgroundImage
     color: var(--color-white);
   }
 
-  .hero__rule {
-    border: none;
-    border-top: 1px solid rgb(255 255 255 / 0.4);
-    margin: var(--space-8) 0 var(--space-6);
-  }
-
   .hero__meta {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
-    gap: var(--space-10);
+    gap: var(--space-8);
+    margin-top: var(--space-8);
   }
 
   .hero__subheading {
@@ -120,18 +125,38 @@ const imageUrl = section.backgroundImage
     color: rgb(255 255 255 / 0.9);
   }
 
+  /* CTA treatment under trial: a frosted pill button, rather than the
+   * plain underlined-text link used on product hero — more visually
+   * prominent for a section that isn't anchored by a product name. */
   .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
     font-size: var(--text-sm);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    padding-bottom: var(--space-1);
-    border-bottom: 1px solid rgb(255 255 255 / 0.5);
-    transition: border-color 0.15s ease;
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    transition: background 0.2s ease, transform 0.2s ease;
   }
 
   .hero__cta:hover {
-    border-color: var(--color-white);
+    background: rgb(255 255 255 / 0.28);
+    transform: translateY(-1px);
+  }
+
+  .hero__cta-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .hero__cta:hover .hero__cta-arrow {
+    transform: translateX(3px);
   }
 
   @media (max-width: 767px) {

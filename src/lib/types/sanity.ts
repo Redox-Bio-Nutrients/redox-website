@@ -239,6 +239,8 @@ export interface HomeHeroSection {
   heading: string
   subheading?: string
   backgroundImage?: SanityImage
+  /** resolved file URL — takes priority over backgroundImage when present */
+  backgroundVideoUrl?: string
   cta?: Cta
 }
 
