@@ -1,0 +1,112 @@
+---
+// src/pages/technologies/[slug].astro
+//
+// Detail page is fully modular — same HomeSections dispatcher and
+// section types as the Homepage. Editors compose the page from Hero /
+// Hero Carousel / Columns; nothing here is a fixed template. The one
+// exception is "Built Into These Products" below, which is a fixed
+// data-driven block (from the product↔technology reference graph),
+// not an editorial section — so it always appears when applicable,
+// regardless of how the page above it is composed.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import HomeSections from '../../components/home/HomeSections.astro'
+import ProductGrid from '../../components/products/ProductGrid.astro'
+import { getAllTechnologies, getTechnology } from '../../lib/queries'
+
+export async function getStaticPaths() {
+  const technologies = await getAllTechnologies()
+  return technologies.map((t) => ({ params: { slug: t.slug } }))
+}
+
+const { slug } = Astro.params
+const technology = await getTechnology(slug!)
+
+if (!technology) {
+  return Astro.redirect('/404')
+}
+
+// Breadcrumb sits between the first section (typically the Hero) and
+// whatever comes after it — never overlapping the sticky nav, never
+// pushed below the whole composed page. Splitting the array in two
+// lets HomeSections render each half independently around it.
+const sections = technology.sections ?? []
+const [firstSection, ...restSections] = sections
+---
+
+<BaseLayout title={technology.title} description={technology.tagline} seo={technology.seo}>
+  {firstSection ? (
+    <HomeSections sections={[firstSection]} />
+  ) : (
+    <div class="fallback">
+      <h1>{technology.title}</h1>
+      {technology.tagline && <p>{technology.tagline}</p>}
+    </div>
+  )}
+
+  <div class="crumbs">
+    <a href="/technologies">← Technologies</a>
+  </div>
+
+  {restSections.length > 0 && <HomeSections sections={restSections} />}
+
+  {technology.products && technology.products.length > 0 && (
+    <section class="used-in">
+      <div class="used-in__inner">
+        <h2>Built Into These Products</h2>
+        <ProductGrid products={technology.products} />
+      </div>
+    </section>
+  )}
+</BaseLayout>
+
+<style>
+  .crumbs {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .crumbs a:hover {
+    color: var(--color-text-primary);
+  }
+
+  .fallback {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .fallback h1 {
+    font-size: var(--text-4xl);
+    color: var(--color-green-dark);
+  }
+
+  .fallback p {
+    margin-top: var(--space-3);
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+  }
+
+  .used-in {
+    padding: var(--space-24) 0;
+  }
+
+  .used-in__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .used-in h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+  }
+</style>

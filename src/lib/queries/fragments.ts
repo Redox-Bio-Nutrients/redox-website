@@ -33,6 +33,47 @@ export const BG_POOL_FRAGMENT = /* groq */ `select(
   *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
 )`
 
+// Shared page-builder sections projection — used by any document type
+// with a `sections` array of homeHeroSection / homeHeroCarouselSection
+// / homeColumnSection / chartSection (Homepage, Technology, ...). One
+// polymorphic projection covers every section _type; fields that don't
+// apply to a given _type just resolve to null and are ignored by the
+// HomeSections dispatcher, which switches on _type.
+export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
+  _type,
+  _key,
+  heading,
+  subheading,
+  "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
+  "backgroundVideoUrl": backgroundVideo.asset->url,
+  cta,
+  "slides": slides[]{
+    _key,
+    heading,
+    subheading,
+    "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
+    "backgroundVideoUrl": backgroundVideo.asset->url,
+    cta
+  },
+  autoplay,
+  interval,
+  columns,
+  "items": items[]{
+    _key,
+    "image": image ${IMAGE_FRAGMENT},
+    heading,
+    body,
+    cta
+  },
+  backgroundType,
+  backgroundColor,
+  // chartSection fields
+  source,
+  unit,
+  rows,
+  footnote
+}`
+
 export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   _id,
   title,

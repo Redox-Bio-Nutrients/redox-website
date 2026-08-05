@@ -19,6 +19,7 @@ export const homepage = defineType({
         { type: 'homeHeroSection' },
         { type: 'homeHeroCarouselSection' },
         { type: 'homeColumnSection' },
+        { type: 'chartSection' },
       ],
     }),
     defineField({ name: 'seo', title: 'SEO', type: 'seo' }),

@@ -1,0 +1,100 @@
+---
+// src/components/technologies/TechnologyCard.astro
+//
+// Simpler cousin of ProductCard — technologies don't carry a
+// background-imagery pool or a primary color (yet), so this is the
+// quiet-surface leaf-corner panel without the randomized photo layer.
+// Icon centered and contained (never cropped), title/tagline below.
+
+import { urlFor } from '../../lib/sanity'
+import type { TechnologyCard } from '../../lib/types/sanity'
+
+interface Props {
+  technology: TechnologyCard
+}
+
+const { technology } = Astro.props
+const iconUrl = technology.icon
+  ? urlFor(technology.icon).width(400).fit('max').url()
+  : null
+---
+
+<a href={`/technologies/${technology.slug}`} class="card">
+  <div class="card__media">
+    {iconUrl ? (
+      <img src={iconUrl} alt={technology.icon?.alt ?? technology.title} width="400" height="320" loading="lazy" />
+    ) : (
+      <div class="card__placeholder" aria-hidden="true">
+        <span>{technology.title}</span>
+      </div>
+    )}
+  </div>
+  <div class="card__body">
+    <h3>{technology.title}</h3>
+    {technology.tagline && <p>{technology.tagline}</p>}
+  </div>
+</a>
+
+<style>
+  .card {
+    display: block;
+  }
+
+  .card__media {
+    aspect-ratio: 5 / 4;
+    border-radius: var(--radius-leaf);
+    overflow: hidden;
+    background:
+      radial-gradient(100% 100% at 50% 0%, color-mix(in srgb, var(--color-text-primary) 4%, transparent), transparent 70%),
+      var(--bg-surface);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .card:hover .card__media {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-4px);
+  }
+
+  .card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: var(--space-10);
+  }
+
+  .card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(80% 100% at 30% 100%, color-mix(in srgb, var(--color-green-pale) 65%, transparent), transparent 65%),
+      var(--color-cream);
+  }
+
+  .card__placeholder span {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    color: var(--color-green-dark);
+    text-align: center;
+    padding: 0 var(--space-6);
+  }
+
+  .card__body {
+    padding: var(--space-6) var(--space-2) 0;
+  }
+
+  .card__body h3 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+  }
+
+  .card__body p {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-snug);
+  }
+</style>

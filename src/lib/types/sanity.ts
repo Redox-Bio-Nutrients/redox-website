@@ -120,7 +120,9 @@ export interface TechnologyCard {
 }
 
 export interface Technology extends TechnologyCard {
-  description?: PortableTextBlock[]
+  /** modular page-builder sections — same shapes as Homepage */
+  sections?: HomeSection[]
+  /** reverse reference: products whose `technologies` field points here */
   products?: ProductCard[]
   seo?: Seo
 }
@@ -284,7 +286,7 @@ export interface HomeColumnSection {
   backgroundImage?: SanityImage
 }
 
-export type HomeSection = HomeHeroSection | HomeHeroCarouselSection | HomeColumnSection
+export type HomeSection = HomeHeroSection | HomeHeroCarouselSection | HomeColumnSection | ChartSection
 
 export interface Homepage {
   _id: string

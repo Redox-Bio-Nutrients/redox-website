@@ -182,10 +182,13 @@ export const analysisSection = defineType({
   },
 })
 
-// ── Trial chart (bar) ──────────────────────────────────────────────
+// ── Bar chart ────────────────────────────────────────────────────
 // Editors enter rows; the frontend renders a native, theme-aware bar
-// chart. `highlight: true` rows render in the product color (the
-// treated result); others render as neutral controls.
+// chart. `highlight: true` rows render in the product color when a
+// product page sets one; on non-product pages (Homepage, Technology)
+// the CSS falls back to brand green, so this section also doubles as
+// the general-purpose chart module in the page-builder sections array
+// — no separate "generic chart" type needed.
 
 export const chartSection = defineType({
   name: 'chartSection',
