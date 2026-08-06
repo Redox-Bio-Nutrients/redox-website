@@ -12,7 +12,10 @@ import {
   bulletSection,
   calloutSection,
   chartSection,
+  faqSection,
+  testimonialSection,
   textSection,
+  videoSection,
 } from '../schemas/objects/productSections'
 import {
   homeHeroSection,
@@ -44,6 +47,9 @@ export const schemaTypes = [
   bulletSection,
   analysisSection,
   chartSection,
+  faqSection,
+  testimonialSection,
+  videoSection,
   homeHeroSection,
   homeHeroCarouselSection,
   homeColumnSection,

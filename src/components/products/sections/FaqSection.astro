@@ -1,0 +1,140 @@
+---
+// src/components/products/sections/FaqSection.astro
+//
+// Native <details>/<summary> accordion — no JS required, works with
+// find-in-page and screen readers out of the box. Rows live in one
+// --radius-3xl slab (analysis-table pattern), joined by hairline
+// dividers. The +/− icon is CSS-drawn (two bars, vertical bar
+// collapses on open) — same "no icon library" rule as the theme toggle.
+
+import { PortableText } from 'astro-portabletext'
+import type { FaqSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: FaqSection
+}
+
+const { section } = Astro.props
+---
+
+<section class="faq">
+  {section.heading && <h2>{section.heading}</h2>}
+  <div class="faq__slab">
+    {section.items.map((item) => (
+      <details class="faq__item">
+        <summary class="faq__question">
+          <span>{item.question}</span>
+          <span class="faq__icon" aria-hidden="true"></span>
+        </summary>
+        <div class="faq__answer">
+          <PortableText value={item.answer} />
+        </div>
+      </details>
+    ))}
+  </div>
+</section>
+
+<style>
+  .faq h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+  }
+
+  .faq__slab {
+    background: var(--bg-surface);
+    border-radius: var(--radius-3xl);
+    overflow: hidden;
+  }
+
+  .faq__item {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .faq__item:last-child {
+    border-bottom: none;
+  }
+
+  .faq__question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-8);
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--text-lg);
+    color: var(--color-text-primary);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .faq__question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+  }
+
+  .faq__icon::before,
+  .faq__icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: var(--product-color, var(--color-green));
+    transform: translate(-50%, -50%);
+    transition: transform var(--transition-base);
+  }
+
+  .faq__icon::before {
+    width: 100%;
+    height: 2px;
+  }
+
+  .faq__icon::after {
+    width: 2px;
+    height: 100%;
+  }
+
+  .faq__item[open] .faq__icon::after {
+    transform: translate(-50%, -50%) scaleY(0);
+  }
+
+  .faq__answer {
+    padding: 0 var(--space-8) var(--space-6);
+    max-width: 70ch;
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+  }
+
+  .faq__answer :global(p) {
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-3);
+  }
+
+  .faq__answer :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 767px) {
+    .faq h2 {
+      margin-bottom: var(--space-6);
+    }
+
+    .faq__question {
+      padding: var(--space-5) var(--space-6);
+    }
+
+    .faq__answer {
+      padding: 0 var(--space-6) var(--space-5);
+    }
+  }
+</style>

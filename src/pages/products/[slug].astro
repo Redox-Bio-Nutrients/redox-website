@@ -10,6 +10,7 @@
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import ProductSections from '../../components/products/ProductSections.astro'
+import ResourceRequestDialog from '../../components/products/ResourceRequestDialog.astro'
 import { getAllProducts, getProduct } from '../../lib/queries'
 import { urlFor } from '../../lib/sanity'
 
@@ -52,15 +53,12 @@ const productShotUrl = product.image
   ? urlFor(product.image).width(900).fit('max').url()
   : null
 
-// Sanity CDN assets force a download via ?dl=<filename>; external CDN
-// links get the download attribute (honored when same-origin, and a
-// plain open otherwise)
-const documents = (product.documents ?? []).map((doc) => ({
-  ...doc,
-  downloadUrl: doc.isUpload
-    ? `${doc.url}?dl=${encodeURIComponent(doc.filename ?? doc.title ?? 'download')}`
-    : doc.url,
-}))
+// Hard gate: document URLs are fetched (Studio still needs them, and a
+// future direct-link mode isn't ruled out) but never rendered — only
+// titles reach the page. Access happens through ResourceRequestDialog,
+// which never receives a url either. See its file header for why.
+const documents = product.documents ?? []
+const resourceRequestEndpoint = import.meta.env.PUBLIC_RESOURCE_REQUEST_ENDPOINT as string | undefined
 ---
 
 <BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
@@ -154,35 +152,28 @@ const documents = (product.documents ?? []).map((doc) => ({
           )}
         </figure>
 
-        {documents.length > 0 && (
-          <section class="sidebar__group">
-            <h2>Resources</h2>
+        <section class="sidebar__group">
+          <h2>Resources</h2>
+          {documents.length > 0 && (
             <ul>
               {documents.map((doc) => (
                 <li class="sidebar__doc">
-                  <a
-                    class="sidebar__doc-view"
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={`Open ${doc.title ?? 'document'}`}
-                  >
-                    {doc.title ?? 'Document'}
-                  </a>
-                  <a
-                    class="sidebar__doc-icon"
-                    href={doc.downloadUrl}
-                    download={doc.filename ?? true}
-                    aria-label={`Download ${doc.title ?? 'document'}`}
-                    title="Download"
-                  >
-                    ↓
-                  </a>
+                  <span class="sidebar__doc-lock" aria-hidden="true"></span>
+                  <span class="sidebar__doc-title">{doc.title ?? 'Document'}</span>
                 </li>
               ))}
             </ul>
-          </section>
-        )}
+          )}
+          {resourceRequestEndpoint ? (
+            <button type="button" class="sidebar__doc-request" data-dialog-open="resource-request-dialog">
+              Product Information Request
+            </button>
+          ) : (
+            <a class="sidebar__doc-request" href="/contact">
+              Product Information Request
+            </a>
+          )}
+        </section>
 
         {product.technologies && product.technologies.length > 0 && (
           <section class="sidebar__group">
@@ -250,6 +241,14 @@ const documents = (product.documents ?? []).map((doc) => ({
       </div>
     </aside>
   </div>
+
+  {resourceRequestEndpoint && (
+    <ResourceRequestDialog
+      productTitle={product.title}
+      endpoint={resourceRequestEndpoint}
+      color={color}
+    />
+  )}
 </BaseLayout>
 
 <style>
@@ -437,10 +436,9 @@ const documents = (product.documents ?? []).map((doc) => ({
   }
 
   .sidebar__group h2 {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: var(--font-semi);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
     color: var(--color-text-muted);
     margin-bottom: var(--space-3);
   }
@@ -452,7 +450,6 @@ const documents = (product.documents ?? []).map((doc) => ({
     gap: var(--space-2);
   }
 
-  .sidebar__doc,
   .sidebar__link {
     display: flex;
     align-items: center;
@@ -462,47 +459,74 @@ const documents = (product.documents ?? []).map((doc) => ({
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
+    padding: var(--space-3) var(--space-4);
     transition: box-shadow 0.15s ease, transform 0.15s ease;
   }
 
-  .sidebar__link {
-    padding: var(--space-3) var(--space-4);
-  }
-
-  .sidebar__doc:hover,
   .sidebar__link:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
   }
 
-  /* Doc row: title opens in a new tab, the ↓ button forces download */
-  .sidebar__doc-view {
-    flex: 1;
-    min-width: 0;
-    padding: var(--space-3) 0 var(--space-3) var(--space-4);
-    color: inherit;
-  }
-
-  .sidebar__doc-view:hover {
-    text-decoration: underline;
-  }
-
-  .sidebar__doc-icon {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    flex-shrink: 0;
-    margin-right: var(--space-2);
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--product-color) 14%, var(--bg-raised));
-    color: var(--product-color);
+  /* Doc row — informational only, no href: access is gated behind the
+   * request dialog (see .sidebar__doc-request below). */
+  .sidebar__doc {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
     font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+  }
+
+  .sidebar__doc-lock {
+    flex-shrink: 0;
+    width: 14px;
+    height: 12px;
+    position: relative;
+    border: 1.5px solid var(--color-text-muted);
+    border-radius: 2px;
+  }
+
+  .sidebar__doc-lock::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    width: 8px;
+    height: 8px;
+    transform: translateX(-50%);
+    border: 1.5px solid var(--color-text-muted);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .sidebar__doc-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar__doc-request {
+    display: block;
+    text-align: center;
+    margin-top: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--product-color) 40%, transparent);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    color: var(--product-color);
     transition: background 0.15s ease;
   }
 
-  .sidebar__doc-icon:hover {
-    background: color-mix(in srgb, var(--product-color) 28%, var(--bg-raised));
+  .sidebar__doc-request:hover {
+    background: color-mix(in srgb, var(--product-color) 10%, transparent);
   }
 
   /* Crop tags */

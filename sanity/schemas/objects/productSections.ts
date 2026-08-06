@@ -268,3 +268,140 @@ export const chartSection = defineType({
     },
   },
 })
+
+// ── FAQ / accordion ─────────────────────────────────────────────────
+
+export const faqSection = defineType({
+  name: 'faqSection',
+  title: 'FAQ',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+      initialValue: 'Frequently Asked Questions',
+    }),
+    defineField({
+      name: 'items',
+      title: 'Questions',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'faqItem',
+          fields: [
+            defineField({
+              name: 'question',
+              title: 'Question',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'answer',
+              title: 'Answer',
+              type: 'blockContent',
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: {
+            select: { title: 'question' },
+          },
+        },
+      ],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', items: 'items' },
+    prepare({ title, items }) {
+      const count = items?.length ?? 0
+      return {
+        title: title || 'FAQ',
+        subtitle: `FAQ — ${count} question${count === 1 ? '' : 's'}`,
+      }
+    },
+  },
+})
+
+// ── Grower quote / testimonial ──────────────────────────────────────
+
+export const testimonialSection = defineType({
+  name: 'testimonialSection',
+  title: 'Grower Quote',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'quote',
+      title: 'Quote',
+      type: 'text',
+      rows: 4,
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'name',
+      title: 'Name',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'role',
+      title: 'Role / Location',
+      type: 'string',
+      description: 'e.g. "Almond Grower, Central Valley, CA"',
+    }),
+    defineField({
+      name: 'avatar',
+      title: 'Photo',
+      type: 'image',
+      description: 'Optional — falls back to a monogram if not set.',
+      options: { hotspot: true },
+      fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
+  ],
+  preview: {
+    select: { title: 'name', subtitle: 'quote' },
+    prepare({ title, subtitle }) {
+      return {
+        title: title || 'Grower Quote',
+        subtitle: subtitle ? `"${subtitle.length > 60 ? `${subtitle.slice(0, 60)}…` : subtitle}"` : 'Testimonial',
+      }
+    },
+  },
+})
+
+// ── Video embed ──────────────────────────────────────────────────────
+// External embed only (YouTube / Vimeo) — no Sanity file upload, so it
+// works with the generic `sections[]{ ... }` spread projection (see
+// src/lib/queries/products.ts) without needing an asset dereference.
+
+export const videoSection = defineType({
+  name: 'videoSection',
+  title: 'Video',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+    }),
+    defineField({
+      name: 'url',
+      title: 'Video URL',
+      type: 'url',
+      description: 'A YouTube or Vimeo link (e.g. https://www.youtube.com/watch?v=... or https://vimeo.com/...).',
+      validation: (rule) => rule.required().uri({ scheme: ['http', 'https'] }),
+    }),
+    defineField({
+      name: 'caption',
+      title: 'Caption',
+      type: 'string',
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', subtitle: 'url' },
+    prepare({ title, subtitle }) {
+      return { title: title || 'Video', subtitle: subtitle || 'Video' }
+    },
+  },
+})

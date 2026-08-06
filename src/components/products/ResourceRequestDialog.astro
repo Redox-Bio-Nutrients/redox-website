@@ -1,0 +1,326 @@
+---
+// src/components/products/ResourceRequestDialog.astro
+//
+// Hard gate for product documents: no document URL is ever rendered
+// into the page. A visitor submits a Product Information Request; a
+// staffer follows up by email with the actual files. Native <dialog>
+// for focus-trap/Escape/backdrop for free.
+//
+// The product name is auto-populated server-side — this component is
+// rendered per product page (see [slug].astro), so Astro bakes the
+// correct productTitle into the hidden field and intro copy at
+// build/render time. No client-side "which page am I on" detection
+// needed; the page itself already knows.
+//
+// Provider-agnostic on purpose — the form POSTs to whatever
+// PUBLIC_RESOURCE_REQUEST_ENDPOINT points at (Formspree/Getform/Basin
+// today, a HubSpot forms-submit URL later — see PUBLIC_HUBSPOT_PORTAL_ID
+// in .env.example for the planned migration). If the endpoint isn't
+// configured yet, don't render a dialog that can't actually submit —
+// the caller falls back to a plain /contact link instead (see
+// [slug].astro).
+
+interface Props {
+  productTitle: string
+  endpoint: string
+  color: string
+}
+
+const { productTitle, endpoint, color } = Astro.props
+
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+  'Wisconsin', 'Wyoming', 'District of Columbia',
+]
+
+const MATERIALS = ['Label', 'Brochure', 'SDS']
+---
+
+<dialog id="resource-request-dialog" class="resource-dialog" style={`--dialog-color: ${color}`} aria-labelledby="resource-dialog-title">
+  <button type="button" class="resource-dialog__close" data-dialog-close aria-label="Close">×</button>
+
+  <div id="resource-dialog-form-panel">
+    <h2 id="resource-dialog-title">Product Information Request</h2>
+    <p class="resource-dialog__intro">
+      Requesting information for <strong>{productTitle}</strong>. Our team will follow up by email.
+    </p>
+
+    <form class="resource-dialog__form" id="resource-request-form" action={endpoint} method="POST">
+      <input type="hidden" name="product" value={productTitle} />
+      <input type="hidden" name="_subject" value={`Product information request — ${productTitle}`} />
+
+      <label class="resource-dialog__field">
+        Name
+        <input type="text" name="name" required autocomplete="name" />
+      </label>
+
+      <label class="resource-dialog__field">
+        Email
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+
+      <label class="resource-dialog__field">
+        State
+        <select name="state" required autocomplete="address-level1">
+          <option value="" disabled selected>Select a state</option>
+          {US_STATES.map((state) => <option value={state}>{state}</option>)}
+          <option value="Outside the U.S.">Outside the U.S.</option>
+        </select>
+      </label>
+
+      <fieldset class="resource-dialog__docs">
+        <legend>Materials Requested</legend>
+        {MATERIALS.map((material) => (
+          <label class="resource-dialog__check">
+            <input type="checkbox" name="materials" value={material} checked />
+            {material}
+          </label>
+        ))}
+      </fieldset>
+
+      <button type="submit" class="resource-dialog__submit">Send Request</button>
+    </form>
+  </div>
+
+  <div id="resource-dialog-success" class="resource-dialog__success" hidden>
+    <h2>Request sent</h2>
+    <p>Thanks — our team will follow up by email with the materials you requested, usually within 1 business day.</p>
+    <button type="button" class="resource-dialog__submit" data-dialog-close>Close</button>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('resource-request-dialog') as HTMLDialogElement | null
+  const form = document.getElementById('resource-request-form') as HTMLFormElement | null
+  const formPanel = document.getElementById('resource-dialog-form-panel')
+  const success = document.getElementById('resource-dialog-success')
+
+  document.querySelectorAll('[data-dialog-open="resource-request-dialog"]').forEach((btn) => {
+    btn.addEventListener('click', () => dialog?.showModal())
+  })
+
+  dialog?.querySelectorAll('[data-dialog-close]').forEach((btn) => {
+    btn.addEventListener('click', () => dialog.close())
+  })
+
+  // Click on the backdrop (the dialog element itself, outside its
+  // content box) closes it.
+  dialog?.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close()
+  })
+
+  dialog?.addEventListener('close', () => {
+    formPanel?.removeAttribute('hidden')
+    success?.setAttribute('hidden', '')
+    form?.reset()
+  })
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
+    if (submitBtn) {
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Sending…'
+    }
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      })
+      if (!res.ok) throw new Error('Request failed')
+      formPanel?.setAttribute('hidden', '')
+      success?.removeAttribute('hidden')
+    } catch {
+      // Fall back to a native (full-navigation) submit — still reaches
+      // the same endpoint, just without the inline confirmation.
+      form.submit()
+    }
+  })
+</script>
+
+<style>
+  .resource-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(480px, calc(100vw - var(--space-8)));
+    max-height: min(680px, calc(100vh - var(--space-8)));
+    padding: var(--space-10);
+    border: none;
+    border-radius: var(--radius-3xl);
+    background: var(--bg-page);
+    box-shadow: var(--shadow-xl);
+    overflow-y: auto;
+  }
+
+  .resource-dialog::backdrop {
+    background: rgb(0 0 0 / 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .resource-dialog[open] {
+    animation: resource-dialog-in 0.2s ease;
+  }
+
+  @keyframes resource-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+
+  .resource-dialog__close {
+    position: absolute;
+    top: var(--space-5);
+    right: var(--space-5);
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    color: var(--color-text-secondary);
+    font-size: var(--text-xl);
+    line-height: 1;
+    transition: background var(--transition-fast);
+  }
+
+  .resource-dialog__close:hover {
+    background: var(--color-off-white);
+  }
+
+  .resource-dialog h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+    padding-right: var(--space-8);
+  }
+
+  .resource-dialog__intro {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+  }
+
+  .resource-dialog__intro strong {
+    color: var(--color-text-primary);
+    font-weight: var(--font-semi);
+  }
+
+  .resource-dialog__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .resource-dialog__docs {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .resource-dialog__docs legend {
+    font-size: var(--text-xs);
+    font-weight: var(--font-semi);
+    color: var(--color-text-muted);
+    padding: 0 var(--space-1);
+  }
+
+  .resource-dialog__check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+  }
+
+  .resource-dialog__check input {
+    accent-color: var(--dialog-color, var(--color-green));
+  }
+
+  .resource-dialog__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+  }
+
+  .resource-dialog__field input,
+  .resource-dialog__field select {
+    font: inherit;
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    color: var(--color-text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+
+  .resource-dialog__field select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%),
+      linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 20px) center, calc(100% - 15px) center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+
+  .resource-dialog__field input:focus,
+  .resource-dialog__field select:focus {
+    outline: 2px solid var(--dialog-color, var(--color-green));
+    outline-offset: 1px;
+  }
+
+  .resource-dialog__submit {
+    margin-top: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    background: var(--dialog-color, var(--color-green));
+    color: var(--color-white);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    transition: filter var(--transition-fast);
+  }
+
+  .resource-dialog__submit:hover {
+    filter: brightness(0.92);
+  }
+
+  .resource-dialog__submit:disabled {
+    opacity: 0.7;
+  }
+
+  .resource-dialog__success h2 {
+    margin-bottom: var(--space-3);
+  }
+
+  .resource-dialog__success p {
+    color: var(--color-text-secondary);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+  }
+
+  @media (max-width: 767px) {
+    .resource-dialog {
+      padding: var(--space-6);
+    }
+  }
+</style>

@@ -121,6 +121,9 @@ export const product = defineType({
         { type: 'bulletSection' },
         { type: 'analysisSection' },
         { type: 'chartSection' },
+        { type: 'faqSection' },
+        { type: 'testimonialSection' },
+        { type: 'videoSection' },
       ],
     }),
     defineField({

@@ -11,6 +11,9 @@ import CalloutSection from './sections/CalloutSection.astro'
 import BulletSection from './sections/BulletSection.astro'
 import AnalysisSection from './sections/AnalysisSection.astro'
 import ChartSection from './sections/ChartSection.astro'
+import FaqSection from './sections/FaqSection.astro'
+import TestimonialSection from './sections/TestimonialSection.astro'
+import VideoSection from './sections/VideoSection.astro'
 
 interface Props {
   sections: ProductSection[]
@@ -38,6 +41,12 @@ const { sections, productColor, backgrounds } = Astro.props
           return <AnalysisSection section={section} />
         case 'chartSection':
           return <ChartSection section={section} />
+        case 'faqSection':
+          return <FaqSection section={section} />
+        case 'testimonialSection':
+          return <TestimonialSection section={section} productColor={productColor} />
+        case 'videoSection':
+          return <VideoSection section={section} />
         default:
           return null
       }

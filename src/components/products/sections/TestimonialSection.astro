@@ -1,0 +1,129 @@
+---
+// src/components/products/sections/TestimonialSection.astro
+//
+// A grower/trial-partner pull-quote. Oversized serif quotation mark in
+// --product-color behind the copy (the "confident oversized display
+// type" principle applied to a decorative glyph instead of a heading).
+// Avatar is optional — falls back to an initial in a tinted circle so
+// the meta row never looks unfinished.
+
+import { urlFor } from '../../../lib/sanity'
+import type { TestimonialSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: TestimonialSection
+  productColor?: string
+}
+
+const { section, productColor } = Astro.props
+const color = productColor ?? 'var(--color-green)'
+const avatarUrl = section.avatar
+  ? urlFor(section.avatar).width(96).height(96).fit('crop').auto('format').quality(80).url()
+  : null
+const initial = section.name.trim().charAt(0).toUpperCase()
+---
+
+<section class="testimonial" style={`--testimonial-color: ${color}`}>
+  <p class="testimonial__quote">
+    <span class="testimonial__mark" aria-hidden="true">&ldquo;</span>
+    {section.quote}
+  </p>
+  <div class="testimonial__meta">
+    {avatarUrl ? (
+      <img
+        class="testimonial__avatar"
+        src={avatarUrl}
+        alt={section.avatar?.alt ?? ''}
+        width="48"
+        height="48"
+        loading="lazy"
+      />
+    ) : (
+      <span class="testimonial__avatar testimonial__avatar--fallback" aria-hidden="true">{initial}</span>
+    )}
+    <div>
+      <p class="testimonial__name">{section.name}</p>
+      {section.role && <p class="testimonial__role">{section.role}</p>}
+    </div>
+  </div>
+</section>
+
+<style>
+  .testimonial {
+    position: relative;
+    background: var(--bg-surface);
+    border-radius: var(--radius-3xl);
+    padding: var(--space-16) var(--space-12);
+    overflow: hidden;
+  }
+
+  .testimonial__mark {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 6rem;
+    line-height: 1;
+    color: var(--testimonial-color);
+    opacity: 0.22;
+    margin-bottom: -1.5rem;
+  }
+
+  .testimonial__quote {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    max-width: 42ch;
+  }
+
+  .testimonial__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-10);
+  }
+
+  .testimonial__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .testimonial__avatar--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--testimonial-color) 18%, var(--bg-raised));
+    color: var(--testimonial-color);
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+  }
+
+  .testimonial__name {
+    color: var(--color-text-primary);
+    font-weight: var(--font-semi);
+  }
+
+  .testimonial__role {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  @media (max-width: 767px) {
+    .testimonial {
+      padding: var(--space-10) var(--space-6);
+    }
+
+    .testimonial__mark {
+      font-size: 4rem;
+    }
+
+    .testimonial__quote {
+      font-size: var(--text-xl);
+    }
+  }
+</style>

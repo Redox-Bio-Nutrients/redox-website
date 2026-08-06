@@ -78,12 +78,39 @@ export interface ChartSection {
   footnote?: string
 }
 
+export interface FaqSection {
+  _type: 'faqSection'
+  _key: string
+  heading?: string
+  items: { question: string; answer: PortableTextBlock[] }[]
+}
+
+export interface TestimonialSection {
+  _type: 'testimonialSection'
+  _key: string
+  quote: string
+  name: string
+  role?: string
+  avatar?: SanityImage
+}
+
+export interface VideoSection {
+  _type: 'videoSection'
+  _key: string
+  heading?: string
+  url: string
+  caption?: string
+}
+
 export type ProductSection =
   | TextSection
   | CalloutSection
   | BulletSection
   | AnalysisSection
   | ChartSection
+  | FaqSection
+  | TestimonialSection
+  | VideoSection
 
 // ── Catalog ────────────────────────────────────────────────────────
 
