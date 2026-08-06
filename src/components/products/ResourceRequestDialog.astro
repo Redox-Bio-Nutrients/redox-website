@@ -12,21 +12,20 @@
 // build/render time. No client-side "which page am I on" detection
 // needed; the page itself already knows.
 //
-// Provider-agnostic on purpose — the form POSTs to whatever
-// PUBLIC_RESOURCE_REQUEST_ENDPOINT points at (Formspree/Getform/Basin
-// today, a HubSpot forms-submit URL later — see PUBLIC_HUBSPOT_PORTAL_ID
-// in .env.example for the planned migration). If the endpoint isn't
-// configured yet, don't render a dialog that can't actually submit —
-// the caller falls back to a plain /contact link instead (see
-// [slug].astro).
+// Submits to our own /api/resource-request (see that file's header) —
+// a real backend that emails through Microsoft Graph, not a
+// third-party form service. That route is server-rendered even though
+// the rest of the site is static; this dialog is otherwise always
+// rendered and always reachable, regardless of whether the Graph
+// credentials are configured yet (the API route itself returns a
+// clear error in that case, shown inline below).
 
 interface Props {
   productTitle: string
-  endpoint: string
   color: string
 }
 
-const { productTitle, endpoint, color } = Astro.props
+const { productTitle, color } = Astro.props
 
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -51,9 +50,10 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
       Requesting information for <strong>{productTitle}</strong>. Our team will follow up by email.
     </p>
 
-    <form class="resource-dialog__form" id="resource-request-form" action={endpoint} method="POST">
+    <form class="resource-dialog__form" id="resource-request-form" action="/api/resource-request" method="POST">
       <input type="hidden" name="product" value={productTitle} />
-      <input type="hidden" name="_subject" value={`Product information request — ${productTitle}`} />
+
+      <p class="resource-dialog__error" id="resource-dialog-error" hidden></p>
 
       <label class="resource-dialog__field">
         Name
@@ -100,6 +100,7 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   const form = document.getElementById('resource-request-form') as HTMLFormElement | null
   const formPanel = document.getElementById('resource-dialog-form-panel')
   const success = document.getElementById('resource-dialog-success')
+  const errorEl = document.getElementById('resource-dialog-error')
 
   document.querySelectorAll('[data-dialog-open="resource-request-dialog"]').forEach((btn) => {
     btn.addEventListener('click', () => dialog?.showModal())
@@ -118,11 +119,13 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   dialog?.addEventListener('close', () => {
     formPanel?.removeAttribute('hidden')
     success?.setAttribute('hidden', '')
+    errorEl?.setAttribute('hidden', '')
     form?.reset()
   })
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
+    errorEl?.setAttribute('hidden', '')
     const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
     if (submitBtn) {
       submitBtn.disabled = true
@@ -134,13 +137,25 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
         body: new FormData(form),
         headers: { Accept: 'application/json' },
       })
-      if (!res.ok) throw new Error('Request failed')
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || 'Something went wrong sending your request — please try again.')
+      }
       formPanel?.setAttribute('hidden', '')
       success?.removeAttribute('hidden')
-    } catch {
-      // Fall back to a native (full-navigation) submit — still reaches
-      // the same endpoint, just without the inline confirmation.
-      form.submit()
+    } catch (err) {
+      // This is our own API route, not a third-party form backend —
+      // there's no better fallback than showing the error inline; a
+      // native re-submit would just hit the same failure again.
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong — please try again.'
+        errorEl.removeAttribute('hidden')
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false
+        submitBtn.textContent = 'Send Request'
+      }
     }
   })
 </script>
@@ -222,6 +237,15 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
+  }
+
+  .resource-dialog__error {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, #c0392b 12%, var(--bg-surface));
+    color: #c0392b;
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
   }
 
   .resource-dialog__docs {

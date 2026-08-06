@@ -14,6 +14,25 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* The leaf-sprig motif (design-system.md §7) deliberately spills
+   * past its own box on purpose — callout boxes carry no overflow
+   * clipping so the leaves can break their border. On narrow
+   * viewports that spill can land past the edge of the screen; rather
+   * than clip it at the component level (which would cut the leaf off
+   * inconsistently depending on layout), clip horizontally at the
+   * page level instead. Vertical scroll is untouched — this never
+   * limits page height, only ever trims decorative overflow that
+   * would otherwise add horizontal scroll capability to the whole
+   * page.
+   *
+   * `clip`, not `hidden`: overflow-x: hidden on html/body genuinely
+   * breaks position: sticky (header, product sidebar) in this
+   * codebase — tested directly, not a theoretical concern. `hidden`
+   * establishes an actual (if scrollbar-less) scroll container, and
+   * that's enough to break sticky's viewport-relative positioning.
+   * `overflow: clip` trims the paint without ever creating a
+   * scrollable box, so sticky positioning is untouched. */
+  overflow-x: clip;
 }
 
 body {
@@ -24,6 +43,7 @@ body {
   background-color: var(--bg-page);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.25s ease, color 0.25s ease;
+  overflow-x: clip;
 }
 
 img, video {

@@ -146,7 +146,8 @@ export const product = defineType({
       name: 'documents',
       title: 'Documents',
       type: 'array',
-      description: 'Labels, SDS sheets, spec sheets — upload a file OR paste a CDN link.',
+      description:
+        'Supporting and supplemental materials that are not Labels, Brochures, or SDS — those are requested through the Product Information Request form instead. Upload a file OR paste a CDN link.',
       of: [
         {
           type: 'object',

@@ -260,6 +260,12 @@ export interface Page {
   seo?: Seo
 }
 
+// ── Site settings (singletons) ──────────────────────────────────────
+
+export interface FormSettings {
+  resourceRequestRecipient: string
+}
+
 // ── Homepage (modular page-builder sections) ───────────────────────
 
 export interface HomeHeroSection {

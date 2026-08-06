@@ -36,6 +36,7 @@ import { universityResource } from '../schemas/documents/universityResource'
 import { page } from '../schemas/documents/page'
 import { backgroundPool } from '../schemas/documents/backgroundPool'
 import { homepage } from '../schemas/documents/homepage'
+import { formSettings } from '../schemas/documents/formSettings'
 
 export const schemaTypes = [
   // objects
@@ -71,4 +72,5 @@ export const schemaTypes = [
   // site-level
   backgroundPool,
   homepage,
+  formSettings,
 ]
