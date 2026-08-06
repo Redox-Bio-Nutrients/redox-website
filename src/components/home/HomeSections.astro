@@ -1,0 +1,68 @@
+---
+// src/components/home/HomeSections.astro
+//
+// Dispatcher: switches on each homepage section's _type to pick its
+// renderer. Adding a new section kind = add the schema object, the
+// type, a component, and a case here — same pattern as ProductSections.
+
+import type { HomeSection } from '../../lib/types/sanity'
+import HeroSection from './sections/HeroSection.astro'
+import HeroCarouselSection from './sections/HeroCarouselSection.astro'
+import ColumnSection from './sections/ColumnSection.astro'
+// Reused as-is from the product page-builder — its highlight color
+// already falls back to brand green (var(--product-color, ...)) when
+// no product context sets --product-color, so it works unmodified
+// here too. See sanity/schemas/objects/productSections.ts.
+import ChartSection from '../products/sections/ChartSection.astro'
+
+interface Props {
+  sections: HomeSection[]
+}
+
+const { sections } = Astro.props
+---
+
+<div class="home-sections">
+  {sections.map((section) => {
+    switch (section._type) {
+      case 'homeHeroSection':
+        return <HeroSection section={section} />
+      case 'homeHeroCarouselSection':
+        return <HeroCarouselSection section={section} />
+      case 'homeColumnSection':
+        return <ColumnSection section={section} />
+      case 'chartSection':
+        // ChartSection has no built-in width constraint (product pages
+        // supply one via .layout) — wrap it here since page-builder
+        // sections render full-width by default.
+        return (
+          <div class="home-sections__constrain">
+            <ChartSection section={section} />
+          </div>
+        )
+      default:
+        return null
+    }
+  })}
+</div>
+
+<style>
+  .home-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-24);
+  }
+
+  .home-sections__constrain {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+    width: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .home-sections {
+      gap: var(--space-16);
+    }
+  }
+</style>

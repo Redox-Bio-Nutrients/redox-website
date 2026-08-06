@@ -1,0 +1,47 @@
+---
+// src/components/technologies/TechnologyGrid.astro
+
+import type { TechnologyCard as TechnologyCardType } from '../../lib/types/sanity'
+import TechnologyCard from './TechnologyCard.astro'
+
+interface Props {
+  technologies: TechnologyCardType[]
+  emptyMessage?: string
+}
+
+const { technologies, emptyMessage = 'Technologies coming soon.' } = Astro.props
+---
+
+{technologies.length > 0 ? (
+  <div class="grid">
+    {technologies.map((technology) => <TechnologyCard technology={technology} />)}
+  </div>
+) : (
+  <p class="empty">{emptyMessage}</p>
+)}
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-16) var(--space-8);
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-16) 0;
+  }
+
+  @media (max-width: 1023px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

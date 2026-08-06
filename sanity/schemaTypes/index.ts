@@ -12,8 +12,16 @@ import {
   bulletSection,
   calloutSection,
   chartSection,
+  faqSection,
+  testimonialSection,
   textSection,
+  videoSection,
 } from '../schemas/objects/productSections'
+import {
+  homeHeroSection,
+  homeHeroCarouselSection,
+  homeColumnSection,
+} from '../schemas/objects/homeSections'
 
 // Documents
 import { product } from '../schemas/documents/product'
@@ -27,6 +35,7 @@ import { podcastEpisode } from '../schemas/documents/podcastEpisode'
 import { universityResource } from '../schemas/documents/universityResource'
 import { page } from '../schemas/documents/page'
 import { backgroundPool } from '../schemas/documents/backgroundPool'
+import { homepage } from '../schemas/documents/homepage'
 
 export const schemaTypes = [
   // objects
@@ -38,6 +47,12 @@ export const schemaTypes = [
   bulletSection,
   analysisSection,
   chartSection,
+  faqSection,
+  testimonialSection,
+  videoSection,
+  homeHeroSection,
+  homeHeroCarouselSection,
+  homeColumnSection,
   // catalog
   product,
   technology,
@@ -55,4 +70,5 @@ export const schemaTypes = [
   page,
   // site-level
   backgroundPool,
+  homepage,
 ]

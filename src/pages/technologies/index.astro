@@ -1,0 +1,45 @@
+---
+// src/pages/technologies/index.astro
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import TechnologyGrid from '../../components/technologies/TechnologyGrid.astro'
+import { getAllTechnologies } from '../../lib/queries'
+
+const technologies = await getAllTechnologies()
+---
+
+<BaseLayout
+  title="Technologies"
+  description="The science behind Redox Bio-Nutrients products — proprietary technologies engineered for soil, water, and plant health."
+>
+  <div class="page">
+    <header class="page__header">
+      <h1>Technologies</h1>
+      <p>The science built into every product we make.</p>
+    </header>
+    <TechnologyGrid technologies={technologies} />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-6) var(--space-24);
+  }
+
+  .page__header {
+    margin-bottom: var(--space-10);
+  }
+
+  .page__header h1 {
+    font-size: var(--text-4xl);
+    color: var(--color-green-dark);
+  }
+
+  .page__header p {
+    margin-top: var(--space-3);
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+  }
+</style>

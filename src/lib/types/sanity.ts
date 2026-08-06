@@ -78,12 +78,39 @@ export interface ChartSection {
   footnote?: string
 }
 
+export interface FaqSection {
+  _type: 'faqSection'
+  _key: string
+  heading?: string
+  items: { question: string; answer: PortableTextBlock[] }[]
+}
+
+export interface TestimonialSection {
+  _type: 'testimonialSection'
+  _key: string
+  quote: string
+  name: string
+  role?: string
+  avatar?: SanityImage
+}
+
+export interface VideoSection {
+  _type: 'videoSection'
+  _key: string
+  heading?: string
+  url: string
+  caption?: string
+}
+
 export type ProductSection =
   | TextSection
   | CalloutSection
   | BulletSection
   | AnalysisSection
   | ChartSection
+  | FaqSection
+  | TestimonialSection
+  | VideoSection
 
 // ── Catalog ────────────────────────────────────────────────────────
 
@@ -120,7 +147,9 @@ export interface TechnologyCard {
 }
 
 export interface Technology extends TechnologyCard {
-  description?: PortableTextBlock[]
+  /** modular page-builder sections — same shapes as Homepage */
+  sections?: HomeSection[]
+  /** reverse reference: products whose `technologies` field points here */
   products?: ProductCard[]
   seo?: Seo
 }
@@ -228,5 +257,66 @@ export interface Page {
   heroImage?: SanityImage
   heroCta?: Cta
   body?: PortableTextBlock[]
+  seo?: Seo
+}
+
+// ── Homepage (modular page-builder sections) ───────────────────────
+
+export interface HomeHeroSection {
+  _type: 'homeHeroSection'
+  _key: string
+  heading: string
+  subheading?: string
+  backgroundImage?: SanityImage
+  /** resolved file URL — takes priority over backgroundImage when present */
+  backgroundVideoUrl?: string
+  cta?: Cta
+}
+
+/** A single slide of a Hero Carousel — same shape as HomeHeroSection
+ * minus the discriminant, since a slide is just "a hero" repeated. */
+export interface HeroSlide {
+  _key: string
+  heading: string
+  subheading?: string
+  backgroundImage?: SanityImage
+  backgroundVideoUrl?: string
+  cta?: Cta
+}
+
+export interface HomeHeroCarouselSection {
+  _type: 'homeHeroCarouselSection'
+  _key: string
+  slides: HeroSlide[]
+  autoplay?: boolean
+  interval?: number
+}
+
+export interface ColumnItem {
+  _key: string
+  image?: SanityImage
+  heading?: string
+  body?: PortableTextBlock[]
+  cta?: Cta
+}
+
+export type SectionBackgroundType = 'none' | 'color' | 'image'
+
+export interface HomeColumnSection {
+  _type: 'homeColumnSection'
+  _key: string
+  heading?: string
+  columns: 1 | 2 | 3
+  items: ColumnItem[]
+  backgroundType?: SectionBackgroundType
+  backgroundColor?: string
+  backgroundImage?: SanityImage
+}
+
+export type HomeSection = HomeHeroSection | HomeHeroCarouselSection | HomeColumnSection | ChartSection
+
+export interface Homepage {
+  _id: string
+  sections?: HomeSection[]
   seo?: Seo
 }

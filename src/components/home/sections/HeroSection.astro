@@ -1,0 +1,173 @@
+---
+// src/components/home/sections/HeroSection.astro
+//
+// Big image-led header — same full-bleed scale as the product page
+// hero, but content is vertically centered (not bottom-aligned) since
+// the homepage hero isn't tied to a fixed product-name anchor point.
+// Priority: video > image > brand-green gradient. Any real uploaded
+// media gets a flat dark overlay for text legibility; the gradient
+// fallback has its own built-in contrast and skips it.
+
+import { urlFor } from '../../../lib/sanity'
+import type { HomeHeroSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: HomeHeroSection
+}
+
+const { section } = Astro.props
+const imageUrl = section.backgroundImage
+  ? urlFor(section.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
+  : null
+const videoUrl = section.backgroundVideoUrl ?? null
+const hasMedia = Boolean(videoUrl || imageUrl)
+---
+
+<header class="hero">
+  {videoUrl ? (
+    <video
+      class="hero__bg"
+      src={videoUrl}
+      poster={imageUrl ?? undefined}
+      autoplay
+      muted
+      loop
+      playsinline
+    />
+  ) : imageUrl ? (
+    <img class="hero__bg" src={imageUrl} alt={section.backgroundImage?.alt ?? ''} loading="eager" />
+  ) : (
+    <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
+  )}
+  {hasMedia && <div class="hero__overlay" aria-hidden="true"></div>}
+
+  <div class="hero__content">
+    <h1 class="hero__title">{section.heading}</h1>
+    <div class="hero__meta">
+      {section.subheading && <p class="hero__subheading">{section.subheading}</p>}
+      {section.cta && (
+        <a
+          class="hero__cta"
+          href={section.cta.href}
+          target={section.cta.external ? '_blank' : undefined}
+          rel={section.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          <span>{section.cta.label}</span>
+          <span class="hero__cta-arrow" aria-hidden="true">→</span>
+        </a>
+      )}
+    </div>
+  </div>
+</header>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: min(85vh, 880px);
+    display: flex;
+    align-items: center; /* vertical center regardless of content height */
+    overflow: hidden;
+    color: var(--color-white);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__bg--gradient {
+    background:
+      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.16), transparent 60%),
+      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.35), transparent 55%),
+      var(--color-green-dark);
+  }
+
+  /* Flat dark wash over any uploaded image/video so centered text
+   * stays legible regardless of what's underneath. The gradient
+   * fallback already has its own built-in contrast and skips this. */
+  .hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.42);
+  }
+
+  .hero__content {
+    position: relative;
+    width: min(var(--max-width-2xl), 100%);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-8);
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .hero__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-top: var(--space-8);
+  }
+
+  .hero__subheading {
+    max-width: 44ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  /* CTA treatment under trial: a frosted pill button, rather than the
+   * plain underlined-text link used on product hero — more visually
+   * prominent for a section that isn't anchored by a product name. */
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .hero__cta:hover {
+    background: rgb(255 255 255 / 0.28);
+    transform: translateY(-1px);
+  }
+
+  .hero__cta-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .hero__cta:hover .hero__cta-arrow {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 767px) {
+    .hero {
+      min-height: 70vh;
+    }
+
+    .hero__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+  }
+</style>

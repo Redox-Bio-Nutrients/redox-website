@@ -13,6 +13,18 @@ export const structure: StructureResolver = (S) =>
   S.list()
     .title('Content')
     .items([
+      // Site-level singleton — one shared document, pinned at the top
+      S.listItem()
+        .title('Homepage')
+        .child(
+          S.document()
+            .schemaType('homepage')
+            .documentId('homepage')
+            .title('Homepage'),
+        ),
+
+      S.divider(),
+
       S.listItem()
         .title('Catalog')
         .child(

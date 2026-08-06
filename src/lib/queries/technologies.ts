@@ -2,7 +2,7 @@
 
 import { sanityFetch } from '../sanity'
 import type { Technology, TechnologyCard } from '../types/sanity'
-import { PRODUCT_CARD_FRAGMENT, SEO_FRAGMENT, TECHNOLOGY_CARD_FRAGMENT } from './fragments'
+import { HOME_SECTIONS_FRAGMENT, PRODUCT_CARD_FRAGMENT, SEO_FRAGMENT, TECHNOLOGY_CARD_FRAGMENT } from './fragments'
 
 export async function getAllTechnologies(): Promise<TechnologyCard[]> {
   return sanityFetch(
@@ -18,7 +18,7 @@ export async function getTechnology(slug: string): Promise<Technology | null> {
       "slug": slug.current,
       tagline,
       "icon": icon { asset, alt, hotspot },
-      description,
+      ${HOME_SECTIONS_FRAGMENT},
       // reverse reference: products built on this technology
       "products": *[_type == "product" && references(^._id)]
         | order(orderRank asc, title asc) ${PRODUCT_CARD_FRAGMENT},
