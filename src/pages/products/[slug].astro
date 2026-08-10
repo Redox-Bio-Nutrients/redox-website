@@ -71,7 +71,7 @@ const documents = (product.documents ?? []).map((doc) => ({
 ---
 
 <BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
-  <header class="hero" style={`--product-color: ${color}`}>
+  <header class="hero" data-header-theme="light" style={`--product-color: ${color}`}>
     {heroImage ? (
       <>
         <div
@@ -322,7 +322,13 @@ const documents = (product.documents ?? []).map((doc) => ({
   /* ── Hero ─────────────────────────────────────────────────────── */
   .hero {
     position: relative;
-    min-height: min(85vh, 880px);
+    /* Pulled up behind the fixed nav (see Header.astro) so the image
+     * extends to the very top of the viewport; min-height grows by the
+     * same amount so the visible area below the nav is unchanged.
+     * Content here is bottom-anchored, so unlike the home hero variants
+     * it needs no extra top padding to clear the nav. */
+    margin-top: calc(-1 * var(--header-space));
+    min-height: calc(min(85vh, 880px) + var(--header-space));
     display: flex;
     align-items: flex-end;
     overflow: hidden;
@@ -862,7 +868,7 @@ const documents = (product.documents ?? []).map((doc) => ({
 
   @media (max-width: 767px) {
     .hero {
-      min-height: 70vh;
+      min-height: calc(70vh + var(--header-space));
     }
 
     .hero__meta {

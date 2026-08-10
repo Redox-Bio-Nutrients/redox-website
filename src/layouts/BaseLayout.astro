@@ -111,6 +111,12 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
 
   main {
     flex: 1;
+    /* The header floats above content now (position: fixed in
+     * Header.astro), so it no longer reserves flow space on its own.
+     * Full-bleed hero sections cancel this out (negative margin-top)
+     * so their imagery still extends behind the nav; everything else
+     * gets pushed clear of it. */
+    padding-top: var(--header-space);
   }
 
   .back-to-top {

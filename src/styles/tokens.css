@@ -89,6 +89,12 @@
   --max-width-2xl:  1536px;
   --content-width:  1200px;
 
+  /* Space reserved above page content for the floating nav, now that
+   * the header is fixed/out-of-flow. Header.astro measures its own
+   * rendered height on load and overwrites this — the value here is
+   * just the pre-JS fallback so nothing jumps before that runs. */
+  --header-space: 6rem;
+
   /* ── Borders & Radii ────────────────────────────────────────────── */
   --radius-sm:  0.25rem;
   --radius-md:  0.5rem;

@@ -4,6 +4,30 @@
 // Nav items come from src/config/site.ts — never hardcoded here.
 // Mobile menu is a no-JS-fallback-friendly checkbox toggle; swap for
 // a scripted disclosure if the design calls for animation.
+//
+// DESIGN TEST (not final — expect iteration): floating pillbox nav.
+// The header is `position: fixed` — out of flow, floating over
+// whatever's beneath it — with no visible background at rest, just
+// the logo/links sitting directly over the page. A scroll listener
+// below toggles `.header--scrolled` once the page scrolls past a
+// small threshold, which "solidifies" it into a frosted rounded pill
+// (matching the --glass-* tokens already used on the hero CTA) so it
+// reads clearly once content is passing underneath it.
+//
+// Two supporting scripts:
+// - Since the header no longer reserves space in flow, `--header-
+//   space` (src/styles/tokens.css) is measured off the header's own
+//   rendered height and written to :root, so BaseLayout's <main> can
+//   pad content clear of it and full-bleed heroes can cancel that
+//   padding back out to sit flush behind the nav (see HeroSection.astro
+//   etc. for the negative-margin half of that trick).
+// - At rest, text needs to be legible over whatever's directly behind
+//   it. Full-bleed hero sections mark themselves
+//   `data-header-theme="light"`; if one is sitting right at the top of
+//   the page, the header switches its resting text to white
+//   (`.header--on-dark`) to read against the hero's dark scrim. Once
+//   scrolled, the solidified pill has its own background either way,
+//   so normal dark text takes over regardless.
 
 import { primaryNav, site, utilityNav } from '../../config/site'
 
@@ -12,10 +36,23 @@ const isActive = (href: string) =>
   href === '/' ? currentPath === '/' : currentPath.startsWith(href)
 ---
 
-<header class="header">
+<header class="header" id="site-header">
   <div class="header__inner">
     <a href="/" class="header__logo" aria-label={`${site.name} — Home`}>
-      <span class="header__logo-text">{site.name}</span>
+      <img
+        class="header__logo-mark header__logo-mark--on-light"
+        src="/logos/redox-logo-on-light.svg"
+        alt={site.name}
+        width="238"
+        height="87"
+      />
+      <img
+        class="header__logo-mark header__logo-mark--on-dark"
+        src="/logos/redox-logo-on-dark.svg"
+        alt={site.name}
+        width="238"
+        height="87"
+      />
     </a>
 
     <input type="checkbox" id="nav-toggle" class="header__toggle-input" aria-hidden="true" />
@@ -27,6 +64,7 @@ const isActive = (href: string) =>
 
     <nav class="header__nav" aria-label="Primary">
       <ul class="header__nav-list">
+        <li class="header__nav-chip" aria-hidden="true"></li>
         {primaryNav.map((item) => (
           <li>
             <a
@@ -69,28 +107,163 @@ const isActive = (href: string) =>
 
 <style>
   .header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: var(--z-nav);
-    background: var(--bg-page);
-    border-bottom: var(--border-thin) solid var(--border-subtle);
+    /* Gap around the pill so it never touches the viewport edges.
+     * The header itself stays transparent — only .header__inner is
+     * visible, and only once scrolled — so at rest it reads as bare
+     * floating text/links, not a bar or a shape. */
+    padding: var(--space-4) var(--space-6) 0;
+    background: transparent;
+    pointer-events: none;
   }
 
   .header__inner {
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-3) var(--space-5);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-6);
+    pointer-events: auto;
+    /* Same asymmetric "leaf" shape as the product callout boxes
+     * (rounded TL/BR, squared TR/BL) — ties the floating pill back
+     * into that motif instead of a generic full pill. Toned down
+     * from --radius-leaf's 40px (right for a big callout slab, too
+     * dominant on a ~50px-tall pill) to a scale that fits the nav. */
+    border-radius: var(--radius-xl) 0 var(--radius-xl) 0;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    transition:
+      background 0.3s ease,
+      box-shadow 0.3s ease,
+      padding 0.3s ease,
+      border-color 0.3s ease,
+      color 0.2s ease;
   }
 
-  .header__logo-text {
-    font-family: var(--font-serif);
-    font-size: var(--text-xl);
-    color: var(--color-green-dark);
-    white-space: nowrap;
+  /* Solidified state — applied once the page scrolls past a small
+   * threshold (see script below). The pill's shape only becomes
+   * visible here: frosted glass background, border, shadow all
+   * appear together so it reads clearly over whatever is scrolling
+   * underneath it. */
+  .header--scrolled .header__inner {
+    /* Solid white behind the logo, easing into the shared frosted-
+     * glass look toward the nav side — the logo's green needs a fully
+     * opaque surface to stay legible (a flat translucent fill was
+     * still letting busy scrolled-past imagery wash it out), while the
+     * rest of the pill keeps the glass feel rather than going flat and
+     * blocky end to end. */
+    background: linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.96) 0%,
+      rgb(255 255 255 / 0.68) 55%
+    );
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-color: rgb(255 255 255 / 0.6);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-2) var(--space-5);
+  }
+
+  :global([data-theme='dark']) .header--scrolled .header__inner {
+    background: linear-gradient(
+      90deg,
+      rgb(18 20 17 / 0.96) 0%,
+      rgb(18 20 17 / 0.68) 55%
+    );
+    border-color: rgb(255 255 255 / 0.14);
+  }
+
+  .header__logo {
+    display: flex;
+    align-items: center;
+  }
+
+  .header__logo-mark {
+    height: 37.5px; /* 30px + 25% */
+    width: auto;
+    display: block;
+  }
+
+  /* Two pre-built SVGs (dark wordmark for light backgrounds, white
+   * wordmark for dark ones) rather than one recolored via CSS — the
+   * mark isn't a single flat color. Only one shows at a time; which
+   * one is governed by the same on-dark/scrolled logic as the nav
+   * text below. */
+  .header__logo-mark--on-dark {
+    display: none;
+  }
+
+  /* At rest over a full-bleed dark hero, swap to the white mark so it
+   * reads against the hero's scrim (see script below for how this
+   * class gets applied). Scrolled state always wins in light theme —
+   * once the pill has its own (light, translucent-white) background,
+   * the normal on-light mark takes back over. */
+  .header--on-dark:not(.header--scrolled) .header__logo-mark--on-light {
+    display: none;
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__logo-mark--on-dark {
+    display: block;
+  }
+
+  /* Dark site theme unconditionally needs the white mark — unlike the
+   * nav text/icons, which recolor themselves automatically via
+   * semantic tokens that are remapped for dark theme, the logo is a
+   * static image with no theme-aware color. This holds regardless of
+   * scroll: dark theme's own --bg-page and --glass-bg are both dark,
+   * so there's never a light surface under the header to put the
+   * on-light (dark wordmark) mark on. */
+  :global([data-theme='dark']) .header__logo-mark--on-light {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .header__logo-mark--on-dark {
+    display: block;
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__nav-link {
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__nav-link:hover,
+  .header--on-dark:not(.header--scrolled) .header__nav-link--active {
+    color: var(--color-white);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__utility-link {
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__utility-link:hover {
+    color: var(--color-white);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__theme {
+    border-color: rgb(255 255 255 / 0.4);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__theme:hover {
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  /* Light theme's icon is a dark shadow-cut moon — flip it white to
+   * read against a dark hero. Dark theme's icon is already a light
+   * fill (see the [data-theme='dark'] rule below), so it needs no
+   * override here — scope this to light theme only or the two rules
+   * fight each other. */
+  :global(html:not([data-theme='dark'])) .header--on-dark:not(.header--scrolled) .header__theme-icon {
+    box-shadow: inset 5px -3px 0 0 var(--color-white);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__toggle-bar {
+    background: var(--color-white);
   }
 
   .header__nav {
@@ -100,18 +273,61 @@ const isActive = (href: string) =>
   }
 
   .header__nav-list {
+    position: relative;
     display: flex;
     align-items: center;
     gap: var(--space-5);
     list-style: none;
   }
 
+  /* Soft chip — a single element that slides between links instead of
+   * each link drawing its own background. JS (below) measures the
+   * active or hovered/focused link and transforms this into place;
+   * it starts hidden (opacity 0, no active page in primaryNav is a
+   * real case — product pages aren't in the list) and only appears
+   * once JS has positioned it, so there's never a flash at (0,0). */
+  .header__nav-chip {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-radius: var(--radius-full);
+    background: var(--color-green-pale);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+    transition:
+      transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.2s ease,
+      background 0.2s ease;
+  }
+
+  :global([data-theme='dark']) .header__nav-chip {
+    /* The pale-green token goes quite dark in dark theme — fine as
+     * text-on-light, too muddy as a fill against the already-dark
+     * solidified pill. A soft light wash reads more clearly here. */
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .header--on-dark:not(.header--scrolled) .header__nav-chip {
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header__nav-chip {
+      transition: opacity 0.2s ease;
+    }
+  }
+
   .header__nav-link {
+    position: relative;
+    z-index: 1;
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     color: var(--color-text-secondary);
     padding: var(--space-2) 0;
-    border-bottom: 2px solid transparent;
     transition: color 0.15s ease;
   }
 
@@ -121,7 +337,6 @@ const isActive = (href: string) =>
 
   .header__nav-link--active {
     color: var(--color-green-dark);
-    border-bottom-color: var(--color-green);
   }
 
   .header__utility {
@@ -213,14 +428,18 @@ const isActive = (href: string) =>
     .header__nav {
       display: none;
       position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
+      /* Its own floating card below the pill — inset by the same
+       * amount as the header's horizontal padding so its edges line
+       * up with the pill above, not the viewport edges. */
+      top: calc(100% + var(--space-2));
+      left: var(--space-6);
+      right: var(--space-6);
       flex-direction: column;
       align-items: stretch;
       gap: 0;
-      background: var(--bg-page);
-      border-bottom: var(--border-thin) solid var(--border-subtle);
+      background: var(--bg-raised);
+      border: var(--border-thin) solid var(--border-subtle);
+      border-radius: var(--radius-2xl);
       box-shadow: var(--shadow-lg);
       padding: var(--space-4) var(--space-6) var(--space-6);
     }
@@ -235,10 +454,24 @@ const isActive = (href: string) =>
       gap: 0;
     }
 
+    /* The sliding chip is measured for a horizontal row — in the
+     * stacked mobile dropdown the active link gets a plain static
+     * chip instead (below) rather than trying to make the JS handle
+     * both axes. */
+    .header__nav-chip {
+      display: none;
+    }
+
     .header__nav-link {
       display: block;
-      padding: var(--space-3) 0;
+      padding: var(--space-3) var(--space-3);
+      margin: 0 calc(-1 * var(--space-3));
       font-size: var(--text-base);
+      border-radius: var(--radius-lg);
+    }
+
+    .header__nav-link--active {
+      background: var(--color-green-pale);
     }
 
     .header__utility {
@@ -263,4 +496,102 @@ const isActive = (href: string) =>
     root.dataset.theme = next
     localStorage.setItem('theme', next)
   })
+
+  // Solidify the pill once the page has scrolled past a small
+  // threshold. Passive + rAF-throttled so it doesn't add scroll jank.
+  const header = document.getElementById('site-header')
+  const SCROLL_THRESHOLD = 24
+  let ticking = false
+
+  const syncScrolledState = () => {
+    header?.classList.toggle('header--scrolled', window.scrollY > SCROLL_THRESHOLD)
+    ticking = false
+  }
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!ticking) {
+        requestAnimationFrame(syncScrolledState)
+        ticking = true
+      }
+    },
+    { passive: true },
+  )
+
+  syncScrolledState()
+
+  // Measure the header's own rendered height into --header-space so
+  // BaseLayout's <main> can pad content clear of it (the header is
+  // position: fixed and no longer reserves flow space on its own).
+  // Re-measured on resize since the mobile layout's row height differs
+  // from desktop's.
+  const setHeaderSpace = () => {
+    if (header) {
+      document.documentElement.style.setProperty('--header-space', `${header.offsetHeight}px`)
+    }
+  }
+  setHeaderSpace()
+  window.addEventListener('resize', setHeaderSpace)
+
+  // At rest, flip to white text if a full-bleed dark hero
+  // (data-header-theme="light") is sitting right at the top of the
+  // page — otherwise resting text stays the normal dark-on-light
+  // colors, which is correct for pages with no hero. Checked once on
+  // load: which section (if any) leads the page doesn't change after
+  // that, so this doesn't need to re-run on scroll.
+  const leadHero = document.querySelector('[data-header-theme="light"]')
+  if (leadHero && leadHero.getBoundingClientRect().top <= 4) {
+    header?.classList.add('header--on-dark')
+  }
+
+  // Soft chip — slides to whichever link is active, then hovered/
+  // focused, then back. One shared element instead of each link
+  // drawing its own background, so the move between them animates.
+  const navList = document.querySelector<HTMLElement>('.header__nav-list')
+  const navChip = navList?.querySelector<HTMLElement>('.header__nav-chip')
+  const navLinks = navList ? Array.from(navList.querySelectorAll<HTMLElement>('.header__nav-link')) : []
+  const CHIP_INSET = 10
+
+  const positionChip = (link: HTMLElement) => {
+    if (!navChip || !navList) return
+    const listRect = navList.getBoundingClientRect()
+    const linkRect = link.getBoundingClientRect()
+    navChip.style.width = `${linkRect.width + CHIP_INSET * 2}px`
+    navChip.style.height = `${linkRect.height}px`
+    navChip.style.transform = `translateY(-50%) translateX(${linkRect.left - listRect.left - CHIP_INSET}px)`
+    navChip.style.opacity = '1'
+  }
+
+  // instant: skips the transition (page load, resize) so the chip only
+  // ever animates in response to an actual mouse/keyboard move between
+  // links — it shouldn't grow/fade in on first paint or jump-cut on
+  // resize either, both read as a glitch rather than a page appearing.
+  const restChip = (instant = false) => {
+    if (!navChip) return
+    if (instant) navChip.style.transition = 'none'
+    const active = navList?.querySelector<HTMLElement>('.header__nav-link--active')
+    if (active) {
+      positionChip(active)
+    } else {
+      navChip.style.opacity = '0'
+    }
+    if (instant) {
+      navChip.offsetHeight // force reflow so the transition-less move commits before re-enabling
+      navChip.style.transition = ''
+    }
+  }
+
+  if (navChip && navLinks.length) {
+    restChip(true)
+    navLinks.forEach((link) => {
+      link.addEventListener('mouseenter', () => positionChip(link))
+      link.addEventListener('focus', () => positionChip(link))
+    })
+    navList?.addEventListener('mouseleave', () => restChip())
+    navList?.addEventListener('focusout', (e) => {
+      if (!navList.contains(e.relatedTarget as Node)) restChip()
+    })
+    window.addEventListener('resize', () => restChip(true))
+  }
 </script>
