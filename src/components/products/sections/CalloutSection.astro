@@ -9,6 +9,8 @@
 
 import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
+import { deriveCalloutPalette } from '../../../lib/color'
+import { randomBetween, randomChoice, seededRandom } from '../../../lib/seededRandom'
 import type { CalloutSection, SanityImage } from '../../../lib/types/sanity'
 import PoolBackground from '../../ui/PoolBackground.astro'
 
@@ -20,6 +22,7 @@ interface Props {
 
 const { section, productColor, backgrounds } = Astro.props
 const color = productColor ?? 'var(--color-green)'
+const palette = deriveCalloutPalette(color)
 const solid = section.tone !== 'tint'
 const hasBody = section.body?.some(
   (b: any) => b.children?.some((c: any) => c.text?.trim()),
@@ -30,11 +33,39 @@ const pool = (backgrounds ?? []).map((img) => ({
   lqip: img.lqip ?? null,
 }))
 const hasBg = pool.length > 0
+
+// Seeded on the section's own _key, not Math.random() — every callout
+// gets a genuinely different bloom layout, but the *same* callout
+// looks the same on every rebuild rather than reshuffling on redeploy.
+// bright/deep stay in their own "upper" / "lower" position bands (a
+// handful of candidates each) so the light-from-above, shadow-below
+// logic never breaks; only which corner within that band varies.
+const rng = seededRandom(section._key)
+const sweepAngle = Math.round(randomBetween(rng, 100, 160))
+const brightPos = randomChoice(rng, ['92% -10%', '8% -10%', '50% -18%', '75% -15%'])
+const deepPos = randomChoice(rng, ['0% 115%', '100% 115%', '50% 122%', '25% 118%'])
+const complementPos = randomChoice(rng, ['78% 96%', '15% 92%', '85% 12%', '10% 8%', '95% 55%', '4% 55%'])
+const complementSizeX = Math.round(randomBetween(rng, 55, 92))
+const complementSizeY = Math.round(randomBetween(rng, 70, 105))
+const complementMix = Math.round(randomBetween(rng, 34, 52))
+
+const calloutVars = [
+  `--callout-color: ${color}`,
+  `--callout-bright: ${palette.bright}`,
+  `--callout-deep: ${palette.deep}`,
+  `--callout-complement: ${palette.complement}`,
+  `--callout-sweep: ${sweepAngle}deg`,
+  `--callout-bright-pos: ${brightPos}`,
+  `--callout-deep-pos: ${deepPos}`,
+  `--callout-complement-pos: ${complementPos}`,
+  `--callout-complement-size: ${complementSizeX}% ${complementSizeY}%`,
+  `--callout-complement-mix: ${complementMix}%`,
+].join('; ')
 ---
 
 <section
   class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
-  style={`--callout-color: ${color}`}
+  style={calloutVars}
 >
   {hasBg ? (
     <PoolBackground pool={pool} />
@@ -102,24 +133,52 @@ const hasBg = pool.length > 0
 
 
   /* ── Solid ──────────────────────────────────────────────────── */
+  /* Design test (see chat): was a single flat --callout-color tinted
+   * with plain white/black lighting radials — reads monochromatic on
+   * a box this large. Now built from --callout-color plus two
+   * hue-shifted variants (deriveCalloutPalette() in src/lib/color.ts,
+   * computed from the same product hex, not a second CMS field) swept
+   * diagonally, with the light/shadow blooms tinted by those same
+   * hues instead of plain white/black, plus a fine grain layer so the
+   * surface doesn't read as a flat vector fill. Bloom positions and
+   * the sweep angle come from --callout-* custom properties seeded
+   * per-section (see the frontmatter) rather than fixed values, so
+   * every callout instance gets a different layout instead of
+   * repeating an identical formula. Shape/spacing/leaf sprig
+   * untouched — this only changes what paints as the background. */
   .callout--solid {
     background:
-      radial-gradient(120% 140% at 90% 0%, rgb(255 255 255 / 0.14), transparent 55%),
-      radial-gradient(90% 120% at 0% 100%, rgb(0 0 0 / 0.22), transparent 60%),
-      var(--callout-color);
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
+      radial-gradient(var(--callout-complement-size) at var(--callout-complement-pos), color-mix(in srgb, var(--callout-complement) var(--callout-complement-mix), transparent), transparent 62%),
+      radial-gradient(120% 140% at var(--callout-bright-pos), color-mix(in srgb, var(--callout-bright) 65%, white 35%), transparent 58%),
+      radial-gradient(115% 130% at var(--callout-deep-pos), color-mix(in srgb, var(--callout-deep) 80%, black 20%), transparent 62%),
+      linear-gradient(var(--callout-sweep), var(--callout-bright) 0%, var(--callout-color) 45%, var(--callout-deep) 100%);
+    background-blend-mode: overlay, normal, normal, normal, normal;
     color: var(--color-white);
   }
 
   /* Product-color wash over the imagery — brand color carries, photo
-   * texture shows through */
+   * texture shows through. Same multi-hue + grain + per-instance
+   * variation as .callout--solid above (this is the layer actually
+   * visible whenever a product has *any* background imagery — its
+   * own, a callout-specific pool, or the site-wide fallback — which
+   * in practice is most of the time, so the flat-color
+   * .callout--solid background is more the exception than the rule). */
   .callout__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      115deg,
-      color-mix(in srgb, var(--callout-color) 90%, transparent) 0%,
-      color-mix(in srgb, var(--callout-color) 72%, transparent) 100%
-    );
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
+      radial-gradient(var(--callout-complement-size) at var(--callout-complement-pos), color-mix(in srgb, var(--callout-complement) var(--callout-complement-mix), transparent), transparent 62%),
+      radial-gradient(120% 140% at var(--callout-bright-pos), color-mix(in srgb, var(--callout-bright) 40%, transparent) 0%, transparent 58%),
+      radial-gradient(115% 130% at var(--callout-deep-pos), color-mix(in srgb, var(--callout-deep) 48%, transparent) 0%, transparent 62%),
+      linear-gradient(
+        var(--callout-sweep),
+        color-mix(in srgb, var(--callout-bright) 60%, transparent) 0%,
+        color-mix(in srgb, var(--callout-color) 52%, transparent) 50%,
+        color-mix(in srgb, var(--callout-deep) 58%, transparent) 100%
+      );
+    background-blend-mode: overlay, normal, normal, normal, normal;
   }
 
   .callout--solid .callout__panel {
