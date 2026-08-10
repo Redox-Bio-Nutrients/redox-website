@@ -55,15 +55,17 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
 
       <p class="resource-dialog__error" id="resource-dialog-error" hidden></p>
 
-      <label class="resource-dialog__field">
-        Name
-        <input type="text" name="name" required autocomplete="name" />
-      </label>
+      <div class="resource-dialog__row">
+        <label class="resource-dialog__field">
+          Name
+          <input type="text" name="name" required autocomplete="name" />
+        </label>
 
-      <label class="resource-dialog__field">
-        Email
-        <input type="email" name="email" required autocomplete="email" />
-      </label>
+        <label class="resource-dialog__field">
+          Email
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+      </div>
 
       <label class="resource-dialog__field">
         State
@@ -76,12 +78,14 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
 
       <fieldset class="resource-dialog__docs">
         <legend>Materials Requested</legend>
-        {MATERIALS.map((material) => (
-          <label class="resource-dialog__check">
-            <input type="checkbox" name="materials" value={material} checked />
-            {material}
-          </label>
-        ))}
+        <div class="resource-dialog__checks">
+          {MATERIALS.map((material) => (
+            <label class="resource-dialog__check">
+              <input type="checkbox" name="materials" value={material} checked />
+              {material}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
       <button type="submit" class="resource-dialog__submit">Send Request</button>
@@ -166,13 +170,20 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     inset: 0;
     margin: auto;
     width: min(480px, calc(100vw - var(--space-8)));
-    max-height: min(680px, calc(100vh - var(--space-8)));
-    padding: var(--space-10);
+    /* Compact enough (see .resource-dialog__row / __checks below —
+     * Name+Email side by side, materials inline instead of stacked)
+     * that this is a hard cap for pathological viewports, not a
+     * scrollbar trigger for normal ones. No overflow-y: auto on
+     * purpose — a scrollbar inside a modal is exactly what this was
+     * built to avoid; on a viewport short enough to actually hit this
+     * cap, the bottom edge clipping is the lesser problem. */
+    max-height: calc(100vh - var(--space-8));
+    padding: var(--space-8);
     border: none;
     border-radius: var(--radius-3xl);
     background: var(--bg-page);
     box-shadow: var(--shadow-xl);
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .resource-dialog::backdrop {
@@ -225,7 +236,7 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
     line-height: var(--leading-relaxed);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
   }
 
   .resource-dialog__intro strong {
@@ -236,7 +247,16 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   .resource-dialog__form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-4);
+  }
+
+  /* Name + Email side by side — the whole reason the dialog never
+   * needs to scroll on short viewports is that fields are laid out in
+   * columns instead of stacked full-height rows. */
+  .resource-dialog__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
   }
 
   .resource-dialog__error {
@@ -251,10 +271,7 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   .resource-dialog__docs {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
   }
 
   .resource-dialog__docs legend {
@@ -262,6 +279,15 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     font-weight: var(--font-semi);
     color: var(--color-text-muted);
     padding: 0 var(--space-1);
+  }
+
+  /* Inline instead of stacked — three checkboxes in a column was the
+   * single biggest contributor to the dialog's old height. */
+  .resource-dialog__checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-2);
   }
 
   .resource-dialog__check {
@@ -283,6 +309,17 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
+    /* Grid items default to min-width: auto, which resolves to the
+     * intrinsic width of unshrinkable content inside — an <input>
+     * with no explicit width of its own. Without this, Name/Email
+     * side by side overflows its column instead of respecting it
+     * (the email field ran right off the edge of the dialog). */
+    min-width: 0;
+  }
+
+  .resource-dialog__field input,
+  .resource-dialog__field select {
+    width: 100%;
   }
 
   .resource-dialog__field input,
