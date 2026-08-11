@@ -474,7 +474,12 @@ const documents = (product.documents ?? []).map((doc) => ({
   .sidebar__inner {
     background: color-mix(in srgb, var(--product-color) 6%, var(--color-cream));
     border: 1px solid color-mix(in srgb, var(--product-color) 18%, transparent);
-    border-radius: var(--radius-2xl);
+    /* Mirrored leaf shape (squared TL/BR, rounded TR/BL) — echoes the
+     * callout boxes' asymmetric radius but flipped across the diagonal,
+     * since the sidebar sits opposite them in the layout. Scaled down
+     * from --radius-leaf-mirror's 40px to the card's own --radius-2xl
+     * so it reads as a corner detail, not a dominant shape. */
+    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
     padding: var(--space-8) var(--space-6);
     display: flex;
     flex-direction: column;

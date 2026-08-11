@@ -36,7 +36,11 @@ function hexToHsl(hex: string): [number, number, number] {
   return [h, s * 100, l * 100]
 }
 
-function hslToHex(h: number, s: number, l: number): string {
+/** Exported for CalloutSection's drop-shadow — it picks its own
+ * curated (h, s, l) triples for a grounded, non-neon palette rather
+ * than deriving from the product color, so it needs the raw
+ * converter rather than deriveCalloutPalette's brand-tied output. */
+export function hslToHex(h: number, s: number, l: number): string {
   h = ((h % 360) + 360) % 360
   const sN = s / 100
   const lN = l / 100

@@ -105,6 +105,11 @@
   /* Asymmetric "leaf" radius — rounded TL/BR, squared TR/BL.
    * Trialing on catalog cards; apply to other slabs if adopted. */
   --radius-leaf: var(--radius-3xl) 0 var(--radius-3xl) 0;
+  /* Mirrored leaf — squared TL/BR, rounded TR/BL. Same motif, flipped
+   * across the diagonal; used where a slab should echo the leaf shape
+   * without repeating --radius-leaf's exact orientation (e.g. the
+   * product sidebar, which sits opposite the callout boxes). */
+  --radius-leaf-mirror: 0 var(--radius-3xl) 0 var(--radius-3xl);
   --radius-full:9999px;
 
   --border-thin:   1px;
