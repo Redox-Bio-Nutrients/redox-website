@@ -23,7 +23,7 @@ const videoUrl = section.backgroundVideoUrl ?? null
 const hasMedia = Boolean(videoUrl || imageUrl)
 ---
 
-<header class="hero">
+<header class="hero" data-header-theme="light">
   {videoUrl ? (
     <video
       class="hero__bg"
@@ -63,7 +63,12 @@ const hasMedia = Boolean(videoUrl || imageUrl)
 <style>
   .hero {
     position: relative;
-    min-height: min(85vh, 880px);
+    /* Pulled up behind the fixed nav (see Header.astro) so the image
+     * extends to the very top of the viewport instead of stopping
+     * below a reserved nav gap; min-height grows by the same amount
+     * so the content area below the nav keeps its original size. */
+    margin-top: calc(-1 * var(--header-space));
+    min-height: calc(min(85vh, 880px) + var(--header-space));
     display: flex;
     align-items: center; /* vertical center regardless of content height */
     overflow: hidden;
@@ -98,7 +103,9 @@ const hasMedia = Boolean(videoUrl || imageUrl)
     position: relative;
     width: min(var(--max-width-2xl), 100%);
     margin: 0 auto;
-    padding: var(--space-16) var(--space-8);
+    /* Extra top clearance so the heading doesn't sit under the nav —
+     * cancels out .hero's own margin-top pull-up. */
+    padding: calc(var(--space-16) + var(--header-space)) var(--space-8) var(--space-16);
   }
 
   .hero__title {
@@ -161,7 +168,7 @@ const hasMedia = Boolean(videoUrl || imageUrl)
 
   @media (max-width: 767px) {
     .hero {
-      min-height: 70vh;
+      min-height: calc(70vh + var(--header-space));
     }
 
     .hero__meta {

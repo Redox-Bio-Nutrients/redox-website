@@ -102,4 +102,14 @@ export const structure: StructureResolver = (S) =>
             .documentId('backgroundPool')
             .title('Background Imagery'),
         ),
+
+      // Site-level singleton — one shared document, no list
+      S.listItem()
+        .title('Form Settings')
+        .child(
+          S.document()
+            .schemaType('formSettings')
+            .documentId('formSettings')
+            .title('Form Settings'),
+        ),
     ])

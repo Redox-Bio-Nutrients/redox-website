@@ -1,0 +1,253 @@
+---
+// src/pages/[slug].astro
+//
+// Generic catch-all for the `page` Sanity document type — About,
+// Contact, and any other marketing page that doesn't need a bespoke
+// template (see sanity/schemas/documents/page.ts). More specific
+// static routes (e.g. /agriculture, /products/*) always win over this
+// dynamic route, so there's no collision risk in adding pages here.
+//
+// heroImage is optional per the schema: pages with one get a full-bleed
+// photo header (Homepage hero treatment); pages without just get a
+// plain title/subheading block.
+
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { PortableText } from 'astro-portabletext'
+import { getAllPageSlugs, getPage } from '../lib/queries'
+import { urlFor } from '../lib/sanity'
+
+export async function getStaticPaths() {
+  const slugs = await getAllPageSlugs()
+  return slugs.map((slug) => ({ params: { slug } }))
+}
+
+const { slug } = Astro.params
+const page = await getPage(slug!)
+
+if (!page) {
+  return Astro.redirect('/404')
+}
+
+const heroImageUrl = page.heroImage
+  ? urlFor(page.heroImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
+  : null
+---
+
+<BaseLayout title={page.title} seo={page.seo}>
+  {heroImageUrl ? (
+    <header class="hero">
+      <img class="hero__bg" src={heroImageUrl} alt={page.heroImage?.alt ?? ''} loading="eager" />
+      <div class="hero__overlay" aria-hidden="true"></div>
+      <div class="hero__content">
+        <h1 class="hero__title">{page.heroHeading ?? page.title}</h1>
+        <div class="hero__meta">
+          {page.heroSubheading && <p class="hero__subheading">{page.heroSubheading}</p>}
+          {page.heroCta && (
+            <a
+              class="hero__cta"
+              href={page.heroCta.href}
+              target={page.heroCta.external ? '_blank' : undefined}
+              rel={page.heroCta.external ? 'noopener noreferrer' : undefined}
+            >
+              <span>{page.heroCta.label}</span>
+              <span class="hero__cta-arrow" aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </header>
+  ) : (
+    <header class="page-header">
+      <h1>{page.heroHeading ?? page.title}</h1>
+      {page.heroSubheading && <p>{page.heroSubheading}</p>}
+      {page.heroCta && (
+        <a
+          class="page-header__cta"
+          href={page.heroCta.href}
+          target={page.heroCta.external ? '_blank' : undefined}
+          rel={page.heroCta.external ? 'noopener noreferrer' : undefined}
+        >
+          {page.heroCta.label}
+        </a>
+      )}
+    </header>
+  )}
+
+  {page.body && page.body.length > 0 && (
+    <div class="body">
+      <PortableText value={page.body} />
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  /* ── Full-bleed hero variant (heroImage set) ─────────────────── */
+  .hero {
+    position: relative;
+    min-height: min(60vh, 560px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: var(--color-white);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.42);
+  }
+
+  .hero__content {
+    position: relative;
+    width: min(var(--max-width-2xl), 100%);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-8);
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .hero__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-top: var(--space-6);
+  }
+
+  .hero__subheading {
+    max-width: 44ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .hero__cta:hover {
+    background: rgb(255 255 255 / 0.28);
+    transform: translateY(-1px);
+  }
+
+  .hero__cta-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .hero__cta:hover .hero__cta-arrow {
+    transform: translateX(3px);
+  }
+
+  /* ── Plain header variant (no heroImage) ─────────────────────── */
+  .page-header {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6) var(--space-8);
+  }
+
+  .page-header h1 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+  }
+
+  .page-header p {
+    max-width: 60ch;
+    margin-top: var(--space-4);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .page-header__cta {
+    display: inline-block;
+    margin-top: var(--space-6);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    background: var(--color-green);
+    color: var(--color-white);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    transition: filter 0.15s ease;
+  }
+
+  .page-header__cta:hover {
+    filter: brightness(0.92);
+  }
+
+  /* ── Body prose ───────────────────────────────────────────────── */
+  .body {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) var(--space-32);
+    font-size: var(--text-lg);
+  }
+
+  .body :global(p) {
+    max-width: 70ch;
+    margin-bottom: var(--space-5);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .body :global(h2) {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin: var(--space-10) 0 var(--space-4);
+  }
+
+  .body :global(a) {
+    color: var(--color-green-dark);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 767px) {
+    .hero {
+      min-height: 50vh;
+    }
+
+    .hero__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+
+    .page-header {
+      padding-top: var(--space-16);
+    }
+  }
+</style>

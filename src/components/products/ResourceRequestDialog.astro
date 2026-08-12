@@ -12,21 +12,20 @@
 // build/render time. No client-side "which page am I on" detection
 // needed; the page itself already knows.
 //
-// Provider-agnostic on purpose — the form POSTs to whatever
-// PUBLIC_RESOURCE_REQUEST_ENDPOINT points at (Formspree/Getform/Basin
-// today, a HubSpot forms-submit URL later — see PUBLIC_HUBSPOT_PORTAL_ID
-// in .env.example for the planned migration). If the endpoint isn't
-// configured yet, don't render a dialog that can't actually submit —
-// the caller falls back to a plain /contact link instead (see
-// [slug].astro).
+// Submits to our own /api/resource-request (see that file's header) —
+// a real backend that emails through Microsoft Graph, not a
+// third-party form service. That route is server-rendered even though
+// the rest of the site is static; this dialog is otherwise always
+// rendered and always reachable, regardless of whether the Graph
+// credentials are configured yet (the API route itself returns a
+// clear error in that case, shown inline below).
 
 interface Props {
   productTitle: string
-  endpoint: string
   color: string
 }
 
-const { productTitle, endpoint, color } = Astro.props
+const { productTitle, color } = Astro.props
 
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -51,19 +50,22 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
       Requesting information for <strong>{productTitle}</strong>. Our team will follow up by email.
     </p>
 
-    <form class="resource-dialog__form" id="resource-request-form" action={endpoint} method="POST">
+    <form class="resource-dialog__form" id="resource-request-form" action="/api/resource-request" method="POST">
       <input type="hidden" name="product" value={productTitle} />
-      <input type="hidden" name="_subject" value={`Product information request — ${productTitle}`} />
 
-      <label class="resource-dialog__field">
-        Name
-        <input type="text" name="name" required autocomplete="name" />
-      </label>
+      <p class="resource-dialog__error" id="resource-dialog-error" hidden></p>
 
-      <label class="resource-dialog__field">
-        Email
-        <input type="email" name="email" required autocomplete="email" />
-      </label>
+      <div class="resource-dialog__row">
+        <label class="resource-dialog__field">
+          Name
+          <input type="text" name="name" required autocomplete="name" />
+        </label>
+
+        <label class="resource-dialog__field">
+          Email
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+      </div>
 
       <label class="resource-dialog__field">
         State
@@ -76,12 +78,14 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
 
       <fieldset class="resource-dialog__docs">
         <legend>Materials Requested</legend>
-        {MATERIALS.map((material) => (
-          <label class="resource-dialog__check">
-            <input type="checkbox" name="materials" value={material} checked />
-            {material}
-          </label>
-        ))}
+        <div class="resource-dialog__checks">
+          {MATERIALS.map((material) => (
+            <label class="resource-dialog__check">
+              <input type="checkbox" name="materials" value={material} checked />
+              {material}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
       <button type="submit" class="resource-dialog__submit">Send Request</button>
@@ -100,6 +104,7 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   const form = document.getElementById('resource-request-form') as HTMLFormElement | null
   const formPanel = document.getElementById('resource-dialog-form-panel')
   const success = document.getElementById('resource-dialog-success')
+  const errorEl = document.getElementById('resource-dialog-error')
 
   document.querySelectorAll('[data-dialog-open="resource-request-dialog"]').forEach((btn) => {
     btn.addEventListener('click', () => dialog?.showModal())
@@ -118,11 +123,13 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   dialog?.addEventListener('close', () => {
     formPanel?.removeAttribute('hidden')
     success?.setAttribute('hidden', '')
+    errorEl?.setAttribute('hidden', '')
     form?.reset()
   })
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
+    errorEl?.setAttribute('hidden', '')
     const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
     if (submitBtn) {
       submitBtn.disabled = true
@@ -134,13 +141,25 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
         body: new FormData(form),
         headers: { Accept: 'application/json' },
       })
-      if (!res.ok) throw new Error('Request failed')
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || 'Something went wrong sending your request — please try again.')
+      }
       formPanel?.setAttribute('hidden', '')
       success?.removeAttribute('hidden')
-    } catch {
-      // Fall back to a native (full-navigation) submit — still reaches
-      // the same endpoint, just without the inline confirmation.
-      form.submit()
+    } catch (err) {
+      // This is our own API route, not a third-party form backend —
+      // there's no better fallback than showing the error inline; a
+      // native re-submit would just hit the same failure again.
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong — please try again.'
+        errorEl.removeAttribute('hidden')
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false
+        submitBtn.textContent = 'Send Request'
+      }
     }
   })
 </script>
@@ -151,13 +170,20 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     inset: 0;
     margin: auto;
     width: min(480px, calc(100vw - var(--space-8)));
-    max-height: min(680px, calc(100vh - var(--space-8)));
-    padding: var(--space-10);
+    /* Compact enough (see .resource-dialog__row / __checks below —
+     * Name+Email side by side, materials inline instead of stacked)
+     * that this is a hard cap for pathological viewports, not a
+     * scrollbar trigger for normal ones. No overflow-y: auto on
+     * purpose — a scrollbar inside a modal is exactly what this was
+     * built to avoid; on a viewport short enough to actually hit this
+     * cap, the bottom edge clipping is the lesser problem. */
+    max-height: calc(100vh - var(--space-8));
+    padding: var(--space-8);
     border: none;
     border-radius: var(--radius-3xl);
     background: var(--bg-page);
     box-shadow: var(--shadow-xl);
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .resource-dialog::backdrop {
@@ -210,7 +236,7 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
     line-height: var(--leading-relaxed);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
   }
 
   .resource-dialog__intro strong {
@@ -221,16 +247,31 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
   .resource-dialog__form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-4);
+  }
+
+  /* Name + Email side by side — the whole reason the dialog never
+   * needs to scroll on short viewports is that fields are laid out in
+   * columns instead of stacked full-height rows. */
+  .resource-dialog__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .resource-dialog__error {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, #c0392b 12%, var(--bg-surface));
+    color: #c0392b;
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
   }
 
   .resource-dialog__docs {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
   }
 
   .resource-dialog__docs legend {
@@ -238,6 +279,15 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     font-weight: var(--font-semi);
     color: var(--color-text-muted);
     padding: 0 var(--space-1);
+  }
+
+  /* Inline instead of stacked — three checkboxes in a column was the
+   * single biggest contributor to the dialog's old height. */
+  .resource-dialog__checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-2);
   }
 
   .resource-dialog__check {
@@ -259,6 +309,17 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
+    /* Grid items default to min-width: auto, which resolves to the
+     * intrinsic width of unshrinkable content inside — an <input>
+     * with no explicit width of its own. Without this, Name/Email
+     * side by side overflows its column instead of respecting it
+     * (the email field ran right off the edge of the dialog). */
+    min-width: 0;
+  }
+
+  .resource-dialog__field input,
+  .resource-dialog__field select {
+    width: 100%;
   }
 
   .resource-dialog__field input,
