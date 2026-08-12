@@ -9,7 +9,7 @@
 
 import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
-import { deriveCalloutPalette, hslToHex } from '../../../lib/color'
+import { deriveCalloutPalette } from '../../../lib/color'
 import { randomBetween, randomChoice, seededRandom } from '../../../lib/seededRandom'
 import type { CalloutSection, SanityImage } from '../../../lib/types/sanity'
 import PoolBackground from '../../ui/PoolBackground.astro'
@@ -19,21 +19,6 @@ interface Props {
   productColor?: string
   backgrounds?: SanityImage[]
 }
-
-// Curated hue/saturation/lightness bands for the drop-shadow palette
-// (see shadowDeep/shadowComplement below) — greens, blues, browns,
-// burnt orange, and amber only, each tuned so it stays "grounded"
-// rather than sliding into neon at the saturated end. Brown in
-// particular isn't really a hue at all, just a low-saturation,
-// low-lightness orange — hence sharing burnt-orange/amber's hue range
-// but with much tamer s/l.
-const GROUNDED_SHADOW_FAMILIES: { h: [number, number]; s: [number, number]; l: [number, number] }[] = [
-  { h: [95, 140], s: [30, 50], l: [24, 38] }, // green — moss to forest
-  { h: [195, 225], s: [35, 55], l: [28, 42] }, // blue — denim to deep ocean
-  { h: [20, 34], s: [22, 38], l: [16, 28] }, // brown — espresso to walnut
-  { h: [14, 24], s: [55, 72], l: [30, 42] }, // burnt orange / rust
-  { h: [36, 46], s: [55, 72], l: [38, 50] }, // amber / gold
-]
 
 const { section, productColor, backgrounds } = Astro.props
 const color = productColor ?? 'var(--color-green)'
@@ -63,34 +48,6 @@ const complementPos = randomChoice(rng, ['78% 96%', '15% 92%', '85% 12%', '10% 8
 const complementSizeX = Math.round(randomBetween(rng, 55, 92))
 const complementSizeY = Math.round(randomBetween(rng, 70, 105))
 const complementMix = Math.round(randomBetween(rng, 34, 52))
-// Drop-shadow nudge — small on purpose ("offsets just a little bit"),
-// but seeded like everything else above so it isn't the exact same
-// few pixels on every callout on the page.
-const shadowX = Math.round(randomBetween(rng, 8, 14))
-const shadowY = Math.round(randomBetween(rng, 9, 16))
-// Shadow color deliberately does NOT reuse or rotate this callout's
-// own bright/deep/complement (unlike everything else on this page) —
-// Curtis's call: keep the shadow palette to greens, blues, browns,
-// burnt orange, and amber specifically, "grounded but still
-// artistic," nothing neon. A hue rotation of the box's own vivid
-// deep/complement can land anywhere on the wheel (hot pink, cyan —
-// we shipped exactly that before this note). So instead each shadow
-// draws its two gradient stops from a small curated set of earthy
-// families below, each with its own tuned saturation/lightness band
-// (browns need to stay dark and desaturated to read as brown at all;
-// amber/burnt-orange can run more saturated and still read as
-// pigment rather than neon). Independent per-family pick for deep vs.
-// complement, still seeded off the section's own _key like everything
-// else here.
-const groundedTone = () => {
-  const family = randomChoice(rng, GROUNDED_SHADOW_FAMILIES)
-  const h = randomBetween(rng, family.h[0], family.h[1])
-  const s = randomBetween(rng, family.s[0], family.s[1])
-  const l = randomBetween(rng, family.l[0], family.l[1])
-  return hslToHex(h, s, l)
-}
-const shadowDeep = groundedTone()
-const shadowComplement = groundedTone()
 
 const calloutVars = [
   `--callout-color: ${color}`,
@@ -103,97 +60,31 @@ const calloutVars = [
   `--callout-complement-pos: ${complementPos}`,
   `--callout-complement-size: ${complementSizeX}% ${complementSizeY}%`,
   `--callout-complement-mix: ${complementMix}%`,
-  `--callout-shadow-x: ${shadowX}px`,
-  `--callout-shadow-y: ${shadowY}px`,
-  `--callout-shadow-deep: ${shadowDeep}`,
-  `--callout-shadow-complement: ${shadowComplement}`,
 ].join('; ')
 ---
 
-{/* Wrapper exists only to host the drop-shadow pseudo-element — the
-   box itself already spends its ::before/::after on the leaf sprig,
-   so the shadow needs a slot of its own. style carries the seeded
-   --callout-* custom properties down; they're read both here and by
-   the section below (custom properties inherit).
-   callout-shadow--solid gates the shadow to the bold gradient boxes
-   only — tint callouts (e.g. "Suggested Rate") are a quieter,
-   frosted-glass reference-card style, and a loud grainy contrast
-   shadow behind them fights that restraint rather than suiting it. */}
-<div class:list={['callout-shadow', { 'callout-shadow--solid': solid }]} style={calloutVars}>
-  <section
-    class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
-  >
-    {hasBg ? (
-      <PoolBackground pool={pool} />
-    ) : (
-      !solid && <div class="callout__wash" aria-hidden="true"></div>
-    )}
-    {hasBg && solid && <div class="callout__overlay" aria-hidden="true"></div>}
+<section
+  class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
+  style={calloutVars}
+>
+  {hasBg ? (
+    <PoolBackground pool={pool} />
+  ) : (
+    !solid && <div class="callout__wash" aria-hidden="true"></div>
+  )}
+  {hasBg && solid && <div class="callout__overlay" aria-hidden="true"></div>}
 
-    <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
-      {section.heading && <h2>{section.heading}</h2>}
-      {hasBody && (
-        <div class="callout__body">
-          <PortableText value={section.body} />
-        </div>
-      )}
-    </div>
-  </section>
-</div>
+  <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
+    {section.heading && <h2>{section.heading}</h2>}
+    {hasBody && (
+      <div class="callout__body">
+        <PortableText value={section.body} />
+      </div>
+    )}
+  </div>
+</section>
 
 <style>
-  /* ── Drop shadow ────────────────────────────────────────────────
-   * Ask was for a shadow that (a) follows the box's own leaf shape
-   * and (b) picks up the grain/contrasting-color language from the
-   * rest of this component, not a generic grey blur. A plain
-   * box-shadow gets (a) for free — it already clips to border-radius
-   * — but it can't paint a background-image, so grain is off the
-   * table there. Solution: a second leaf-shaped slab, identical
-   * radius, nudged a few px down-right and painted behind the box —
-   * same noise texture as .callout--solid/.callout__overlay, colored
-   * from --callout-shadow-deep/-complement (a per-section hue
-   * rotation of this callout's own deep/complement — see the
-   * frontmatter) so every callout throws a differently-colored
-   * shadow instead of every instance on a product page matching.
-   *
-   * Solid boxes only (.callout-shadow--solid) — tint callouts (the
-   * frosted "Suggested Rate" reference cards) are a deliberately
-   * quieter style, and this loud a shadow doesn't suit them.
-   *
-   * Needs its own wrapper because .callout already spends both its
-   * pseudo-element slots on the leaf sprig (::before/::after below).
-   * z-index: 0 here (not just position: relative) so this element
-   * becomes the shadow's containing stacking context — otherwise a
-   * z-index: -1 child goes hunting up the tree for the nearest
-   * ancestor that has one, which risks it painting behind unrelated
-   * page content instead of just behind this one box. */
-  .callout-shadow {
-    position: relative;
-    z-index: 0;
-  }
-
-  .callout-shadow--solid::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: var(--radius-leaf);
-    transform: translate(var(--callout-shadow-x), var(--callout-shadow-y));
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
-      radial-gradient(120% 140% at var(--callout-complement-pos), color-mix(in srgb, var(--callout-shadow-complement) 80%, white 10%), transparent 65%),
-      linear-gradient(var(--callout-sweep), var(--callout-shadow-deep), var(--callout-shadow-complement));
-    background-blend-mode: overlay, normal, normal;
-  }
-
-  @media (max-width: 767px) {
-    /* Same nudge, scaled down — full-size offset reads as a gap on a
-     * narrow, shorter box rather than a shadow. */
-    .callout-shadow--solid::before {
-      transform: translate(calc(var(--callout-shadow-x) * 0.6), calc(var(--callout-shadow-y) * 0.6));
-    }
-  }
-
   .callout {
     position: relative;
     /* leaf radius: rounded TL/BR, right-angled TR/BL */
