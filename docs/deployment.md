@@ -157,8 +157,8 @@ Studio publish → Sanity GROQ webhook → Vercel deploy hook → rebuild (~1 mi
 Both fire on create/update/delete of published documents, filtered to
 site content types only (`product`, `technology`, `region`, `rep`,
 `blogPost`, `category`, `author`, `podcastEpisode`,
-`universityResource`, `page`, `homepage`, `backgroundPool`) — drafts
-and system documents do not trigger builds.
+`universityResource`, `page`, `homepage`, `backgroundPool`,
+`siteWallpaper`) — drafts and system documents do not trigger builds.
 
 **When adding a new Sanity document type, add it to this filter too.**
 It's not automatic — `homepage` and `backgroundPool` were both missing
