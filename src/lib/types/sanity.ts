@@ -171,6 +171,7 @@ export interface Collection {
   description?: string
   color?: string
   kind?: string
+  icon?: SanityImage
 }
 
 export interface Technology extends TechnologyCard {

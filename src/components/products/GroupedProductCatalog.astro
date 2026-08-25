@@ -19,6 +19,7 @@
 
 import type { ProductCard as ProductCardType, Collection } from '../../lib/types/sanity'
 import ProductCard from './ProductCard.astro'
+import { urlFor } from '../../lib/sanity'
 
 interface Props {
   products: ProductCardType[]
@@ -81,8 +82,21 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
           class="catalog__group-head"
           style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}
         >
-          <span class="catalog__eyebrow">{group.collection?.title ?? 'More Products'}</span>
-          {group.collection?.description && <p class="catalog__desc">{group.collection.description}</p>}
+          <div class="catalog__group-head-row">
+            {group.collection?.icon && (
+              <img
+                class="catalog__icon"
+                src={urlFor(group.collection.icon).width(96).fit('max').url()}
+                alt={group.collection.icon.alt ?? ''}
+                width="40"
+                height="40"
+              />
+            )}
+            <div class="catalog__group-head-text">
+              <span class="catalog__eyebrow">{group.collection?.title ?? 'More Products'}</span>
+              {group.collection?.description && <p class="catalog__desc">{group.collection.description}</p>}
+            </div>
+          </div>
           <hr class="catalog__rule" />
         </div>
         <div class="catalog__grid">
@@ -136,6 +150,23 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
 
   .catalog__group-head {
     margin-bottom: var(--space-8);
+  }
+
+  .catalog__group-head-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .catalog__icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+
+  .catalog__group-head-text {
+    min-width: 0;
   }
 
   .catalog__eyebrow {

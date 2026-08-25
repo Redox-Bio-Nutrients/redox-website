@@ -84,7 +84,8 @@ export const COLLECTION_FRAGMENT = /* groq */ `{
   "slug": slug.current,
   description,
   color,
-  kind
+  kind,
+  "icon": icon ${IMAGE_FRAGMENT}
 }`
 
 export const PRODUCT_CARD_FRAGMENT = /* groq */ `{

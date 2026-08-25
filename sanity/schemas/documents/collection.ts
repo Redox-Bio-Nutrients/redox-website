@@ -52,8 +52,15 @@ export const collection = defineType({
       description:
         'Freeform label for what dimension this collection belongs to, e.g. "Benefit Category" or "Seasonal Campaign" — purely organizational, not enforced. Helps keep the Collection list legible if multiple taxonomies end up in use at once.',
     }),
+    defineField({
+      name: 'icon',
+      title: 'Icon',
+      type: 'image',
+      description: 'Shown floated left of this collection\'s heading/description wherever it\'s displayed, e.g. the grouped catalog pages.',
+      fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
   ],
   preview: {
-    select: { title: 'title', subtitle: 'kind' },
+    select: { title: 'title', subtitle: 'kind', media: 'icon' },
   },
 })
