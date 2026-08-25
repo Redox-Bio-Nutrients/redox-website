@@ -166,11 +166,25 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     background: linear-gradient(160deg, color-mix(in srgb, var(--card-accent) 25%, white), color-mix(in srgb, var(--card-accent) 65%, white));
   }
 
+  /* Covers the placeholder case (no background photo at all — see
+   * .card__placeholder below) where .card__media's own background is
+   * actually visible. */
   .card--accented .card__media {
     background:
       radial-gradient(100% 100% at 50% 0%, color-mix(in srgb, var(--card-accent) 16%, transparent), transparent 70%),
       radial-gradient(100% 100% at 50% 0%, color-mix(in srgb, var(--color-text-primary) 4%, transparent), transparent 70%),
       var(--bg-surface);
+  }
+
+  /* The far more common case: almost every card has a real background
+   * photo (its own, or the shared site-wide pool as a fallback — see
+   * BG_POOL_FRAGMENT), which is opaque and fully covers .card__media's
+   * own background above. The wash has to live on the photo's own
+   * scrim layer instead to actually be visible. */
+  .card--accented .card__bg::after {
+    background:
+      radial-gradient(120% 90% at 50% 100%, color-mix(in srgb, var(--card-accent) 45%, transparent), transparent 65%),
+      var(--img-scrim);
   }
 
   .card__media {
