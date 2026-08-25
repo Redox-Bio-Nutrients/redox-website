@@ -78,6 +78,16 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   footnote
 }`
 
+export const COLLECTION_FRAGMENT = /* groq */ `{
+  _id,
+  title,
+  "slug": slug.current,
+  description,
+  color,
+  kind,
+  "icon": icon ${IMAGE_FRAGMENT}
+}`
+
 export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   _id,
   title,
@@ -85,7 +95,8 @@ export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   tagline,
   markets,
   "image": image ${IMAGE_FRAGMENT},
-  "backgrounds": ${BG_POOL_FRAGMENT}
+  "backgrounds": ${BG_POOL_FRAGMENT},
+  "collections": collections[]-> ${COLLECTION_FRAGMENT}
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{

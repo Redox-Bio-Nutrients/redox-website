@@ -1,0 +1,222 @@
+---
+// src/components/products/GroupedProductCatalog.astro
+//
+// WHY: Catalog listing pages (Agriculture, Turf) group products by
+// their Collection (sanity/schemas/documents/collection.ts) instead of
+// one flat grid — the printed catalog's own benefit-taxonomy, now
+// modeled as content rather than a hardcoded enum. Deliberately no
+// tabs/sub-nav: every group renders on the same page, in the catalog's
+// own category order (not alphabetized — only products *within* a
+// group are alphabetical), with a same-page anchor "quick jump" row up
+// top so a long page stays navigable without hiding any content behind
+// a click. Chosen over flat-grid and color-washed-band alternatives —
+// see chat/design history for the other two explored directions.
+//
+// A product with no Collection (or a Collection outside the known
+// catalog taxonomy) still renders, grouped into a trailing "More
+// Products" bucket — new products never silently disappear just for
+// missing a tag.
+
+import type { ProductCard as ProductCardType, Collection } from '../../lib/types/sanity'
+import ProductCard from './ProductCard.astro'
+import { urlFor } from '../../lib/sanity'
+
+interface Props {
+  products: ProductCardType[]
+  emptyMessage?: string
+}
+
+const { products, emptyMessage = 'Products coming soon.' } = Astro.props
+
+// The catalog's own category order — Foundation → Plant Performance →
+// Yield Development → Crop Resilience → Integrated Solutions. Not
+// derived from Collection docs (nothing orders them today), just
+// matched by title; anything outside this list sorts last.
+const CATEGORY_ORDER = [
+  'Foundation',
+  'Plant Performance',
+  'Yield Development',
+  'Crop Resilience',
+  'Integrated Solutions',
+]
+
+interface Group {
+  collection: Collection | null
+  products: ProductCardType[]
+}
+
+const groupMap = new Map<string, Group>()
+for (const product of products) {
+  const collection = product.collections?.[0] ?? null
+  const mapKey = collection?._id ?? '__uncategorized__'
+  if (!groupMap.has(mapKey)) groupMap.set(mapKey, { collection, products: [] })
+  groupMap.get(mapKey)!.products.push(product)
+}
+for (const group of groupMap.values()) {
+  group.products.sort((a, b) => a.title.localeCompare(b.title))
+}
+const groups = Array.from(groupMap.values()).sort((a, b) => {
+  const ai = CATEGORY_ORDER.indexOf(a.collection?.title ?? '')
+  const bi = CATEGORY_ORDER.indexOf(b.collection?.title ?? '')
+  return (ai === -1 ? CATEGORY_ORDER.length : ai) - (bi === -1 ? CATEGORY_ORDER.length : bi)
+})
+---
+
+{products.length > 0 ? (
+  <div class="catalog">
+    {groups.length > 1 && (
+      <nav class="catalog__jump" aria-label="Jump to category">
+        {groups.map((group) => (
+          <a
+            href={`#${group.collection?.slug ?? 'more-products'}`}
+            style={group.collection?.color ? `--jump-color: ${group.collection.color}` : undefined}
+          >
+            {group.collection?.title ?? 'More Products'}
+          </a>
+        ))}
+      </nav>
+    )}
+    {groups.map((group) => (
+      <section class="catalog__group" id={group.collection?.slug ?? 'more-products'}>
+        <div
+          class="catalog__group-head"
+          style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}
+        >
+          <div class="catalog__group-head-row">
+            {group.collection?.icon && (
+              <img
+                class="catalog__icon"
+                src={urlFor(group.collection.icon).width(96).fit('max').url()}
+                alt={group.collection.icon.alt ?? ''}
+                width="40"
+                height="40"
+              />
+            )}
+            <div class="catalog__group-head-text">
+              <span class="catalog__eyebrow">{group.collection?.title ?? 'More Products'}</span>
+              {group.collection?.description && <p class="catalog__desc">{group.collection.description}</p>}
+            </div>
+          </div>
+          <hr class="catalog__rule" />
+        </div>
+        <div class="catalog__grid">
+          {group.products.map((product) => (
+            <ProductCard product={product} accentColor={group.collection?.color} />
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+) : (
+  <p class="catalog__empty">{emptyMessage}</p>
+)}
+
+<style>
+  .catalog__jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-16);
+    padding: var(--space-3);
+    background: var(--bg-surface);
+    border-radius: var(--radius-full);
+  }
+
+  .catalog__jump a {
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-raised);
+    transition: var(--transition-fast);
+  }
+
+  .catalog__jump a:hover {
+    border-color: var(--jump-color, var(--color-green));
+    color: var(--jump-color, var(--color-green-dark));
+  }
+
+  .catalog__group {
+    margin-bottom: var(--space-16);
+    /* keeps the jumped-to section clear of the fixed header */
+    scroll-margin-top: var(--header-space);
+  }
+
+  .catalog__group:last-child {
+    margin-bottom: 0;
+  }
+
+  .catalog__group-head {
+    margin-bottom: var(--space-8);
+  }
+
+  .catalog__group-head-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .catalog__icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+
+  .catalog__group-head-text {
+    min-width: 0;
+  }
+
+  .catalog__eyebrow {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--group-color, var(--color-green-dark));
+  }
+
+  .catalog__desc {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .catalog__rule {
+    margin-top: var(--space-4);
+    border: none;
+    border-top: 2px solid var(--group-color, var(--color-green));
+  }
+
+  .catalog__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-10) var(--space-6);
+  }
+
+  .catalog__empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-16) 0;
+  }
+
+  @media (max-width: 1279px) {
+    .catalog__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .catalog__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .catalog__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

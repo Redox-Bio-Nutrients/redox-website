@@ -135,6 +135,7 @@ export interface ProductCard {
   image?: SanityImage
   /** heroImage + backgrounds pool — pick one at random per load */
   backgrounds?: SanityImage[]
+  collections?: Collection[]
 }
 
 export interface Product extends ProductCard {
@@ -157,6 +158,19 @@ export interface TechnologyCard {
   title: string
   slug: string
   tagline?: string
+  icon?: SanityImage
+}
+
+// ── Collections ───────────────────────────────────────────────────
+// Freeform grouping — see sanity/schemas/documents/collection.ts.
+
+export interface Collection {
+  _id: string
+  title: string
+  slug: string
+  description?: string
+  color?: string
+  kind?: string
   icon?: SanityImage
 }
 

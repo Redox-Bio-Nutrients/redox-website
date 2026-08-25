@@ -48,6 +48,14 @@ export const product = defineType({
       description: 'The Redox technologies this product is built on.',
     }),
     defineField({
+      name: 'collections',
+      title: 'Collections',
+      type: 'array',
+      of: [{ type: 'reference', to: [{ type: 'collection' }] }],
+      description:
+        'Freeform groupings — a product can belong to any number of Collections, and Collections themselves can be created/renamed/regrouped at any time in Studio. Use this instead of hardcoding a taxonomy in the schema, since marketing positioning on these products can shift with market conditions.',
+    }),
+    defineField({
       name: 'tagline',
       title: 'Tagline',
       type: 'string',
