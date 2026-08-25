@@ -11,7 +11,11 @@ export const IMAGE_FRAGMENT = /* groq */ `{
   hotspot,
   // tiny blurred placeholder (base64) — painted instantly while the
   // full image loads (blur-up)
-  "lqip": asset->metadata.lqip
+  "lqip": asset->metadata.lqip,
+  // native pixel size — lets layouts reserve the right aspect-ratio
+  // box before the image loads (e.g. the blog masonry grid) instead
+  // of shifting once it arrives
+  "dimensions": asset->metadata.dimensions { width, height }
 }`
 
 export const SEO_FRAGMENT = /* groq */ `seo {
@@ -99,7 +103,8 @@ export const BLOG_CARD_FRAGMENT = /* groq */ `{
   publishedAt,
   excerpt,
   "coverImage": coverImage ${IMAGE_FRAGMENT},
-  "categories": categories[]->{ title, "slug": slug.current }
+  "categories": categories[]->{ title, "slug": slug.current },
+  "author": author->{ name, "photo": photo ${IMAGE_FRAGMENT} }
 }`
 
 export const EPISODE_CARD_FRAGMENT = /* groq */ `{

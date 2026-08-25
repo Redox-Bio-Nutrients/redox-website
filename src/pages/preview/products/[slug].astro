@@ -1,0 +1,40 @@
+---
+// src/pages/preview/products/[slug].astro
+//
+// Draft-aware mirror of src/pages/products/[slug].astro — same
+// ProductDetail component, same design, but SSR (prerender = false,
+// no getStaticPaths) and fetched via the draft-perspective client
+// (getProductPreview) so an unpublished draft renders exactly as a
+// visitor will eventually see it once published. Gated by the
+// "sanity-preview" cookie set in src/pages/api/preview.ts — this route
+// is never linked from anywhere on the public site.
+
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import ProductDetail from '../../../components/products/ProductDetail.astro'
+import PreviewBanner from '../../../components/preview/PreviewBanner.astro'
+import { getProductPreview } from '../../../lib/queries'
+
+export const prerender = false
+
+const authed = Astro.cookies.get('sanity-preview')?.value === '1'
+if (!authed) {
+  return new Response(
+    'Preview not authorized. Open this page via the preview link (see src/pages/api/preview.ts) rather than navigating here directly.',
+    { status: 401 },
+  )
+}
+
+const { slug } = Astro.params
+const product = await getProductPreview(slug!)
+
+if (!product) {
+  return new Response(`No product found for slug "${slug}" (checked drafts and published).`, {
+    status: 404,
+  })
+}
+---
+
+<BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
+  <PreviewBanner />
+  <ProductDetail product={product} />
+</BaseLayout>

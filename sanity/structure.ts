@@ -112,4 +112,14 @@ export const structure: StructureResolver = (S) =>
             .documentId('formSettings')
             .title('Form Settings'),
         ),
+
+      // Site-level singleton — one shared document, no list
+      S.listItem()
+        .title('Site Wallpaper')
+        .child(
+          S.document()
+            .schemaType('siteWallpaper')
+            .documentId('siteWallpaper')
+            .title('Site Wallpaper'),
+        ),
     ])

@@ -1,0 +1,56 @@
+---
+// src/pages/blog/index.astro
+//
+// Layout: the most recent post is a full-width photo section right at
+// the top of the content area (flush under the fixed nav — BaseLayout's
+// `main` already reserves exactly `--header-space` above it, and this
+// page adds nothing more, so there's no extra gap; BlogFeatured is a
+// top-level element here, not nested in any max-width wrapper, so its
+// own edge-to-edge trick actually reaches the viewport edges). Every
+// other post follows in a masonry grid constrained to the site's
+// normal content width.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import BlogFeatured from '../../components/blog/BlogFeatured.astro'
+import BlogMasonry from '../../components/blog/BlogMasonry.astro'
+import { getAllBlogPosts } from '../../lib/queries'
+
+const posts = await getAllBlogPosts()
+const [featuredPost, ...restPosts] = posts
+---
+
+<BaseLayout
+  title="Blog"
+  description="Agronomy insights, product updates, and field results from the Redox Bio-Nutrients team."
+>
+  {featuredPost ? (
+    <>
+      <BlogFeatured post={featuredPost} />
+      <BlogMasonry posts={restPosts} />
+    </>
+  ) : (
+    <div class="empty-state">
+      <h1>Blog</h1>
+      <p>New posts coming soon.</p>
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  .empty-state {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .empty-state h1 {
+    font-size: var(--text-4xl);
+    color: var(--color-green-dark);
+  }
+
+  .empty-state p {
+    margin-top: var(--space-3);
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+  }
+</style>

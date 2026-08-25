@@ -14,15 +14,36 @@ export const site = {
 }
 
 // Primary navigation
-export const primaryNav = [
-  { label: 'Agriculture', href: '/agriculture' },
-  { label: 'Turf',        href: '/turf'        },
-  { label: 'Technologies',href: '/technologies' },
-  { label: 'Regions',     href: '/regions'      },
-  { label: 'University',  href: '/university'   },
-  { label: 'Blog',        href: '/blog'         },
-  { label: 'Podcast',     href: '/podcast'      },
-  { label: 'Contact',     href: '/contact'      },
+//
+// `children` is optional on every item — any top-level item can carry
+// a subnav dropdown by adding one, not just "News" below. An item
+// with `children` has no `href` of its own (nothing to link to but
+// the dropdown itself); Header.astro renders those as a
+// <details>/<summary> trigger instead of a plain <a>.
+export interface PrimaryNavChild {
+  label: string
+  href: string
+}
+
+export interface PrimaryNavItem {
+  label: string
+  href?: string
+  children?: PrimaryNavChild[]
+}
+
+export const primaryNav: PrimaryNavItem[] = [
+  { label: 'Agriculture',      href: '/agriculture'  },
+  { label: 'Turf',             href: '/turf'         },
+  { label: 'RAM Technologies', href: '/technologies' },
+  { label: 'Regions',          href: '/regions'      },
+  {
+    label: 'News',
+    children: [
+      { label: 'Blog',    href: '/blog'    },
+      { label: 'Podcast', href: '/podcast' },
+    ],
+  },
+  { label: 'Contact', href: '/contact' },
 ]
 
 // Utility navigation (header right-side)

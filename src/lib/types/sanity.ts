@@ -16,6 +16,8 @@ export interface SanityImage {
   hotspot?: { x: number; y: number; height: number; width: number }
   /** base64 blurred placeholder for blur-up loading */
   lqip?: string
+  /** native asset pixel size — lets layouts reserve aspect-ratio space before the image loads (e.g. masonry grids) without a CLS jump */
+  dimensions?: { width: number; height: number }
 }
 
 export interface Seo {
@@ -199,6 +201,8 @@ export interface BlogPostCard {
   excerpt?: string
   coverImage?: SanityImage
   categories?: { title: string; slug: string }[]
+  /** just enough for a card byline (avatar + name) — the full bio/role/slug live on `Author`, used by the detail page */
+  author?: { name: string; photo?: SanityImage }
 }
 
 export interface BlogPost extends BlogPostCard {
@@ -264,6 +268,12 @@ export interface Page {
 
 export interface FormSettings {
   resourceRequestRecipient: string
+}
+
+export interface SiteWallpaper {
+  lightImage?: SanityImage
+  darkImage?: SanityImage
+  opacity: number
 }
 
 // ── Homepage (modular page-builder sections) ───────────────────────

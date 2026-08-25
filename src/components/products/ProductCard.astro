@@ -1,11 +1,15 @@
 ---
 // src/components/products/ProductCard.astro
 //
-// Biorg-style card: soft rounded panel, product imagery on a quiet
-// tinted field, minimal type, floating "+" affordance on hover.
-// When the product has a backgrounds pool, one image renders as a
-// cover background behind the packaging shot — randomized per load
-// by the script below, same pool the product page hero draws from.
+// Biorg-style card: packaging shot floating on a randomized photo
+// field, leaf-radius panel (rounded TL/BR, squared TR/BL — same shape
+// as the product callout boxes), floating "+" affordance on hover.
+// Title/tagline are overlaid directly on the card over a bottom
+// gradient scrim — same treatment as the blog masonry cards
+// (BlogMasonry.astro) — instead of living in a text block below the
+// image. Taller/narrower than the previous 5:4 card (now 3:4) so four
+// fit per row instead of three; see ProductGrid.astro for the column
+// counts.
 
 import { urlFor } from '../../lib/sanity'
 import type { ProductCard } from '../../lib/types/sanity'
@@ -21,7 +25,7 @@ const imageUrl = product.image
   : null
 
 const bgPool = (product.backgrounds ?? []).map((img) => ({
-  url: urlFor(img).width(1000).height(800).fit('crop').auto('format').quality(75).url(),
+  url: urlFor(img).width(1000).height(1200).fit('crop').auto('format').quality(75).url(),
   lqip: img.lqip ?? null,
 }))
 ---
@@ -39,14 +43,15 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
       </div>
     )}
     {imageUrl ? (
-      <img src={imageUrl} alt={product.image?.alt ?? product.title} width="800" height="640" loading="lazy" />
+      <img class="card__packaging" src={imageUrl} alt={product.image?.alt ?? product.title} width="800" height="640" loading="lazy" />
     ) : (
       <div class="card__placeholder" aria-hidden="true"></div>
     )}
+    <div class="card__scrim" aria-hidden="true"></div>
     <span class="card__plus" aria-hidden="true">+</span>
   </div>
   <span class="card__leaves" aria-hidden="true"></span>
-  <div class="card__body">
+  <div class="card__caption">
     <h3>{product.title}</h3>
     {product.tagline && <p>{product.tagline}</p>}
   </div>
@@ -84,14 +89,16 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
 
   /* Leaf overlay: mirrors the media box but does NOT clip, so the
    * leaves can break the card border. Two pointed-oval leaves bloom
-   * from the media's bottom-left corner on hover (tips at the pivot). */
+   * from the media's bottom-left corner on hover (tips at the pivot).
+   * Sits below the caption (z-index) so the title/tagline text always
+   * stays legible even where the bloom overlaps it. */
   .card__leaves {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    aspect-ratio: 5 / 4; /* same footprint as the media */
-    z-index: 2; /* above the imagery */
+    aspect-ratio: 3 / 4; /* same footprint as the media */
+    z-index: 2;
     pointer-events: none;
   }
 
@@ -112,14 +119,14 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   /* Primary leaf — tall, standing */
   .card__leaves::before {
     width: 26%;
-    height: 55%;
+    height: 42%;
     background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
   }
 
   /* Secondary leaf — smaller, lighter greens, more translucent */
   .card__leaves::after {
     width: 17%;
-    height: 36%;
+    height: 28%;
     background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
   }
 
@@ -136,8 +143,8 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
 
   .card__media {
     position: relative;
-    z-index: 1; /* above the leaf */
-    aspect-ratio: 5 / 4;
+    z-index: 1;
+    aspect-ratio: 3 / 4;
     border-radius: var(--radius-leaf);
     overflow: hidden;
     /* Quiet surface field — theme-aware, no hard spotlight */
@@ -183,14 +190,12 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     background: var(--img-scrim);
   }
 
-  /* Direct child only — the packaging shot. The background image
-   * nested in .card__bg must NOT inherit this padding/contain. */
-  .card__media > img {
+  .card__packaging {
     position: relative; /* above the background layer */
     width: 100%;
     height: 100%;
     object-fit: contain; /* whole product visible, floating on the field */
-    padding: var(--space-10);
+    padding: var(--space-6);
     filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.3));
   }
 
@@ -202,12 +207,22 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
       var(--color-cream);
   }
 
+  /* Bottom gradient so the white caption text (below) stays legible
+   * over whatever's directly behind it — same treatment as the blog
+   * masonry cards. */
+  .card__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.7) 0%, rgb(0 0 0 / 0.12) 45%, transparent 65%);
+  }
+
   .card__plus {
     position: absolute;
-    right: var(--space-5);
-    bottom: var(--space-5);
-    width: 44px;
-    height: 44px;
+    right: var(--space-4);
+    bottom: var(--space-4);
+    z-index: 2;
+    width: 40px;
+    height: 40px;
     display: grid;
     place-items: center;
     border-radius: var(--radius-full);
@@ -215,8 +230,8 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: var(--glass-border);
-    font-size: var(--text-xl);
-    color: var(--color-text-primary);
+    font-size: var(--text-lg);
+    color: var(--color-white);
     opacity: 0;
     transform: translateY(6px);
     transition: opacity 0.2s ease, transform 0.2s ease;
@@ -227,21 +242,35 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     transform: translateY(0);
   }
 
-  .card__body {
-    padding: var(--space-6) var(--space-2) 0;
+  /* Caption: a sibling of .card__media/.card__leaves (not nested
+   * inside media's clipped, lower stacking context) so it always
+   * paints above the leaf bloom — same aspect-ratio anchoring trick
+   * as .card__leaves gives it the identical footprint without
+   * duplicating height math. */
+  .card__caption {
+    position: absolute;
+    inset: 0 0 auto 0;
+    aspect-ratio: 3 / 4;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--space-5);
+    pointer-events: none;
   }
 
-  .card__body h3 {
-    font-family: var(--font-serif);
-    font-weight: var(--font-normal);
+  .card__caption h3 {
+    font-family: var(--font-sans);
+    font-weight: var(--font-semi);
     font-size: var(--text-2xl);
-    color: var(--color-text-primary);
+    line-height: var(--leading-tight);
+    color: var(--color-white);
   }
 
-  .card__body p {
-    margin-top: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
+  .card__caption p {
+    margin-top: var(--space-1);
+    font-size: var(--text-base);
+    color: rgb(255 255 255 / 0.85);
     line-height: var(--leading-snug);
   }
 </style>

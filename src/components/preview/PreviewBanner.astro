@@ -1,0 +1,38 @@
+---
+// src/components/preview/PreviewBanner.astro
+//
+// Fixed bar shown only on /preview/* routes (src/pages/preview/) —
+// unmissable so preview content is never confused for the live site,
+// even in a screenshot shared out of context.
+---
+
+<div class="preview-banner">
+  <span>👁️ Preview — showing unpublished draft content. Not visible to site visitors.</span>
+  <a href="/api/preview-exit">Exit preview</a>
+</div>
+
+<style>
+  .preview-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    padding: var(--space-2) var(--space-4);
+    background: #f5a623;
+    color: #1a1a1a;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    text-align: center;
+  }
+
+  .preview-banner a {
+    text-decoration: underline;
+    white-space: nowrap;
+  }
+</style>

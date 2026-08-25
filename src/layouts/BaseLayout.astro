@@ -10,6 +10,7 @@ import '../styles/global.css'
 import { site } from '../config/site'
 import type { Seo } from '../lib/types/sanity'
 import { urlFor } from '../lib/sanity'
+import { getSiteWallpaper } from '../lib/queries'
 import Header from '../components/global/Header.astro'
 import Footer from '../components/global/Footer.astro'
 
@@ -28,6 +29,15 @@ const metaOgImage = seo?.ogImage
   ? urlFor(seo.ogImage).width(1200).height(630).url()
   : (ogImage ?? new URL(site.defaultOgImage, site.url).href)
 const canonicalUrl = new URL(Astro.url.pathname, site.url).href
+
+const wallpaper = await getSiteWallpaper()
+const wallpaperOpacity = wallpaper?.opacity ?? 0.12
+const lightWallpaperUrl = wallpaper?.lightImage
+  ? urlFor(wallpaper.lightImage).width(2400).auto('format').quality(70).url()
+  : null
+const darkWallpaperUrl = wallpaper?.darkImage
+  ? urlFor(wallpaper.darkImage).width(2400).auto('format').quality(70).url()
+  : null
 ---
 
 <!doctype html>
@@ -75,6 +85,16 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
     />
   </head>
   <body>
+    {(lightWallpaperUrl || darkWallpaperUrl) && (
+      <div class="wallpaper" aria-hidden="true" style={`--wallpaper-opacity: ${wallpaperOpacity}`}>
+        {lightWallpaperUrl && (
+          <img class="wallpaper__img wallpaper__img--light" src={lightWallpaperUrl} alt="" loading="eager" />
+        )}
+        {darkWallpaperUrl && (
+          <img class="wallpaper__img wallpaper__img--dark" src={darkWallpaperUrl} alt="" loading="eager" />
+        )}
+      </div>
+    )}
     <Header />
     <main id="main">
       <slot />
@@ -110,6 +130,12 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
   }
 
   main {
+    /* Establishes a stacking context so main's own content/backgrounds
+     * reliably paint above .wallpaper below, which is also positioned
+     * (fixed) — an unpositioned/static element paints *behind* any
+     * positioned sibling regardless of DOM order, so without this
+     * main would render underneath the wallpaper image. */
+    position: relative;
     flex: 1;
     /* The header floats above content now (position: fixed in
      * Header.astro), so it no longer reserves flow space on its own.
@@ -117,6 +143,41 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url).href
      * so their imagery still extends behind the nav; everything else
      * gets pushed clear of it. */
     padding-top: var(--header-space);
+  }
+
+  /* Site wallpaper (src/lib/queries/wallpaper.ts) — a fixed backdrop
+   * behind the whole page, editable in Sanity per light/dark theme.
+   * Painted first (before Header/main/Footer) so it sits at the
+   * bottom of the stack; see main's own comment above for why main
+   * and Footer both need `position: relative` to actually stack above
+   * it rather than the wallpaper covering them. */
+  .wallpaper {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .wallpaper__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: var(--wallpaper-opacity, 0.12);
+  }
+
+  .wallpaper__img--dark {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .wallpaper__img--light {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .wallpaper__img--dark {
+    display: block;
   }
 
   .back-to-top {

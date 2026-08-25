@@ -8,6 +8,8 @@
 // gets a richer, multi-tone background that's still clearly "that
 // product's color," not an arbitrary rainbow.
 
+import { randomBetween, randomChoice, seededRandom } from './seededRandom'
+
 function hexToHsl(hex: string): [number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
@@ -36,7 +38,7 @@ function hexToHsl(hex: string): [number, number, number] {
   return [h, s * 100, l * 100]
 }
 
-function hslToHex(h: number, s: number, l: number): string {
+export function hslToHex(h: number, s: number, l: number): string {
   h = ((h % 360) + 360) % 360
   const sN = s / 100
   const lN = l / 100
@@ -99,4 +101,37 @@ export function deriveCalloutPalette(hex: string): CalloutPalette {
     deep: hslToHex(h - 38, Math.min(s + 15, 92), Math.max(l - 18, 10)),
     complement: hslToHex(h + 180, Math.min(s + 8, 88), Math.min(Math.max(l, 45), 62)),
   }
+}
+
+// ── Grounded accent palette ──────────────────────────────────────
+//
+// WHY: revives the curated hue/saturation/lightness bands from an
+// earlier (reverted) callout drop-shadow experiment — greens, blues,
+// browns, burnt orange, and amber only, each tuned so it stays
+// "grounded" rather than sliding into neon at the saturated end.
+// Brown isn't really its own hue, just a low-saturation, low-
+// lightness orange — hence sharing burnt-orange/amber's hue range but
+// with much tamer s/l. Used to give content without its own brand
+// color (blog posts have no `primaryColor` field) a bit of the same
+// richly-lit, multi-tone character the product callout boxes have.
+const GROUNDED_ACCENT_FAMILIES: { h: [number, number]; s: [number, number]; l: [number, number] }[] = [
+  { h: [95, 140], s: [30, 50], l: [24, 38] }, // green — moss to forest
+  { h: [195, 225], s: [35, 55], l: [28, 42] }, // blue — denim to deep ocean
+  { h: [20, 34], s: [22, 38], l: [16, 28] }, // brown — espresso to walnut
+  { h: [14, 24], s: [55, 72], l: [30, 42] }, // burnt orange / rust
+  { h: [36, 46], s: [55, 72], l: [38, 50] }, // amber / gold
+]
+
+/** Deterministic grounded-palette accent color for a piece of content
+ * with no brand color of its own — seeded from a stable id (e.g. a
+ * blog post's `_id`) so the same post always gets the same accent
+ * across rebuilds, but different posts land on different families/
+ * shades instead of repeating one formula. */
+export function groundedAccent(seed: string): string {
+  const rng = seededRandom(seed)
+  const family = randomChoice(rng, GROUNDED_ACCENT_FAMILIES)
+  const h = randomBetween(rng, family.h[0], family.h[1])
+  const s = randomBetween(rng, family.s[0], family.s[1])
+  const l = randomBetween(rng, family.l[0], family.l[1])
+  return hslToHex(h, s, l)
 }

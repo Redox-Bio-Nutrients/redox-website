@@ -39,6 +39,12 @@ const year = new Date().getFullYear()
 
 <style>
   .footer {
+    /* Positioned so it reliably paints above BaseLayout's fixed
+     * .wallpaper backdrop (an unpositioned/static element paints
+     * behind any positioned sibling regardless of DOM order) — the
+     * footer has its own solid background and should never show the
+     * wallpaper through it. */
+    position: relative;
     background: var(--footer-bg);
     color: var(--footer-text);
     margin-top: auto;

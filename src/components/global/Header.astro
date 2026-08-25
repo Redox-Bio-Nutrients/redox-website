@@ -34,6 +34,11 @@ import { primaryNav, site, utilityNav } from '../../config/site'
 const currentPath = Astro.url.pathname
 const isActive = (href: string) =>
   href === '/' ? currentPath === '/' : currentPath.startsWith(href)
+// A parent item (no href of its own) reads as active when the current
+// page matches one of its children — e.g. "News" highlights while on
+// /blog or /podcast, even though "News" itself isn't a real route.
+const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
+  item.children ? item.children.some((child) => isActive(child.href)) : isActive(item.href!)
 ---
 
 <header class="header" id="site-header">
@@ -65,17 +70,43 @@ const isActive = (href: string) =>
     <nav class="header__nav" aria-label="Primary">
       <ul class="header__nav-list">
         <li class="header__nav-chip" aria-hidden="true"></li>
-        {primaryNav.map((item) => (
-          <li>
-            <a
-              href={item.href}
-              class:list={['header__nav-link', { 'header__nav-link--active': isActive(item.href) }]}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-            >
-              {item.label}
-            </a>
-          </li>
-        ))}
+        {primaryNav.map((item) =>
+          item.children ? (
+            <li class="header__nav-item">
+              <details class="header__subnav-details">
+                <summary
+                  class:list={['header__nav-link', { 'header__nav-link--active': isItemActive(item) }]}
+                >
+                  {item.label}
+                  <span class="header__caret" aria-hidden="true"></span>
+                </summary>
+                <ul class="header__subnav">
+                  {item.children.map((child) => (
+                    <li>
+                      <a
+                        href={child.href}
+                        aria-current={isActive(child.href) ? 'page' : undefined}
+                        class:list={{ 'header__subnav-link--active': isActive(child.href) }}
+                      >
+                        {child.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ) : (
+            <li class="header__nav-item">
+              <a
+                href={item.href}
+                class:list={['header__nav-link', { 'header__nav-link--active': isItemActive(item) }]}
+                aria-current={isItemActive(item) ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ),
+        )}
       </ul>
       <div class="header__utility">
         <button
@@ -228,28 +259,37 @@ const isActive = (href: string) =>
     display: block;
   }
 
-  .header--on-dark:not(.header--scrolled) .header__nav-link {
+  /* All four rules below are scoped with
+   * `.header__toggle-input:not(:checked) ~` — on-dark white text is
+   * only correct while these sit directly over the hero photo. Once
+   * the mobile menu is open, .header__nav gets its own opaque
+   * `--bg-raised` panel (below) and these same links sit on *that*
+   * instead — keeping them forced white there made them invisible
+   * (white text on the panel's near-white background). Desktop is
+   * unaffected: the toggle checkbox is never interacted with there,
+   * so `:not(:checked)` is always true. */
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__nav-link {
     color: rgb(255 255 255 / 0.9);
   }
 
-  .header--on-dark:not(.header--scrolled) .header__nav-link:hover,
-  .header--on-dark:not(.header--scrolled) .header__nav-link--active {
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__nav-link:hover,
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__nav-link--active {
     color: var(--color-white);
   }
 
-  .header--on-dark:not(.header--scrolled) .header__utility-link {
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__utility-link {
     color: rgb(255 255 255 / 0.9);
   }
 
-  .header--on-dark:not(.header--scrolled) .header__utility-link:hover {
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__utility-link:hover {
     color: var(--color-white);
   }
 
-  .header--on-dark:not(.header--scrolled) .header__theme {
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__theme {
     border-color: rgb(255 255 255 / 0.4);
   }
 
-  .header--on-dark:not(.header--scrolled) .header__theme:hover {
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__theme:hover {
     background: rgb(255 255 255 / 0.12);
   }
 
@@ -257,8 +297,8 @@ const isActive = (href: string) =>
    * read against a dark hero. Dark theme's icon is already a light
    * fill (see the [data-theme='dark'] rule below), so it needs no
    * override here — scope this to light theme only or the two rules
-   * fight each other. */
-  :global(html:not([data-theme='dark'])) .header--on-dark:not(.header--scrolled) .header__theme-icon {
+   * fight each other. Same open-mobile-menu exclusion as above. */
+  :global(html:not([data-theme='dark'])) .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__theme-icon {
     box-shadow: inset 5px -3px 0 0 var(--color-white);
   }
 
@@ -336,6 +376,71 @@ const isActive = (href: string) =>
   }
 
   .header__nav-link--active {
+    color: var(--color-green-dark);
+  }
+
+  /* ── Subnav (optional per item — see PrimaryNavItem in site.ts) ──
+   * <details>/<summary> gives the toggle native click/keyboard
+   * behavior and correct ARIA for free, no JS. Desktop additionally
+   * reveals it on hover/focus regardless of the native [open] state
+   * (see the min-width block below) — clicking still works too, as a
+   * fallback for touch-laptop/keyboard users. */
+  .header__nav-item {
+    position: relative;
+  }
+
+  .header__subnav-details summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .header__subnav-details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .header__subnav-details summary::marker {
+    content: '';
+  }
+
+  .header__subnav-details summary.header__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .header__caret {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    transition: transform 0.2s ease;
+  }
+
+  .header__subnav-details[open] .header__caret {
+    transform: rotate(180deg);
+  }
+
+  .header__subnav {
+    display: none;
+    list-style: none;
+  }
+
+  .header__subnav-details[open] > .header__subnav {
+    display: block;
+  }
+
+  .header__subnav a {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-lg);
+  }
+
+  .header__subnav a:hover,
+  .header__subnav-link--active {
+    background: var(--color-green-pale);
     color: var(--color-green-dark);
   }
 
@@ -474,6 +579,26 @@ const isActive = (href: string) =>
       background: var(--color-green-pale);
     }
 
+    /* Mobile accordion: the summary row spans full width with the
+     * caret pushed to the trailing edge (rather than hugging the
+     * label text, which is the desktop treatment), and the child
+     * list sits inline in normal flow — indented, not floating —
+     * since the whole mobile nav is already its own stacked card. */
+    .header__subnav-details summary.header__nav-link {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .header__subnav {
+      padding-left: var(--space-4);
+    }
+
+    .header__subnav a {
+      padding: var(--space-3) var(--space-3);
+      margin: 0 calc(-1 * var(--space-3));
+      font-size: var(--text-base);
+    }
+
     .header__utility {
       margin-top: var(--space-4);
       flex-direction: column;
@@ -483,6 +608,35 @@ const isActive = (href: string) =>
 
     .header__utility-link--button {
       padding: var(--space-3) var(--space-4);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    /* Floating dropdown panel, anchored under its own nav item —
+     * revealed by hover/focus regardless of the native [open] state
+     * (the [open]-driven rule above still applies too, so a click/
+     * Enter on the summary works as a fallback). */
+    .header__subnav {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 5;
+      min-width: 180px;
+      margin-top: var(--space-2);
+      background: var(--bg-raised);
+      border: var(--border-thin) solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: var(--space-2);
+    }
+
+    .header__subnav a {
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .header__nav-item:hover .header__subnav,
+    .header__nav-item:focus-within .header__subnav {
+      display: block;
     }
   }
 </style>
