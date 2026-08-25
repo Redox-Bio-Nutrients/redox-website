@@ -17,12 +17,14 @@ import PoolBackground from '../../ui/PoolBackground.astro'
 interface Props {
   section: CalloutSection
   productColor?: string
+  /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
+  productAccentColor?: string
   backgrounds?: SanityImage[]
 }
 
-const { section, productColor, backgrounds } = Astro.props
+const { section, productColor, productAccentColor, backgrounds } = Astro.props
 const color = productColor ?? 'var(--color-green)'
-const palette = deriveCalloutPalette(color)
+const palette = deriveCalloutPalette(color, productAccentColor)
 const solid = section.tone !== 'tint'
 const hasBody = section.body?.some(
   (b: any) => b.children?.some((c: any) => c.text?.trim()),

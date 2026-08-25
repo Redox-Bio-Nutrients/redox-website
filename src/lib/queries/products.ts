@@ -31,6 +31,7 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
   "backgrounds": ${BG_POOL_FRAGMENT},
   "calloutBackgrounds": calloutBackgrounds[] ${IMAGE_FRAGMENT},
   primaryColor,
+  accentColor,
   // sections is a discriminated union — spread everything and let
   // the per-_type frontend renderers pick their fields
   sections[]{ ... },

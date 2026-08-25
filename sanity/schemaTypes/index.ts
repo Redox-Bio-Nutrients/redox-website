@@ -16,6 +16,7 @@ import {
   testimonialSection,
   textSection,
   videoSection,
+  warningSection,
 } from '../schemas/objects/productSections'
 import {
   homeHeroSection,
@@ -52,6 +53,7 @@ export const schemaTypes = [
   faqSection,
   testimonialSection,
   videoSection,
+  warningSection,
   homeHeroSection,
   homeHeroCarouselSection,
   homeColumnSection,

@@ -104,6 +104,15 @@ export interface VideoSection {
   caption?: string
 }
 
+export interface WarningSection {
+  _type: 'warningSection'
+  _key: string
+  heading?: string
+  message: PortableTextBlock[]
+  /** optional numbered steps, e.g. mixing/handling instructions */
+  steps?: string[]
+}
+
 export type ProductSection =
   | TextSection
   | CalloutSection
@@ -113,6 +122,7 @@ export type ProductSection =
   | FaqSection
   | TestimonialSection
   | VideoSection
+  | WarningSection
 
 // ── Catalog ────────────────────────────────────────────────────────
 
@@ -129,6 +139,8 @@ export interface ProductCard {
 
 export interface Product extends ProductCard {
   primaryColor?: string
+  /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
+  accentColor?: string
   heroImage?: SanityImage
   /** optional dedicated pool for callout sections; falls back to backgrounds */
   calloutBackgrounds?: SanityImage[]
