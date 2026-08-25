@@ -184,9 +184,10 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   .card--accented .card__bg::after {
     /* +15% saturation on the accent itself (not just more opacity)
      * before it's mixed in, so the wash reads as a richer version of
-     * the category color rather than just a stronger dose of it. */
+     * the category color rather than just a stronger dose of it.
+     * Mix weight bumped +15% too (45% -> 52%), same relative step. */
     background:
-      radial-gradient(120% 90% at 50% 100%, color-mix(in srgb, hsl(from var(--card-accent) h calc(s * 1.15) l) 45%, transparent), transparent 65%),
+      radial-gradient(120% 90% at 50% 100%, color-mix(in srgb, hsl(from var(--card-accent) h calc(s * 1.15) l) 52%, transparent), transparent 65%),
       var(--img-scrim);
   }
 
