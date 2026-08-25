@@ -2,7 +2,14 @@
 
 import { previewFetch, sanityFetch } from '../sanity'
 import type { Market, Product, ProductCard } from '../types/sanity'
-import { BG_POOL_FRAGMENT, IMAGE_FRAGMENT, PRODUCT_CARD_FRAGMENT, SEO_FRAGMENT, TECHNOLOGY_CARD_FRAGMENT } from './fragments'
+import {
+  BG_POOL_FRAGMENT,
+  COLLECTION_FRAGMENT,
+  IMAGE_FRAGMENT,
+  PRODUCT_CARD_FRAGMENT,
+  SEO_FRAGMENT,
+  TECHNOLOGY_CARD_FRAGMENT,
+} from './fragments'
 
 export async function getProductsByMarket(market: Market): Promise<ProductCard[]> {
   return sanityFetch(
@@ -47,6 +54,7 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
     "filename": file.asset->originalFilename
   },
   "technologies": technologies[]-> ${TECHNOLOGY_CARD_FRAGMENT},
+  "collections": collections[]-> ${COLLECTION_FRAGMENT},
   ${SEO_FRAGMENT}
 }`
 

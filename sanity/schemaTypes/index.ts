@@ -31,6 +31,7 @@ import { region } from '../schemas/documents/region'
 import { rep } from '../schemas/documents/rep'
 import { blogPost } from '../schemas/documents/blogPost'
 import { category } from '../schemas/documents/category'
+import { collection } from '../schemas/documents/collection'
 import { author } from '../schemas/documents/author'
 import { podcastEpisode } from '../schemas/documents/podcastEpisode'
 import { universityResource } from '../schemas/documents/universityResource'
@@ -60,6 +61,7 @@ export const schemaTypes = [
   // catalog
   product,
   technology,
+  collection,
   // regions & reps
   region,
   rep,

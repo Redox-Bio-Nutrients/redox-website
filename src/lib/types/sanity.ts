@@ -149,6 +149,7 @@ export interface Product extends ProductCard {
   relatedProducts?: ProductCard[]
   documents?: { title?: string; url: string; isUpload?: boolean; filename?: string }[]
   technologies?: TechnologyCard[]
+  collections?: Collection[]
   seo?: Seo
 }
 
@@ -158,6 +159,18 @@ export interface TechnologyCard {
   slug: string
   tagline?: string
   icon?: SanityImage
+}
+
+// ── Collections ───────────────────────────────────────────────────
+// Freeform grouping — see sanity/schemas/documents/collection.ts.
+
+export interface Collection {
+  _id: string
+  title: string
+  slug: string
+  description?: string
+  color?: string
+  kind?: string
 }
 
 export interface Technology extends TechnologyCard {

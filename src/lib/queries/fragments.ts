@@ -96,6 +96,15 @@ export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{
   "icon": icon ${IMAGE_FRAGMENT}
 }`
 
+export const COLLECTION_FRAGMENT = /* groq */ `{
+  _id,
+  title,
+  "slug": slug.current,
+  description,
+  color,
+  kind
+}`
+
 export const BLOG_CARD_FRAGMENT = /* groq */ `{
   _id,
   title,
