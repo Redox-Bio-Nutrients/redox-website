@@ -2,7 +2,7 @@
 // src/pages/turf/index.astro
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import ProductGrid from '../../components/products/ProductGrid.astro'
+import GroupedProductCatalog from '../../components/products/GroupedProductCatalog.astro'
 import { getProductsByMarket } from '../../lib/queries'
 
 const products = await getProductsByMarket('turf')
@@ -17,7 +17,7 @@ const products = await getProductsByMarket('turf')
       <h1>Turf</h1>
       <p>Bio-nutrient products for resilient, healthy turf.</p>
     </header>
-    <ProductGrid products={products} />
+    <GroupedProductCatalog products={products} />
   </div>
 </BaseLayout>
 

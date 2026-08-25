@@ -135,6 +135,7 @@ export interface ProductCard {
   image?: SanityImage
   /** heroImage + backgrounds pool — pick one at random per load */
   backgrounds?: SanityImage[]
+  collections?: Collection[]
 }
 
 export interface Product extends ProductCard {
@@ -149,7 +150,6 @@ export interface Product extends ProductCard {
   relatedProducts?: ProductCard[]
   documents?: { title?: string; url: string; isUpload?: boolean; filename?: string }[]
   technologies?: TechnologyCard[]
-  collections?: Collection[]
   seo?: Seo
 }
 
