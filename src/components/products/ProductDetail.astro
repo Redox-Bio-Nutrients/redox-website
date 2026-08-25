@@ -28,6 +28,7 @@ interface Props {
 const { product } = Astro.props
 
 const color = product.primaryColor ?? '#2E6B3E'
+const accentColor = product.accentColor
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.
@@ -135,6 +136,7 @@ const documents = (product.documents ?? []).map((doc) => ({
       <ProductSections
         sections={product.sections}
         productColor={color}
+        productAccentColor={accentColor}
         backgrounds={
           product.calloutBackgrounds?.length
             ? product.calloutBackgrounds

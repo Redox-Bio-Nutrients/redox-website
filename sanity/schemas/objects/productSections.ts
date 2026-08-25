@@ -370,6 +370,50 @@ export const testimonialSection = defineType({
   },
 })
 
+// ── Warning / caution box ────────────────────────────────────────────
+// Fixed alert styling (src/styles/tokens.css --color-warning), not tied
+// to the product's own color — see src/lib/color.ts's WHY comment for
+// why callouts derive from primaryColor but this deliberately doesn't.
+// For mixing/handling cautions, safety notes, or anything that needs to
+// read as "pay attention" regardless of which product it's on.
+
+export const warningSection = defineType({
+  name: 'warningSection',
+  title: 'Warning',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+      initialValue: 'Important',
+    }),
+    defineField({
+      name: 'message',
+      title: 'Message',
+      type: 'blockContent',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'steps',
+      title: 'Steps',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Optional numbered instructions, e.g. mixing/handling steps.',
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', steps: 'steps' },
+    prepare({ title, steps }) {
+      const count = steps?.length ?? 0
+      return {
+        title: title || 'Warning',
+        subtitle: count ? `Warning — ${count} step${count === 1 ? '' : 's'}` : 'Warning',
+      }
+    },
+  },
+})
+
 // ── Video embed ──────────────────────────────────────────────────────
 // External embed only (YouTube / Vimeo) — no Sanity file upload, so it
 // works with the generic `sections[]{ ... }` spread projection (see

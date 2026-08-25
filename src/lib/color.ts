@@ -89,17 +89,27 @@ export interface CalloutPalette {
  * contrast pop (matching the reference art's rainbow accent arcs)
  * rather than another shade of the brand color. Falls back to
  * returning `hex` for every field on non-hex input (e.g. a CSS var
- * fallback string). */
-export function deriveCalloutPalette(hex: string): CalloutPalette {
+ * fallback string).
+ *
+ * `accentHex` (from a product's optional Accent Color field) opts out
+ * of the computed complement for products with two real brand colors
+ * instead of one — the accent renders as-given rather than derived,
+ * since it's an actual second brand color, not something to hue-shift.
+ * Invalid/missing accentHex falls through to the computed complement,
+ * same as before this param existed. */
+export function deriveCalloutPalette(hex: string, accentHex?: string): CalloutPalette {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
     return { base: hex, bright: hex, deep: hex, complement: hex }
   }
   const [h, s, l] = hexToHsl(hex)
+  const hasAccent = accentHex && /^#[0-9a-fA-F]{6}$/.test(accentHex)
   return {
     base: hex,
     bright: hslToHex(h + 18, Math.max(s - 5, 40), Math.min(l + 20, 80)),
     deep: hslToHex(h - 38, Math.min(s + 15, 92), Math.max(l - 18, 10)),
-    complement: hslToHex(h + 180, Math.min(s + 8, 88), Math.min(Math.max(l, 45), 62)),
+    complement: hasAccent
+      ? (accentHex as string)
+      : hslToHex(h + 180, Math.min(s + 8, 88), Math.min(Math.max(l, 45), 62)),
   }
 }
 

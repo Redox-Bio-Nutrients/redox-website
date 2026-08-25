@@ -23,6 +23,13 @@
   --color-white:         #FFFFFF;
   --color-black:         #000000;
 
+  /* Fixed alert color — deliberately NOT derived from a product's
+   * primaryColor (see src/lib/color.ts). A caution/warning box needs
+   * to read as "pay attention" on every product regardless of that
+   * product's brand hue, the same way a real safety label doesn't
+   * change color to match packaging. */
+  --color-warning: #B3261E;
+
   /* ── Semantic surfaces ──────────────────────────────────────────── */
   /* Components use these (not raw palette colors) for backgrounds so
    * the dark theme only has to remap tokens, never components.
@@ -175,6 +182,10 @@
   --color-green-pale:  #2C3A30;
   --color-cream:       #1B1E1A;
   --color-off-white:   #242822;
+
+  /* Lighter/warmer for contrast on near-black, same treatment as the
+   * greens above — not a hue change, just lifted for legibility. */
+  --color-warning: #E2685C;
 
   --footer-bg:    #131A15;
   --footer-text:  #E9E6DD;

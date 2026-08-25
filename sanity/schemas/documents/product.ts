@@ -111,6 +111,25 @@ export const product = defineType({
           .error('Must be a 6-digit hex color like #2E6B3E'),
     }),
     defineField({
+      name: 'accentColor',
+      title: 'Accent Color',
+      type: 'string',
+      description:
+        'Optional second brand color, for products with two distinct focus colors (e.g. a two-tone brochure). Replaces the automatically-computed accent shade in callout sections with this color instead. Leave empty to let the site derive one from Primary Color automatically.',
+      validation: (rule) =>
+        rule
+          .regex(/^#([0-9a-fA-F]{6})$/, { name: 'hex color', invert: false })
+          .error('Must be a 6-digit hex color like #2E6B3E')
+          .custom((value, context) => {
+            if (!value) return true
+            const doc = context.document as { primaryColor?: string } | undefined
+            if (doc?.primaryColor && value.toLowerCase() === doc.primaryColor.toLowerCase()) {
+              return 'Accent Color should differ from Primary Color, or just leave it empty.'
+            }
+            return true
+          }),
+    }),
+    defineField({
       name: 'sections',
       title: 'Content Sections',
       type: 'array',
@@ -124,6 +143,7 @@ export const product = defineType({
         { type: 'faqSection' },
         { type: 'testimonialSection' },
         { type: 'videoSection' },
+        { type: 'warningSection' },
       ],
     }),
     defineField({

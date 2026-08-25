@@ -14,15 +14,18 @@ import ChartSection from './sections/ChartSection.astro'
 import FaqSection from './sections/FaqSection.astro'
 import TestimonialSection from './sections/TestimonialSection.astro'
 import VideoSection from './sections/VideoSection.astro'
+import WarningSection from './sections/WarningSection.astro'
 
 interface Props {
   sections: ProductSection[]
   productColor?: string
+  /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
+  productAccentColor?: string
   /** background imagery pool — callout sections draw a random image */
   backgrounds?: SanityImage[]
 }
 
-const { sections, productColor, backgrounds } = Astro.props
+const { sections, productColor, productAccentColor, backgrounds } = Astro.props
 ---
 
 <div class="product-sections">
@@ -34,7 +37,14 @@ const { sections, productColor, backgrounds } = Astro.props
         case 'textSection':
           return <TextSection section={section} />
         case 'calloutSection':
-          return <CalloutSection section={section} productColor={productColor} backgrounds={backgrounds} />
+          return (
+            <CalloutSection
+              section={section}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+              backgrounds={backgrounds}
+            />
+          )
         case 'bulletSection':
           return <BulletSection section={section} />
         case 'analysisSection':
@@ -47,6 +57,8 @@ const { sections, productColor, backgrounds } = Astro.props
           return <TestimonialSection section={section} productColor={productColor} />
         case 'videoSection':
           return <VideoSection section={section} />
+        case 'warningSection':
+          return <WarningSection section={section} />
         default:
           return null
       }
