@@ -16,9 +16,14 @@ import type { ProductCard } from '../../lib/types/sanity'
 
 interface Props {
   product: ProductCard
+  /** Optional accent (e.g. the product's Collection color) — tints the
+   * card's idle background and recolors the hover-leaf bloom instead of
+   * the fixed brand green. Omit to keep the card's default look
+   * unchanged (used as-is on Technology/Blog "related products"). */
+  accentColor?: string
 }
 
-const { product } = Astro.props
+const { product, accentColor } = Astro.props
 // fit('max') preserves the full image — packaging shots are never cropped
 const imageUrl = product.image
   ? urlFor(product.image).width(800).fit('max').url()
@@ -30,7 +35,11 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
 }))
 ---
 
-<a href={`/products/${product.slug}`} class="card">
+<a
+  href={`/products/${product.slug}`}
+  class:list={['card', { 'card--accented': Boolean(accentColor) }]}
+  style={accentColor ? `--card-accent: ${accentColor}` : undefined}
+>
   <div class="card__media">
     {bgPool.length > 0 && (
       <div
@@ -139,6 +148,29 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     opacity: 0.65;
     transform: rotate(-32deg) scale(1);
     transition-delay: 0.06s;
+  }
+
+  /* ── Accented variant (optional `accentColor` prop, e.g. a
+   * product's Collection color on the grouped catalog pages) ──────
+   * Recolors the hover-leaf bloom to the accent instead of the fixed
+   * brand green, and adds a faint ambient wash behind the packaging
+   * shot so the card reads as "belonging to" its category even before
+   * any hover interaction. Both are pure additions/overrides scoped to
+   * .card--accented — a card without accentColor renders identically
+   * to before this existed. */
+  .card--accented .card__leaves::before {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--card-accent) 70%, white), var(--card-accent));
+  }
+
+  .card--accented .card__leaves::after {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--card-accent) 25%, white), color-mix(in srgb, var(--card-accent) 65%, white));
+  }
+
+  .card--accented .card__media {
+    background:
+      radial-gradient(100% 100% at 50% 0%, color-mix(in srgb, var(--card-accent) 16%, transparent), transparent 70%),
+      radial-gradient(100% 100% at 50% 0%, color-mix(in srgb, var(--color-text-primary) 4%, transparent), transparent 70%),
+      var(--bg-surface);
   }
 
   .card__media {

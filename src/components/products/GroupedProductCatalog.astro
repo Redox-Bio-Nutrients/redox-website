@@ -77,17 +77,18 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     )}
     {groups.map((group) => (
       <section class="catalog__group" id={group.collection?.slug ?? 'more-products'}>
-        <div class="catalog__group-head">
-          <span
-            class="catalog__eyebrow"
-            style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}
-          >
-            {group.collection?.title ?? 'More Products'}
-          </span>
+        <div
+          class="catalog__group-head"
+          style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}
+        >
+          <span class="catalog__eyebrow">{group.collection?.title ?? 'More Products'}</span>
           {group.collection?.description && <p class="catalog__desc">{group.collection.description}</p>}
+          <hr class="catalog__rule" />
         </div>
         <div class="catalog__grid">
-          {group.products.map((product) => <ProductCard product={product} />)}
+          {group.products.map((product) => (
+            <ProductCard product={product} accentColor={group.collection?.color} />
+          ))}
         </div>
       </section>
     ))}
@@ -138,20 +139,24 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
   }
 
   .catalog__eyebrow {
-    display: inline-block;
+    display: block;
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--group-color, var(--color-green-dark));
-    padding-bottom: var(--space-2);
-    border-bottom: 2px solid var(--group-color, var(--color-green));
   }
 
   .catalog__desc {
     margin-top: var(--space-2);
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+  }
+
+  .catalog__rule {
+    margin-top: var(--space-4);
+    border: none;
+    border-top: 2px solid var(--group-color, var(--color-green));
   }
 
   .catalog__grid {
