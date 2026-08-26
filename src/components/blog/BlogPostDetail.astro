@@ -13,10 +13,12 @@
 import { PortableText } from 'astro-portabletext'
 import ProductGrid from '../products/ProductGrid.astro'
 import BlogPostImage from './BlogPostImage.astro'
+import BlogPostGallery from './BlogPostGallery.astro'
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { BlogPost } from '../../lib/types/sanity'
+import type { PortableTextBlock } from '@portabletext/types'
 
 interface Props {
   post: BlogPost
@@ -27,8 +29,50 @@ const { post } = Astro.props
 // Without this, astro-portabletext has no renderer for Sanity's
 // "image" custom type -- see BlogPostImage.astro's frontmatter for
 // why (it logs a console warning and drops an error placeholder into
-// the page instead of the photo).
-const portableTextComponents = { type: { image: BlogPostImage } }
+// the page instead of the photo). "imageGallery" is a synthetic type
+// that doesn't exist in Sanity's schema -- see groupImageRuns() below.
+const portableTextComponents = {
+  type: { image: BlogPostImage, imageGallery: BlogPostGallery },
+}
+
+// A run of 2+ consecutive image blocks collapses into one synthetic
+// "imageGallery" node instead of rendering as N separate full-width
+// images stacked one per row -- see BlogPostGallery.astro for the full
+// story (the original WordPress posts used a gallery plugin that only
+// ever displayed a curated few images at once even though every photo
+// lived in the page's markup; migration pulled every <img> tag it
+// found with no way to tell gallery photos from a genuine standalone
+// inline image). A lone image -- not adjacent to another -- passes
+// through untouched and still renders via BlogPostImage.astro exactly
+// as before; this only changes posts that actually have image runs.
+function groupImageRuns(blocks: PortableTextBlock[]): PortableTextBlock[] {
+  const grouped: PortableTextBlock[] = []
+  let run: PortableTextBlock[] = []
+
+  const flushRun = () => {
+    if (run.length === 0) return
+    grouped.push(
+      run.length === 1
+        ? run[0]
+        : ({ _type: 'imageGallery', _key: `gallery-${run[0]._key}`, images: run } as unknown as PortableTextBlock),
+    )
+    run = []
+  }
+
+  for (const block of blocks) {
+    if (block._type === 'image') {
+      run.push(block)
+    } else {
+      flushRun()
+      grouped.push(block)
+    }
+  }
+  flushRun()
+
+  return grouped
+}
+
+const groupedBody = groupImageRuns(post.body)
 
 // No cover image of its own -> a deterministic pick from the shared
 // Background Imagery pool stands in instead, seeded on the post's own
@@ -85,7 +129,7 @@ const authorPhotoUrl = post.author?.photo
 </div>
 
 <div class="body">
-  <PortableText value={post.body} components={portableTextComponents} />
+  <PortableText value={groupedBody} components={portableTextComponents} />
 </div>
 
 {post.author?.bio && (

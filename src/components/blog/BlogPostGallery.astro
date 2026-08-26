@@ -1,0 +1,91 @@
+---
+// src/components/blog/BlogPostGallery.astro
+//
+// Renders a run of 2+ consecutive inline images (grouped by
+// groupImageRuns() in BlogPostDetail.astro's frontmatter -- see its
+// comment there for the full story) as a real photo grid instead of
+// stacking them full-width, one per row, via BlogPostImage.astro.
+//
+// Why this exists: the original WordPress posts used a gallery plugin
+// that only ever *displayed* a curated handful of images at once even
+// though every photo lived in the page's raw markup. Our migration
+// pulled every <img> tag it found with no way to know which ones the
+// plugin actually surfaced, so a post built as a real photo gallery
+// (e.g. a "30 years in photos" anniversary retrospective, 244 images)
+// came through as 244 flat, full-width, one-per-row images -- everything
+// technically rendered, nothing that read like a gallery.
+//
+// Deliberately no lightbox / no client JS, consistent with every other
+// blog component on this page (BlogMasonry, BlogFeatured are both
+// plain CSS): tapping a tile just opens that one photo at full size in
+// a new tab. Revisit with a real lightbox if that's ever wanted.
+
+import { urlFor } from '../../lib/sanity'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+
+interface ImageNode {
+  _type: 'image'
+  asset: { _ref: string; _type: 'reference' }
+  alt?: string
+}
+
+interface GalleryNode {
+  _type: 'imageGallery'
+  images: ImageNode[]
+}
+
+type Props = PortableTextProps<GalleryNode>
+
+const { node } = Astro.props
+
+const tiles = node.images.map((image) => ({
+  thumbUrl: urlFor(image).width(500).height(500).fit('crop').auto('format').quality(70).url(),
+  fullUrl: urlFor(image).width(1800).auto('format').quality(85).url(),
+  alt: image.alt ?? '',
+}))
+---
+
+<div class="gallery">
+  {tiles.map(({ thumbUrl, fullUrl, alt }) => (
+    <a href={fullUrl} target="_blank" rel="noopener noreferrer" class="gallery__tile">
+      <img src={thumbUrl} alt={alt} loading="lazy" />
+    </a>
+  ))}
+</div>
+
+<style>
+  /* Same centered prose column as everything else in .body (see
+   * BlogPostDetail.astro's --prose-width) -- falls back to 54rem if
+   * rendered somewhere that variable isn't defined. */
+  .gallery {
+    max-width: var(--prose-width, 54rem);
+    margin: var(--space-8) auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+  }
+
+  .gallery__tile {
+    display: block;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .gallery__tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .gallery__tile:hover img {
+    transform: scale(1.05);
+  }
+
+  @media (max-width: 479px) {
+    .gallery {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
