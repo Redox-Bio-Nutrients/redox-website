@@ -1,13 +1,25 @@
 ---
 // src/components/blog/BlogMasonry.astro
 //
-// True variable-height (Pinterest-style) masonry via CSS multi-column
-// layout — no JS needed. Each cover photo keeps its native aspect
-// ratio (from the image's asset metadata, via IMAGE_FRAGMENT's
-// `dimensions`) so columns stagger organically instead of being
-// cropped to a uniform box. `break-inside: avoid` keeps each tile
-// intact within its column instead of splitting across the column
-// break.
+// True variable-height (Pinterest-style) masonry via CSS Grid + dense
+// packing — no JS needed. Two earlier approaches were tried and
+// dropped:
+//   - Uniform-height tiles read flat and repetitive.
+//   - CSS multi-column (`columns: 3`) with each tile's *native* photo
+//     aspect ratio produced wildly inconsistent heights (a very wide
+//     source photo next to a tall portrait one) and, worse, fills
+//     column-by-column — the newest posts all stacked in column 1
+//     before column 2 even started, reading backwards.
+// This version instead assigns each tile one of four *curated* height
+// buckets (HEIGHT_BUCKETS below), deterministic per post so it's
+// stable across rebuilds, and lays the grid out with
+// `grid-auto-flow: row dense` — CSS Grid's native placement already
+// reads left-to-right then wraps (row-major), matching reading/publish
+// order, and `dense` backfills any gaps the uneven heights leave
+// instead of leaving holes. `dense` can shuffle an item slightly out
+// of strict order to fill a gap right above it — acceptable here since
+// it's still very close to true chronological order, unlike the old
+// column-major layout which could be a full column off.
 //
 // Card look: rounded-corner tile, category/title/date/byline overlaid
 // directly on the photo (bottom-left, above a gradient scrim) — no
@@ -49,10 +61,21 @@ interface Props {
 
 const { posts, emptyMessage = 'More posts coming soon.' } = Astro.props
 
+// Four curated tile heights — see frontmatter. Values are CSS Grid
+// row-spans against `.masonry`'s grid-auto-rows (2px) + gap
+// (var(--space-6), 24px): span N -> N*2 + (N-1)*24 px, so these come
+// out to roughly 260 / 340 / 420 / 500px tall regardless of column
+// width (object-fit: cover handles whatever crop that implies).
+const HEIGHT_BUCKETS = [11, 14, 17, 20]
+
 const tiles = posts.map((post) => {
   const heroImage =
     post.coverImage ??
     (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
+  // Separately seeded from the heroImage pick above (a distinct seed
+  // string, not just a second draw off the same generator) so the two
+  // choices vary independently instead of tracking each other.
+  const rowSpan = randomChoice(seededRandom(`${post._id}-height`), HEIGHT_BUCKETS)
 
   return {
   post,
@@ -60,12 +83,7 @@ const tiles = posts.map((post) => {
   imageUrl: heroImage
     ? urlFor(heroImage).width(900).auto('format').quality(75).url()
     : null,
-  // Reserves the tile's real aspect ratio before the image loads —
-  // without this every tile would default to the placeholder's 4/3
-  // and jump to its true height once the photo arrives.
-  aspectRatio: heroImage?.dimensions
-    ? `${heroImage.dimensions.width} / ${heroImage.dimensions.height}`
-    : '4 / 3',
+  rowSpan,
   accent: groundedAccent(post._id),
   authorPhotoUrl: post.author?.photo
     ? urlFor(post.author.photo).width(80).height(80).fit('crop').auto('format').url()
@@ -83,11 +101,11 @@ const tiles = posts.map((post) => {
 
 {tiles.length > 0 ? (
   <div class="masonry">
-    {tiles.map(({ post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, categoryChips }) => (
+    {tiles.map(({ post, heroImage, imageUrl, rowSpan, accent, authorPhotoUrl, categoryChips }) => (
       <a
         href={`/blog/${post.slug}`}
         class="masonry__item"
-        style={`aspect-ratio: ${aspectRatio}; --tile-accent: ${accent}`}
+        style={`--row-span: ${rowSpan}; --tile-accent: ${accent}`}
       >
         {imageUrl ? (
           <img src={imageUrl} alt={heroImage?.alt ?? post.title} loading="lazy" />
@@ -129,17 +147,18 @@ const tiles = posts.map((post) => {
   .masonry {
     max-width: var(--content-width);
     margin: 0 auto;
-    columns: 3;
-    column-gap: var(--space-6);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 2px;
+    grid-auto-flow: row dense;
+    gap: var(--space-6);
     padding: var(--space-10) var(--space-6) var(--space-24);
   }
 
   .masonry__item {
     position: relative;
     display: block;
-    width: 100%;
-    break-inside: avoid;
-    margin-bottom: var(--space-6);
+    grid-row: span var(--row-span);
     border-radius: var(--radius-2xl);
     overflow: hidden;
     background: var(--bg-surface);
@@ -293,13 +312,13 @@ const tiles = posts.map((post) => {
 
   @media (max-width: 1023px) {
     .masonry {
-      columns: 2;
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media (max-width: 639px) {
     .masonry {
-      columns: 1;
+      grid-template-columns: 1fr;
       padding-bottom: var(--space-16);
     }
   }
