@@ -1,0 +1,338 @@
+---
+// src/components/blog/BlogPostDetail.astro
+//
+// The actual blog post design — hero, body, author bio, related
+// products. Extracted out of src/pages/blog/[slug].astro (same move as
+// ProductDetail.astro) so the exact same rendering is shared by the
+// real static route and the SSR draft-preview route
+// (src/pages/preview/blog/[slug].astro). Takes a fully-resolved `post`
+// and renders it; doesn't care whether that came from the public
+// (published-only) client or the draft-aware preview client — see
+// src/lib/queries/blog.ts.
+
+import { PortableText } from 'astro-portabletext'
+import ProductGrid from '../products/ProductGrid.astro'
+import { urlFor } from '../../lib/sanity'
+import { formatDate } from '../../lib/format'
+import type { BlogPost } from '../../lib/types/sanity'
+
+interface Props {
+  post: BlogPost
+}
+
+const { post } = Astro.props
+
+const coverImageUrl = post.coverImage
+  ? urlFor(post.coverImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
+  : null
+
+const authorPhotoUrl = post.author?.photo
+  ? urlFor(post.author.photo).width(160).height(160).fit('crop').auto('format').url()
+  : null
+---
+
+{coverImageUrl ? (
+  <header class="hero">
+    <img class="hero__bg" src={coverImageUrl} alt={post.coverImage?.alt ?? ''} loading="eager" />
+    <div class="hero__overlay" aria-hidden="true"></div>
+    <div class="hero__content">
+      {post.categories && post.categories.length > 0 && (
+        <div class="hero__categories">
+          {post.categories.map((category) => <span class="pill">{category.title}</span>)}
+        </div>
+      )}
+      <h1 class="hero__title">{post.title}</h1>
+      <p class="hero__meta">
+        {post.author && <span>{post.author.name}</span>}
+        <span>{formatDate(post.publishedAt)}</span>
+      </p>
+    </div>
+  </header>
+) : (
+  <header class="page-header">
+    {post.categories && post.categories.length > 0 && (
+      <div class="page-header__categories">
+        {post.categories.map((category) => <span class="pill pill--light">{category.title}</span>)}
+      </div>
+    )}
+    <h1>{post.title}</h1>
+    <p class="page-header__meta">
+      {post.author && <span>{post.author.name}</span>}
+      <span>{formatDate(post.publishedAt)}</span>
+    </p>
+  </header>
+)}
+
+<div class="crumbs">
+  <a href="/blog">← Blog</a>
+</div>
+
+<div class="body">
+  <PortableText value={post.body} />
+</div>
+
+{post.author?.bio && (
+  <section class="author">
+    <div class="author__inner">
+      {authorPhotoUrl && (
+        <img class="author__photo" src={authorPhotoUrl} alt={post.author.name} width="80" height="80" loading="lazy" />
+      )}
+      <div>
+        <p class="author__name">{post.author.name}</p>
+        {post.author.role && <p class="author__role">{post.author.role}</p>}
+        <p class="author__bio">{post.author.bio}</p>
+      </div>
+    </div>
+  </section>
+)}
+
+{post.relatedProducts && post.relatedProducts.length > 0 && (
+  <section class="related">
+    <div class="related__inner">
+      <h2>Related Products</h2>
+      <ProductGrid products={post.relatedProducts} />
+    </div>
+  </section>
+)}
+
+<style>
+  /* ── Full-bleed hero variant (coverImage set) ────────────────── */
+  .hero {
+    position: relative;
+    min-height: min(60vh, 560px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: var(--color-white);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.42);
+  }
+
+  .hero__content {
+    position: relative;
+    width: min(var(--max-width-2xl), 100%);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-8);
+  }
+
+  .hero__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .hero__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+    font-size: var(--text-sm);
+    color: rgb(255 255 255 / 0.85);
+  }
+
+  .hero__meta span + span::before {
+    content: '·';
+    margin-right: var(--space-4);
+    opacity: 0.7;
+  }
+
+  /* ── Plain header variant (no coverImage) ────────────────────── */
+  .page-header {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6) var(--space-8);
+  }
+
+  .page-header__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .page-header h1 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+  }
+
+  .page-header__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .page-header__meta span + span::before {
+    content: '·';
+    margin-right: var(--space-4);
+    opacity: 0.7;
+  }
+
+  /* ── Category pills ───────────────────────────────────────────── */
+  .pill {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.2);
+    backdrop-filter: blur(6px);
+    color: var(--color-white);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .pill--light {
+    background: color-mix(in srgb, var(--color-green) 14%, transparent);
+    color: var(--color-green-dark);
+    backdrop-filter: none;
+  }
+
+  /* ── Breadcrumb ───────────────────────────────────────────────── */
+  .crumbs {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .crumbs a:hover {
+    color: var(--color-text-primary);
+  }
+
+  /* ── Body prose ───────────────────────────────────────────────── */
+  .body {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) var(--space-16);
+    font-size: var(--text-lg);
+  }
+
+  .body :global(p) {
+    max-width: 70ch;
+    margin-bottom: var(--space-5);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .body :global(h2) {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin: var(--space-10) 0 var(--space-4);
+  }
+
+  .body :global(a) {
+    color: var(--color-green-dark);
+    text-decoration: underline;
+  }
+
+  /* ── Author bio ───────────────────────────────────────────────── */
+  .author {
+    padding-bottom: var(--space-16);
+  }
+
+  .author__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-start;
+    border-top: var(--border-thin) solid var(--border-subtle);
+  }
+
+  .author__photo {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+  }
+
+  .author__name {
+    font-weight: var(--font-semi);
+    color: var(--color-text-primary);
+  }
+
+  .author__role {
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .author__bio {
+    margin-top: var(--space-3);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Related products ─────────────────────────────────────────── */
+  .related {
+    padding: var(--space-16) 0 var(--space-24);
+    background: var(--bg-surface);
+  }
+
+  .related__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .related h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+  }
+
+  @media (max-width: 767px) {
+    .hero {
+      min-height: 50vh;
+    }
+
+    .page-header {
+      padding-top: var(--space-16);
+    }
+
+    .author__inner {
+      flex-direction: column;
+    }
+  }
+</style>

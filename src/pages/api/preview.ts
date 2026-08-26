@@ -10,11 +10,10 @@
 // without re-entering it; see src/pages/api/preview-exit.ts to clear
 // it again.
 //
-// Only products are wired up right now (that's what's driving this —
-// building new product pages from brochure PDFs before they're
-// published). Extending to blog posts/pages later means adding their
-// own `type` branch here plus a matching src/pages/preview/<type>/
-// [slug].astro, following the same pattern as products below.
+// Products and blog posts are wired up (products: brochure-PDF
+// drafting; blog: the WordPress migration). Extending to pages later
+// means adding their own `type` branch here plus a matching
+// src/pages/preview/<type>/[slug].astro, following the same pattern.
 
 import type { APIRoute } from 'astro'
 
@@ -36,6 +35,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
 
   const routesByType: Record<string, string> = {
     product: `/preview/products/${slug}`,
+    blogPost: `/preview/blog/${slug}`,
   }
   const target = routesByType[type ?? 'product']
   if (!target) {
