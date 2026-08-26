@@ -19,17 +19,27 @@
 // src/lib/color.ts — the same curated hue bands as CalloutSection's
 // product-page boxes) seeded off the post's own `_id`. The scrim is
 // tinted with that accent instead of flat black, and hover intensifies
-// both the scrim and a matching colored glow around the tile.
+// both the scrim and a matching colored glow around the tile. A flat
+// dark wash sits underneath that tint (see .masonry__scrim) purely for
+// text contrast — the tint alone wasn't reliably dark enough once real
+// photography (below) started filling every tile.
 // (An earlier pass also layered a grain texture into the scrim —
 // pulled back out, it read as noisy rather than rich.)
 // Photos get a modest saturation/contrast boost — cover images are
 // meant to be real photography (landscape, art), not the flatter
 // product-packaging shots standing in as placeholders right now, so
 // they should read vividly even before real content replaces them.
+//
+// Posts with no cover image of their own fall back to a deterministic
+// pick from the shared Background Imagery pool (seeded on the post's
+// own _id, same pattern as groundedAccent() below) — same fallback the
+// detail page hero uses (BlogPostDetail.astro) — rather than the flat
+// placeholder tile, so the grid stays photo-driven end to end.
 
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { deriveCalloutPalette, groundedAccent } from '../../lib/color'
+import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { BlogPostCard } from '../../lib/types/sanity'
 
 interface Props {
@@ -39,16 +49,22 @@ interface Props {
 
 const { posts, emptyMessage = 'More posts coming soon.' } = Astro.props
 
-const tiles = posts.map((post) => ({
+const tiles = posts.map((post) => {
+  const heroImage =
+    post.coverImage ??
+    (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
+
+  return {
   post,
-  imageUrl: post.coverImage
-    ? urlFor(post.coverImage).width(900).auto('format').quality(75).url()
+  heroImage,
+  imageUrl: heroImage
+    ? urlFor(heroImage).width(900).auto('format').quality(75).url()
     : null,
   // Reserves the tile's real aspect ratio before the image loads —
   // without this every tile would default to the placeholder's 4/3
   // and jump to its true height once the photo arrives.
-  aspectRatio: post.coverImage?.dimensions
-    ? `${post.coverImage.dimensions.width} / ${post.coverImage.dimensions.height}`
+  aspectRatio: heroImage?.dimensions
+    ? `${heroImage.dimensions.width} / ${heroImage.dimensions.height}`
     : '4 / 3',
   accent: groundedAccent(post._id),
   authorPhotoUrl: post.author?.photo
@@ -61,19 +77,20 @@ const tiles = posts.map((post) => ({
     category,
     palette: deriveCalloutPalette(groundedAccent(category.slug)),
   })),
-}))
+  }
+})
 ---
 
 {tiles.length > 0 ? (
   <div class="masonry">
-    {tiles.map(({ post, imageUrl, aspectRatio, accent, authorPhotoUrl, categoryChips }) => (
+    {tiles.map(({ post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, categoryChips }) => (
       <a
         href={`/blog/${post.slug}`}
         class="masonry__item"
         style={`aspect-ratio: ${aspectRatio}; --tile-accent: ${accent}`}
       >
         {imageUrl ? (
-          <img src={imageUrl} alt={post.coverImage?.alt ?? post.title} loading="lazy" />
+          <img src={imageUrl} alt={heroImage?.alt ?? post.title} loading="lazy" />
         ) : (
           <div class="masonry__placeholder" aria-hidden="true"></div>
         )}
@@ -162,7 +179,12 @@ const tiles = posts.map((post) => ({
    * soft tinted bloom in the top-left corner (echoing the callout
    * boxes' "light catching" highlight), fading to clear over the rest
    * of the photo. Hover deepens it slightly and the box picks up a
-   * matching colored glow (above). */
+   * matching colored glow (above). A flat dark wash sits underneath as
+   * the bottom-most layer — the tinted gradient alone leaves the top
+   * of the tile essentially unwashed, which read fine over darker
+   * placeholder art but isn't reliably dark enough for white caption
+   * text over bright real photography (Background Imagery pool /
+   * cover photos), so this guarantees a baseline contrast everywhere. */
   .masonry__scrim {
     position: absolute;
     inset: 0;
@@ -173,7 +195,8 @@ const tiles = posts.map((post) => ({
         color-mix(in srgb, var(--tile-accent) 85%, black 15%) 0%,
         color-mix(in srgb, var(--tile-accent) 40%, transparent) 45%,
         transparent 70%
-      );
+      ),
+      rgb(0 0 0 / 0.3);
     opacity: 0.9;
     transition: opacity 0.3s ease;
   }

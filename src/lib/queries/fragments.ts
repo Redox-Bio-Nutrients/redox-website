@@ -107,6 +107,14 @@ export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{
   "icon": icon ${IMAGE_FRAGMENT}
 }`
 
+// Only fetched when the post has no cover image of its own — a
+// deterministic pick from it (seeded on _id) stands in instead, both
+// on the detail page hero and the masonry grid card. See
+// BlogPostDetail.astro / BlogMasonry.astro.
+export const BLOG_FALLBACK_POOL_FRAGMENT = /* groq */ `select(
+  !defined(coverImage) => *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+)`
+
 export const BLOG_CARD_FRAGMENT = /* groq */ `{
   _id,
   title,
@@ -114,6 +122,7 @@ export const BLOG_CARD_FRAGMENT = /* groq */ `{
   publishedAt,
   excerpt,
   "coverImage": coverImage ${IMAGE_FRAGMENT},
+  "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
   "categories": categories[]->{ title, "slug": slug.current },
   "author": author->{ name, "photo": photo ${IMAGE_FRAGMENT} }
 }`
