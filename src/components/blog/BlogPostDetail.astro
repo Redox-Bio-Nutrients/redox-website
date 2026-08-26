@@ -249,19 +249,31 @@ const authorPhotoUrl = post.author?.photo
     font-size: var(--text-lg);
   }
 
+  /* Readable measure (70ch) on both text block types, centered within
+   * the wider .body box rather than pinned to its left edge -- .body
+   * itself stays at the page's full content-width because other
+   * things (the related-products grid, some Portable Text embeds)
+   * may want that full width later; only the actual prose column is
+   * narrowed for readability. */
   .body :global(p) {
     max-width: 70ch;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: var(--space-5);
     line-height: var(--leading-relaxed);
     color: var(--color-text-secondary);
   }
 
   .body :global(h2) {
+    max-width: 70ch;
+    margin-left: auto;
+    margin-right: auto;
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
     font-size: var(--text-2xl);
     color: var(--color-text-primary);
-    margin: var(--space-10) 0 var(--space-4);
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-4);
   }
 
   .body :global(a) {
