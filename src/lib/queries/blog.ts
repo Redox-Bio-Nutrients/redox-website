@@ -2,7 +2,13 @@
 
 import { previewFetch, sanityFetch } from '../sanity'
 import type { BlogPost, BlogPostCard } from '../types/sanity'
-import { BLOG_CARD_FRAGMENT, IMAGE_FRAGMENT, PRODUCT_CARD_FRAGMENT, SEO_FRAGMENT } from './fragments'
+import {
+  BLOG_CARD_FRAGMENT,
+  BLOG_FALLBACK_POOL_FRAGMENT,
+  IMAGE_FRAGMENT,
+  PRODUCT_CARD_FRAGMENT,
+  SEO_FRAGMENT,
+} from './fragments'
 
 // Shared by getBlogPost/getBlogPostPreview — one projection, two
 // clients (public CDN-cached vs. draft-aware), same pattern as
@@ -14,12 +20,7 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
   publishedAt,
   excerpt,
   "coverImage": coverImage ${IMAGE_FRAGMENT},
-  // Only fetched when this post has no cover image of its own — a
-  // deterministic pick from it (seeded on _id) stands in for the hero
-  // photo instead. See BlogPostDetail.astro.
-  "fallbackPool": select(
-    !defined(coverImage) => *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
-  ),
+  "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
   "categories": categories[]->{ title, "slug": slug.current },
   "author": author->{
     name,

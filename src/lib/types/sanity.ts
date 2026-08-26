@@ -226,6 +226,10 @@ export interface BlogPostCard {
   publishedAt: string
   excerpt?: string
   coverImage?: SanityImage
+  /** shared site-wide Background Imagery pool, only fetched when this
+   * post has no coverImage of its own — see BlogPostDetail.astro and
+   * BlogMasonry.astro, which both pick a deterministic photo from it */
+  fallbackPool?: SanityImage[]
   categories?: { title: string; slug: string }[]
   /** just enough for a card byline (avatar + name) — the full bio/role/slug live on `Author`, used by the detail page */
   author?: { name: string; photo?: SanityImage }
@@ -235,9 +239,6 @@ export interface BlogPost extends BlogPostCard {
   author?: Author
   body: PortableTextBlock[]
   relatedProducts?: ProductCard[]
-  /** shared site-wide Background Imagery pool, only fetched when this
-   * post has no coverImage of its own — see BlogPostDetail.astro */
-  fallbackPool?: SanityImage[]
   seo?: Seo
 }
 
