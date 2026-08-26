@@ -249,31 +249,94 @@ const authorPhotoUrl = post.author?.photo
     font-size: var(--text-lg);
   }
 
-  /* Readable measure (70ch) on both text block types, centered within
-   * the wider .body box rather than pinned to its left edge -- .body
-   * itself stays at the page's full content-width because other
-   * things (the related-products grid, some Portable Text embeds)
-   * may want that full width later; only the actual prose column is
-   * narrowed for readability. */
-  .body :global(p) {
+  /* Readable measure (70ch) on every block-level type Portable Text
+   * can hand back, centered within the wider .body box rather than
+   * pinned to its left edge -- .body itself stays at the page's full
+   * content-width because other things (the related-products grid,
+   * some Portable Text embeds) may want that full width later; only
+   * the actual prose column is narrowed for readability. Migrated
+   * WordPress posts mix real heading blocks with bold *paragraphs*
+   * used as pseudo-headings (content structure, not a bug) -- both
+   * need to land in the same column, which is why this covers h2-h4
+   * and lists explicitly instead of just p. */
+  .body :global(p),
+  .body :global(h2),
+  .body :global(h3),
+  .body :global(h4),
+  .body :global(ul),
+  .body :global(ol),
+  .body :global(blockquote) {
     max-width: 70ch;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .body :global(p) {
     margin-bottom: var(--space-5);
     line-height: var(--leading-relaxed);
     color: var(--color-text-secondary);
   }
 
   .body :global(h2) {
-    max-width: 70ch;
-    margin-left: auto;
-    margin-right: auto;
-    font-family: var(--font-serif);
     font-weight: var(--font-normal);
     font-size: var(--text-2xl);
     color: var(--color-text-primary);
     margin-top: var(--space-10);
     margin-bottom: var(--space-4);
+  }
+
+  .body :global(h3) {
+    font-weight: var(--font-normal);
+    font-size: var(--text-xl);
+    color: var(--color-text-primary);
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-3);
+  }
+
+  .body :global(h4) {
+    font-weight: var(--font-semi);
+    font-size: var(--text-lg);
+    color: var(--color-text-primary);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
+  }
+
+  .body :global(ul),
+  .body :global(ol) {
+    margin-bottom: var(--space-5);
+    padding-left: var(--space-6);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .body :global(ul) {
+    list-style: disc;
+  }
+
+  .body :global(ol) {
+    list-style: decimal;
+  }
+
+  .body :global(li) {
+    margin-bottom: var(--space-2);
+  }
+
+  .body :global(li:last-child) {
+    margin-bottom: 0;
+  }
+
+  .body :global(blockquote) {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-6);
+    padding-left: var(--space-5);
+    border-left: var(--border-thin) solid var(--border-subtle);
+    font-style: italic;
+    color: var(--color-text-secondary);
+  }
+
+  .body :global(strong) {
+    font-weight: var(--font-semi);
+    color: var(--color-text-primary);
   }
 
   .body :global(a) {
