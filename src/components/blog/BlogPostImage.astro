@@ -40,11 +40,14 @@ const imageUrl = urlFor(node).width(1400).auto('format').quality(80).url()
 </figure>
 
 <style>
-  /* Same 70ch centered column as every other prose block (see
-   * BlogPostDetail.astro's .body rules) -- an inline image should sit
-   * in the reading column, not break out to the page's full width. */
+  /* Same centered prose column as every other block (see
+   * BlogPostDetail.astro's --prose-width, defined on .body and
+   * inherited here -- an inline image should sit in the reading
+   * column, not break out to the page's full width, and needs to
+   * share the exact pixel width other blocks use, not its own `ch`
+   * measure, to keep a consistent left edge). */
   .body-image {
-    max-width: 70ch;
+    max-width: var(--prose-width, 70ch);
     margin: var(--space-8) auto;
   }
 

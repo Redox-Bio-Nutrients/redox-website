@@ -250,22 +250,35 @@ const authorPhotoUrl = post.author?.photo
 
   /* ── Body prose ───────────────────────────────────────────────── */
   .body {
+    --prose-width: 54rem;
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-8) var(--space-6) var(--space-16);
     font-size: var(--text-lg);
   }
 
-  /* Readable measure (70ch) on every block-level type Portable Text
-   * can hand back, centered within the wider .body box rather than
-   * pinned to its left edge -- .body itself stays at the page's full
+  /* Readable measure on every block-level type Portable Text can hand
+   * back, centered within the wider .body box rather than pinned to
+   * its left edge -- .body itself stays at the page's full
    * content-width because other things (the related-products grid,
    * some Portable Text embeds) may want that full width later; only
    * the actual prose column is narrowed for readability. Migrated
    * WordPress posts mix real heading blocks with bold *paragraphs*
    * used as pseudo-headings (content structure, not a bug) -- both
    * need to land in the same column, which is why this covers h2-h4
-   * and lists explicitly instead of just p. */
+   * and lists explicitly instead of just p.
+   *
+   * A fixed --prose-width (not `ch`, despite `ch` being the "right"
+   * readable-measure unit in principle): `ch` is font-relative, and
+   * headings here use a different font/size than paragraphs, so each
+   * block type resolved to a *different actual pixel width* under
+   * `max-width: 70ch` -- all still centered on the same page midline,
+   * but with mismatched left edges as a result (a heading visibly
+   * indented from the paragraphs around it). One fixed width keeps
+   * every block's left (and right) edge pixel-identical regardless of
+   * its own font. BlogPostImage.astro's figure uses this same
+   * variable -- custom properties inherit across component
+   * boundaries fine, this doesn't need to be redefined there. */
   .body :global(p),
   .body :global(h2),
   .body :global(h3),
@@ -273,7 +286,7 @@ const authorPhotoUrl = post.author?.photo
   .body :global(ul),
   .body :global(ol),
   .body :global(blockquote) {
-    max-width: 70ch;
+    max-width: var(--prose-width);
     margin-left: auto;
     margin-right: auto;
   }
