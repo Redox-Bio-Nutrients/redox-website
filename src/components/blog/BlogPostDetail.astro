@@ -12,6 +12,7 @@
 
 import { PortableText } from 'astro-portabletext'
 import ProductGrid from '../products/ProductGrid.astro'
+import BlogPostImage from './BlogPostImage.astro'
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
@@ -22,6 +23,12 @@ interface Props {
 }
 
 const { post } = Astro.props
+
+// Without this, astro-portabletext has no renderer for Sanity's
+// "image" custom type -- see BlogPostImage.astro's frontmatter for
+// why (it logs a console warning and drops an error placeholder into
+// the page instead of the photo).
+const portableTextComponents = { type: { image: BlogPostImage } }
 
 // No cover image of its own -> a deterministic pick from the shared
 // Background Imagery pool stands in instead, seeded on the post's own
@@ -78,7 +85,7 @@ const authorPhotoUrl = post.author?.photo
 </div>
 
 <div class="body">
-  <PortableText value={post.body} />
+  <PortableText value={post.body} components={portableTextComponents} />
 </div>
 
 {post.author?.bio && (

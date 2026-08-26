@@ -1,0 +1,63 @@
+---
+// src/components/blog/BlogPostImage.astro
+//
+// Renders inline images embedded in a blog post's Portable Text body.
+// astro-portabletext has no built-in handler for Sanity's "image"
+// custom type (that's on the consumer to provide, same as any other
+// custom block) -- without this, the library logs
+// `[components.type] is missing "image"` to the console and drops an
+// error placeholder into the page instead of the photo. Registered
+// via BlogPostDetail.astro's
+// <PortableText components={{ type: { image: BlogPostImage } }} />.
+//
+// The image node comes straight off the raw `body` field -- no GROQ
+// expansion (see blog.ts's BLOG_POST_QUERY comment: `body` is passed
+// through untouched since a Portable Text array mixes block types
+// GROQ can't project uniformly), so there's no `dimensions`/`lqip` to
+// reserve layout space or blur-up with the way IMAGE_FRAGMENT gives
+// every other image on the site -- just the bare asset ref, which
+// urlFor() resolves directly without needing it dereferenced first.
+
+import { urlFor } from '../../lib/sanity'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+
+interface ImageNode {
+  _type: 'image'
+  asset: { _ref: string; _type: 'reference' }
+  alt?: string
+  caption?: string
+}
+
+type Props = PortableTextProps<ImageNode>
+
+const { node } = Astro.props
+const imageUrl = urlFor(node).width(1400).auto('format').quality(80).url()
+---
+
+<figure class="body-image">
+  <img src={imageUrl} alt={node.alt ?? ''} loading="lazy" />
+  {node.caption && <figcaption>{node.caption}</figcaption>}
+</figure>
+
+<style>
+  /* Same 70ch centered column as every other prose block (see
+   * BlogPostDetail.astro's .body rules) -- an inline image should sit
+   * in the reading column, not break out to the page's full width. */
+  .body-image {
+    max-width: 70ch;
+    margin: var(--space-8) auto;
+  }
+
+  .body-image img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .body-image figcaption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+</style>
