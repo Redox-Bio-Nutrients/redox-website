@@ -14,6 +14,12 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
   publishedAt,
   excerpt,
   "coverImage": coverImage ${IMAGE_FRAGMENT},
+  // Only fetched when this post has no cover image of its own — a
+  // deterministic pick from it (seeded on _id) stands in for the hero
+  // photo instead. See BlogPostDetail.astro.
+  "fallbackPool": select(
+    !defined(coverImage) => *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+  ),
   "categories": categories[]->{ title, "slug": slug.current },
   "author": author->{
     name,

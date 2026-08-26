@@ -14,6 +14,7 @@ import { PortableText } from 'astro-portabletext'
 import ProductGrid from '../products/ProductGrid.astro'
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
+import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { BlogPost } from '../../lib/types/sanity'
 
 interface Props {
@@ -22,8 +23,17 @@ interface Props {
 
 const { post } = Astro.props
 
-const coverImageUrl = post.coverImage
-  ? urlFor(post.coverImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
+// No cover image of its own -> a deterministic pick from the shared
+// Background Imagery pool stands in instead, seeded on the post's own
+// _id (same pattern as groundedAccent() in src/lib/color.ts) so the
+// same post always gets the same photo across rebuilds rather than a
+// different one on every deploy.
+const heroImage =
+  post.coverImage ??
+  (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
+
+const coverImageUrl = heroImage
+  ? urlFor(heroImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
 
 const authorPhotoUrl = post.author?.photo
@@ -33,7 +43,7 @@ const authorPhotoUrl = post.author?.photo
 
 {coverImageUrl ? (
   <header class="hero">
-    <img class="hero__bg" src={coverImageUrl} alt={post.coverImage?.alt ?? ''} loading="eager" />
+    <img class="hero__bg" src={coverImageUrl} alt={heroImage?.alt ?? ''} loading="eager" />
     <div class="hero__overlay" aria-hidden="true"></div>
     <div class="hero__content">
       {post.categories && post.categories.length > 0 && (
