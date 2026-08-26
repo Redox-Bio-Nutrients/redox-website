@@ -1,0 +1,40 @@
+---
+// src/pages/preview/blog/[slug].astro
+//
+// Draft-aware mirror of src/pages/blog/[slug].astro — same
+// BlogPostDetail component, same design, but SSR (prerender = false,
+// no getStaticPaths) and fetched via the draft-perspective client
+// (getBlogPostPreview) so an unpublished draft renders exactly as a
+// visitor will eventually see it once published. Gated by the
+// "sanity-preview" cookie set in src/pages/api/preview.ts — this route
+// is never linked from anywhere on the public site.
+
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import BlogPostDetail from '../../../components/blog/BlogPostDetail.astro'
+import PreviewBanner from '../../../components/preview/PreviewBanner.astro'
+import { getBlogPostPreview } from '../../../lib/queries'
+
+export const prerender = false
+
+const authed = Astro.cookies.get('sanity-preview')?.value === '1'
+if (!authed) {
+  return new Response(
+    'Preview not authorized. Open this page via the preview link (see src/pages/api/preview.ts) rather than navigating here directly.',
+    { status: 401 },
+  )
+}
+
+const { slug } = Astro.params
+const post = await getBlogPostPreview(slug!)
+
+if (!post) {
+  return new Response(`No blog post found for slug "${slug}" (checked drafts and published).`, {
+    status: 404,
+  })
+}
+---
+
+<BaseLayout title={post.title} description={post.excerpt} seo={post.seo}>
+  <PreviewBanner />
+  <BlogPostDetail post={post} />
+</BaseLayout>

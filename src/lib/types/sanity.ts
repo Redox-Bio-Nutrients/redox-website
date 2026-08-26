@@ -235,6 +235,9 @@ export interface BlogPost extends BlogPostCard {
   author?: Author
   body: PortableTextBlock[]
   relatedProducts?: ProductCard[]
+  /** shared site-wide Background Imagery pool, only fetched when this
+   * post has no coverImage of its own — see BlogPostDetail.astro */
+  fallbackPool?: SanityImage[]
   seo?: Seo
 }
 
