@@ -12,10 +12,18 @@
 // to the site's normal content width and sized at 2x the normal type
 // scale (both still true from earlier passes), it's just laid
 // straight over the image now instead of inside a floating box.
+//
+// No cover image of its own -> same deterministic pick from the
+// shared Background Imagery pool as the masonry grid and the post's
+// own detail-page hero use (seeded on the post's _id, see
+// BlogMasonry.astro / BlogPostDetail.astro) -- only once that pool is
+// also empty does this fall back further, to the flat
+// .featured__bg--fallback gradient below.
 
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { deriveCalloutPalette, groundedAccent } from '../../lib/color'
+import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { BlogPostCard } from '../../lib/types/sanity'
 
 interface Props {
@@ -24,8 +32,11 @@ interface Props {
 
 const { post } = Astro.props
 const href = `/blog/${post.slug}`
-const imageUrl = post.coverImage
-  ? urlFor(post.coverImage).width(2400).height(1400).fit('crop').auto('format').quality(80).url()
+const heroImage =
+  post.coverImage ??
+  (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
+const imageUrl = heroImage
+  ? urlFor(heroImage).width(2400).height(1400).fit('crop').auto('format').quality(80).url()
   : null
 
 // Category pill color: derived from the category's own slug (not the
