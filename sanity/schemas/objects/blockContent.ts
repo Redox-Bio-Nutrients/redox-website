@@ -87,5 +87,29 @@ export const blockContent = defineType({
         },
       },
     }),
+    defineArrayMember({
+      type: 'object',
+      name: 'productEmbed',
+      title: 'Product Card(s)',
+      description: 'Feature one or more products inline, e.g. right where the post is talking about them.',
+      fields: [
+        {
+          name: 'products',
+          title: 'Products',
+          type: 'array',
+          of: [{ type: 'reference', to: [{ type: 'product' }] }],
+          validation: (rule: any) => rule.min(1).max(4),
+        },
+      ],
+      preview: {
+        select: { products: 'products', firstTitle: 'products.0.title' },
+        prepare({ products, firstTitle }: { products?: unknown[]; firstTitle?: string }) {
+          const count = products?.length ?? 0
+          const title =
+            count === 1 ? (firstTitle ?? 'Product Card') : `Product Cards (${count})`
+          return { title }
+        },
+      },
+    }),
   ],
 })

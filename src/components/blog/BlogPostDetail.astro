@@ -14,6 +14,7 @@ import { PortableText } from 'astro-portabletext'
 import ProductGrid from '../products/ProductGrid.astro'
 import BlogPostImage from './BlogPostImage.astro'
 import BlogPostGallery from './BlogPostGallery.astro'
+import BlogPostProductEmbed from './BlogPostProductEmbed.astro'
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
@@ -42,7 +43,12 @@ const { post } = Astro.props
 // treatment without an editor having to go back and manually convert
 // every one.
 const portableTextComponents = {
-  type: { image: BlogPostImage, gallery: BlogPostGallery, imageGallery: BlogPostGallery },
+  type: {
+    image: BlogPostImage,
+    gallery: BlogPostGallery,
+    imageGallery: BlogPostGallery,
+    productEmbed: BlogPostProductEmbed,
+  },
 }
 
 // A run of 2+ consecutive image blocks collapses into one synthetic

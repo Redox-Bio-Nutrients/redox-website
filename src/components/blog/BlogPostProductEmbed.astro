@@ -1,0 +1,64 @@
+---
+// src/components/blog/BlogPostProductEmbed.astro
+//
+// Renders the "productEmbed" custom block type (sanity/schemas/objects/
+// blockContent.ts) -- an editor featuring one or more specific products
+// right where the post is talking about them, distinct from the
+// "Related Products" grid that always sits at the very end of every
+// post (BlogPostDetail.astro's <ProductGrid products={post.relatedProducts} />
+// section). Reuses the exact same ProductCard.astro everywhere else on
+// the site uses, just at a narrower grid (max 2 columns) sized for the
+// ~864px prose column (--prose-width) instead of the full page width
+// ProductGrid's own 4-column grid assumes.
+//
+// Needs `products` already resolved to real ProductCard data by the
+// time it gets here -- see blog.ts's BLOG_POST_QUERY comment for the
+// conditional GROQ projection that does that (a raw productEmbed block
+// only has unresolved references, same as any other reference field).
+
+import ProductCard from '../products/ProductCard.astro'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+import type { ProductCard as ProductCardType } from '../../lib/types/sanity'
+
+interface ProductEmbedNode {
+  _type: 'productEmbed'
+  products: ProductCardType[]
+}
+
+type Props = PortableTextProps<ProductEmbedNode>
+
+const { node } = Astro.props
+const products = node.products ?? []
+---
+
+{products.length > 0 && (
+  <div class:list={['product-embed', { 'product-embed--single': products.length === 1 }]}>
+    {products.map((product) => <ProductCard product={product} />)}
+  </div>
+)}
+
+<style>
+  /* Same centered prose column as every other block (see
+   * BlogPostDetail.astro's --prose-width) -- falls back to a fixed
+   * width if rendered somewhere that variable isn't defined. */
+  .product-embed {
+    max-width: var(--prose-width, 54rem);
+    margin: var(--space-8) auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+
+  /* A single featured product reads better narrower and centered than
+   * stretched to fill the full prose width. */
+  .product-embed--single {
+    grid-template-columns: minmax(0, 18rem);
+    justify-content: center;
+  }
+
+  @media (max-width: 479px) {
+    .product-embed {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
