@@ -49,23 +49,79 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 </section>
 
 <style>
+  /* Outer element is the page-edge gutter only (matches .body's own
+   * page-edge padding on mobile, where prose-width no longer binds) —
+   * it deliberately carries no max-width of its own. The card below
+   * does the actual measure-matching, so its border lands exactly on
+   * the same edges as the article's paragraphs (a plain padding here
+   * on top of a max-width, as this used to be, ate into the card's
+   * width and inset it ~24px from the prose column on either side).
+   * Bottom padding gives the box room to breathe before whatever
+   * follows — Related Products, or straight into the site Footer on
+   * a post with none. */
   .author-footer {
-    max-width: var(--prose-width, 54rem);
-    margin: var(--space-10) auto 0;
-    padding: 0 var(--space-6);
+    padding: 0 var(--space-6) var(--space-16);
   }
 
   .author-footer__card {
+    position: relative;
     display: flex;
     gap: var(--space-6);
     align-items: flex-start;
+    max-width: var(--prose-width, 54rem);
+    margin: var(--space-10) auto 0;
     padding: var(--space-8);
+    /* Room for the leaf sprig anchored at the bottom-right corner
+     * below, so bio copy never runs under it. */
+    padding-right: clamp(6rem, 20%, 8rem);
     background: var(--bg-surface);
     border: var(--border-thin) solid var(--border-subtle);
     /* Mirrored-leaf corner, scaled down from the site's --radius-leaf-
      * mirror token to a card-sized detail — same asymmetric-radius
      * language ProductDetail's sidebar card uses. */
     border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+    /* No overflow:hidden — the leaf sprig below is allowed to spill
+     * past the border, same as CalloutSection's corner sprig. */
+  }
+
+  /* ── Leaf sprig — permanent fixture at the bottom-right corner ───
+   * Same two-leaf bloom CalloutSection uses permanently at its
+   * top-right corner (itself the always-on sibling of the hover-only
+   * bloom on ProductCard) — mirrored to pivot from the bottom-right
+   * instead: sharp corners on the TL/BR diagonal (opposite of
+   * CalloutSection's TR/BL) so the point still lands exactly on its
+   * pivot corner. */
+  .author-footer__card::before,
+  .author-footer__card::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    border-radius: 0 100% 0 100%;
+    transform-origin: 100% 100%;
+    pointer-events: none;
+  }
+
+  .author-footer__card::before {
+    width: clamp(48px, 11%, 84px);
+    aspect-ratio: 1 / 2.1;
+    background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
+    opacity: 0.92;
+    transform: rotate(-8deg);
+  }
+
+  .author-footer__card::after {
+    width: clamp(32px, 7%, 56px);
+    aspect-ratio: 1 / 2.1;
+    background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
+    opacity: 0.65;
+    transform: rotate(32deg);
+  }
+
+  .author-footer__body {
+    position: relative;
+    z-index: 2;
   }
 
   .author-footer__photo {
