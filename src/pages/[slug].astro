@@ -15,6 +15,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
 import { getAllPageSlugs, getPage } from '../lib/queries'
 import { urlFor } from '../lib/sanity'
+import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
 
 export async function getStaticPaths() {
   const slugs = await getAllPageSlugs()
@@ -75,7 +76,11 @@ const heroImageUrl = page.heroImage
 
   {page.body && page.body.length > 0 && (
     <div class="body">
-      <PortableText value={page.body} />
+      <PortableText
+        value={page.body}
+        components={portableTextComponents}
+        onMissingComponent={onMissingPortableTextComponent}
+      />
     </div>
   )}
 </BaseLayout>

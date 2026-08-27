@@ -2,7 +2,7 @@
 
 import { sanityFetch } from '../sanity'
 import type { UniversityResource, UniversityResourceCard } from '../types/sanity'
-import { IMAGE_FRAGMENT, SEO_FRAGMENT } from './fragments'
+import { IMAGE_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
 
 const RESOURCE_CARD_FRAGMENT = /* groq */ `{
   _id,
@@ -32,7 +32,7 @@ export async function getUniversityResource(slug: string): Promise<UniversityRes
       "coverImage": coverImage ${IMAGE_FRAGMENT},
       videoUrl,
       "fileUrl": file.asset->url,
-      body,
+      ${blockContentField('body')},
       ${SEO_FRAGMENT}
     }`,
     { slug },

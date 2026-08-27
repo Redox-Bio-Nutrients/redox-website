@@ -1,0 +1,218 @@
+---
+// src/components/blog/BlogMasonryTile.astro
+//
+// One masonry card's markup + look, factored out of BlogMasonry.astro
+// so it can be rendered identically into all three of that component's
+// column-count variants (desktop/tablet/mobile — see BlogMasonry.astro
+// for why there are three separate renders) without hand-duplicating
+// this JSX three times.
+
+import { formatDate } from '../../lib/format'
+import type { BlogPostCard, SanityImage } from '../../lib/types/sanity'
+
+interface CategoryChip {
+  category: { title: string; slug: string }
+  palette: { bright: string; deep: string }
+}
+
+interface Props {
+  post: BlogPostCard
+  heroImage: SanityImage | null
+  imageUrl: string | null
+  aspectRatio: string
+  accent: string
+  authorPhotoUrl: string | null
+  categoryChips: CategoryChip[]
+}
+
+const { post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, categoryChips } = Astro.props
+---
+
+<a
+  href={`/blog/${post.slug}`}
+  class="masonry__item"
+  style={`aspect-ratio: ${aspectRatio}; --tile-accent: ${accent}`}
+>
+  {imageUrl ? (
+    <img src={imageUrl} alt={heroImage?.alt ?? post.title} loading="lazy" />
+  ) : (
+    <div class="masonry__placeholder" aria-hidden="true"></div>
+  )}
+  <div class="masonry__scrim" aria-hidden="true"></div>
+  <div class="masonry__caption">
+    {categoryChips.length > 0 && (
+      <div class="masonry__categories">
+        {categoryChips.map(({ category, palette }) => (
+          <span class="pill" style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
+            {category.title}
+          </span>
+        ))}
+      </div>
+    )}
+    <h3>{post.title}</h3>
+    <p class="masonry__date">{formatDate(post.publishedAt)}</p>
+    {post.author && (
+      <div class="masonry__byline">
+        {authorPhotoUrl ? (
+          <img class="masonry__author-photo" src={authorPhotoUrl} alt="" width="80" height="80" loading="lazy" />
+        ) : (
+          <span class="masonry__author-placeholder" aria-hidden="true"></span>
+        )}
+        <span class="masonry__author-name">{post.author.name}</span>
+      </div>
+    )}
+  </div>
+</a>
+
+<style>
+  .masonry__item {
+    position: relative;
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    background: var(--bg-surface);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .masonry__item:hover {
+    box-shadow: 0 22px 46px -16px color-mix(in srgb, var(--tile-accent) 55%, transparent);
+    transform: translateY(-3px);
+  }
+
+  .masonry__item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Modest vibrancy boost — cover images are meant to be real
+     * photography (landscape, art), not the flatter product-packaging
+     * shots standing in as placeholders right now, so they should read
+     * vividly even before real content replaces them. */
+    filter: saturate(1.2) contrast(1.05);
+    transition: transform 0.4s ease;
+  }
+
+  .masonry__item:hover img {
+    transform: scale(1.04);
+  }
+
+  .masonry__placeholder {
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.12), transparent 60%),
+      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.3), transparent 55%),
+      var(--color-green-dark);
+  }
+
+  /* Grounded-accent scrim: a colored gradient instead of flat black —
+   * strongest right behind the caption, a soft tinted bloom in the
+   * top-left corner (echoing the callout boxes' "light catching"
+   * highlight), fading to clear over the rest of the photo. Hover
+   * deepens it slightly and the box picks up a matching colored glow
+   * (above). A flat dark wash sits underneath as the bottom-most layer
+   * — the tinted gradient alone leaves the top of the tile essentially
+   * unwashed, which read fine over darker placeholder art but isn't
+   * reliably dark enough for white caption text over bright real
+   * photography, so this guarantees a baseline contrast everywhere. */
+  .masonry__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 50% at 12% 8%, color-mix(in srgb, var(--tile-accent) 38%, transparent), transparent 60%),
+      linear-gradient(
+        to top,
+        color-mix(in srgb, var(--tile-accent) 85%, black 15%) 0%,
+        color-mix(in srgb, var(--tile-accent) 40%, transparent) 45%,
+        transparent 70%
+      ),
+      rgb(0 0 0 / 0.3);
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .masonry__item:hover .masonry__scrim {
+    opacity: 1;
+  }
+
+  .masonry__caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    padding: var(--space-5);
+    color: var(--color-white);
+  }
+
+  .masonry__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  /* Category chip: a bright->deep gradient derived from the
+   * category's own grounded accent, plus the same fine-grain texture
+   * CalloutSection paints its surfaces with — the "gradient/color/
+   * texture" language carried onto the pill itself, distinct from the
+   * per-post accent driving the tile's scrim/glow. */
+  .pill {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
+      linear-gradient(135deg, var(--pill-bright), var(--pill-deep));
+    background-blend-mode: overlay, normal;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    color: var(--color-white);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .masonry__caption h3 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+    color: var(--color-white);
+  }
+
+  .masonry__date {
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  .masonry__byline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .masonry__author-photo {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 1px solid rgb(255 255 255 / 0.5);
+  }
+
+  .masonry__author-placeholder {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.25);
+    border: 1px solid rgb(255 255 255 / 0.5);
+  }
+
+  .masonry__author-name {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: rgb(255 255 255 / 0.95);
+  }
+</style>

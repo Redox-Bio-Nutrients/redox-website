@@ -9,6 +9,7 @@
 // mixing/handling instructions.
 
 import { PortableText } from 'astro-portabletext'
+import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import type { WarningSection } from '../../../lib/types/sanity'
 
 interface Props {
@@ -23,7 +24,11 @@ const { section } = Astro.props
   <div class="warning__body">
     {section.heading && <h2>{section.heading}</h2>}
     <div class="warning__message">
-      <PortableText value={section.message} />
+      <PortableText
+        value={section.message}
+        components={portableTextComponents}
+        onMissingComponent={onMissingPortableTextComponent}
+      />
     </div>
     {section.steps && section.steps.length > 0 && (
       <ol class="warning__steps">

@@ -8,6 +8,7 @@ import {
   IMAGE_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,
   SEO_FRAGMENT,
+  blockContentField,
 } from './fragments'
 
 // Shared by getBlogPost/getBlogPostPreview — one projection, two
@@ -29,7 +30,7 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
     "photo": photo ${IMAGE_FRAGMENT},
     bio
   },
-  body,
+  ${blockContentField('body')},
   "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
   ${SEO_FRAGMENT}
 }`

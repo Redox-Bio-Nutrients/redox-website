@@ -1,45 +1,65 @@
 ---
 // src/components/blog/BlogMasonry.astro
 //
-// True variable-height (Pinterest-style) masonry via CSS multi-column
-// layout — no JS needed. Each cover photo keeps its native aspect
-// ratio (from the image's asset metadata, via IMAGE_FRAGMENT's
-// `dimensions`) so columns stagger organically instead of being
-// cropped to a uniform box. `break-inside: avoid` keeps each tile
-// intact within its column instead of splitting across the column
-// break.
+// True variable-height (Pinterest-style) masonry — no JS needed.
+// Three approaches were tried and dropped before this one:
+//   - Uniform-height tiles read flat and repetitive.
+//   - CSS multi-column (`columns: 3`) with each tile's *native* photo
+//     aspect ratio: wildly inconsistent heights (a very wide source
+//     photo next to a tall portrait one), and fills column-by-column
+//     — the newest posts all stacked in column 1 before column 2 even
+//     started, reading backwards.
+//   - CSS Grid + `grid-auto-flow: row dense` with curated height
+//     buckets: fixed the height problem, and *mostly* reads in
+//     chronological order, but `dense` only guarantees no gaps, not
+//     order — with large enough height differences between buckets it
+//     can pull a much-older post forward several slots to plug a hole
+//     while the newest posts pile up in whichever column happened to
+//     free up fastest. Visible in review: two 2026 posts stacked in
+//     column 1 while column 2 and 3 opened with a 2023 and a 2022 post.
+// This version distributes tiles into columns explicitly, in plain
+// round-robin (tile 0 -> col 0, tile 1 -> col 1, ... wrapping), at
+// build time in the frontmatter below — a hard guarantee that reading
+// left-to-right then down never skips out of publish order, which
+// `dense` packing can't promise. Each column is then just a plain
+// flex column stack (gap, no packing algorithm needed at all) — a
+// tile's curated height bucket (HEIGHT_BUCKETS below, still
+// deterministic per post rather than the photo's native aspect ratio)
+// only affects that one column's total length, no cross-column
+// reshuffling.
 //
-// Card look: rounded-corner tile, category/title/date/byline overlaid
-// directly on the photo (bottom-left, above a gradient scrim) — no
-// caption block below the image. Constrained to the site's normal
-// content width, matching BlogFeatured.
+// The column *membership* is a build-time decision (round-robin over
+// N columns), so it can't be expressed in CSS alone — this renders
+// three complete variants (3/2/1 columns, matching the desktop/
+// tablet/mobile breakpoints) and shows only one at a time via media
+// query. Costs some extra markup (each post's tile markup appears up
+// to 3 times in the HTML) in exchange for staying fully static: no
+// client JS, no reflow-on-resize logic, no hydration. Hidden variants'
+// `<img loading="lazy">` never fires — lazy-loading only loads what's
+// actually laid out, and `display: none` has no box — so this doesn't
+// cost extra image requests, only extra (highly repetitive, so
+// cheaply gzipped) markup text.
+//
+// Card look itself (rounded-corner tile, category/title/date/byline
+// overlaid directly on the photo above a gradient scrim) lives in
+// BlogMasonryTile.astro, rendered identically into all three variants
+// below rather than hand-duplicated.
 //
 // Color: blog posts have no `primaryColor` field the way products do,
 // so each tile gets a deterministic "grounded" accent (groundedAccent(),
 // src/lib/color.ts — the same curated hue bands as CalloutSection's
-// product-page boxes) seeded off the post's own `_id`. The scrim is
-// tinted with that accent instead of flat black, and hover intensifies
-// both the scrim and a matching colored glow around the tile. A flat
-// dark wash sits underneath that tint (see .masonry__scrim) purely for
-// text contrast — the tint alone wasn't reliably dark enough once real
-// photography (below) started filling every tile.
-// (An earlier pass also layered a grain texture into the scrim —
-// pulled back out, it read as noisy rather than rich.)
-// Photos get a modest saturation/contrast boost — cover images are
-// meant to be real photography (landscape, art), not the flatter
-// product-packaging shots standing in as placeholders right now, so
-// they should read vividly even before real content replaces them.
+// product-page boxes) seeded off the post's own `_id`.
 //
 // Posts with no cover image of their own fall back to a deterministic
 // pick from the shared Background Imagery pool (seeded on the post's
-// own _id, same pattern as groundedAccent() below) — same fallback the
-// detail page hero uses (BlogPostDetail.astro) — rather than the flat
-// placeholder tile, so the grid stays photo-driven end to end.
+// own _id) — same fallback the detail page hero uses
+// (BlogPostDetail.astro) — rather than a flat placeholder tile, so the
+// grid stays photo-driven end to end.
 
 import { urlFor } from '../../lib/sanity'
-import { formatDate } from '../../lib/format'
 import { deriveCalloutPalette, groundedAccent } from '../../lib/color'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
+import BlogMasonryTile from './BlogMasonryTile.astro'
 import type { BlogPostCard } from '../../lib/types/sanity'
 
 interface Props {
@@ -49,240 +69,103 @@ interface Props {
 
 const { posts, emptyMessage = 'More posts coming soon.' } = Astro.props
 
+// Four curated tile heights (not the photo's native aspect ratio —
+// real photos ranged wildly tall/short and produced erratic-looking
+// columns). Expressed as CSS aspect-ratio values.
+const HEIGHT_BUCKETS = ['4 / 3', '1 / 1', '4 / 5', '3 / 5']
+
 const tiles = posts.map((post) => {
   const heroImage =
     post.coverImage ??
     (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
+  // Separately seeded from the heroImage pick above (a distinct seed
+  // string, not just a second draw off the same generator) so the two
+  // choices vary independently instead of tracking each other.
+  const aspectRatio = randomChoice(seededRandom(`${post._id}-height`), HEIGHT_BUCKETS)
 
   return {
-  post,
-  heroImage,
-  imageUrl: heroImage
-    ? urlFor(heroImage).width(900).auto('format').quality(75).url()
-    : null,
-  // Reserves the tile's real aspect ratio before the image loads —
-  // without this every tile would default to the placeholder's 4/3
-  // and jump to its true height once the photo arrives.
-  aspectRatio: heroImage?.dimensions
-    ? `${heroImage.dimensions.width} / ${heroImage.dimensions.height}`
-    : '4 / 3',
-  accent: groundedAccent(post._id),
-  authorPhotoUrl: post.author?.photo
-    ? urlFor(post.author.photo).width(80).height(80).fit('crop').auto('format').url()
-    : null,
-  // Category chip color: derived from the category's own slug (not
-  // the post's), so e.g. every "Agronomy" pill site-wide is the same
-  // color, distinct from the per-post accent used for the scrim/glow.
-  categoryChips: (post.categories ?? []).map((category) => ({
-    category,
-    palette: deriveCalloutPalette(groundedAccent(category.slug)),
-  })),
+    post,
+    heroImage,
+    imageUrl: heroImage
+      ? urlFor(heroImage).width(900).auto('format').quality(75).url()
+      : null,
+    aspectRatio,
+    accent: groundedAccent(post._id),
+    authorPhotoUrl: post.author?.photo
+      ? urlFor(post.author.photo).width(80).height(80).fit('crop').auto('format').url()
+      : null,
+    // Category chip color: derived from the category's own slug (not
+    // the post's), so e.g. every "Agronomy" pill site-wide is the same
+    // color, distinct from the per-post accent used for the scrim/glow.
+    categoryChips: (post.categories ?? []).map((category) => ({
+      category,
+      palette: deriveCalloutPalette(groundedAccent(category.slug)),
+    })),
   }
 })
+
+// Round-robin distribution — see frontmatter. tile[i] always lands in
+// column i % columnCount, so reading left-to-right then wrapping can
+// never skip out of publish order, unlike gap-filling packing.
+function intoColumns<T>(items: T[], columnCount: number): T[][] {
+  const columns: T[][] = Array.from({ length: columnCount }, () => [])
+  items.forEach((item, i) => columns[i % columnCount].push(item))
+  return columns
+}
+
+const desktopColumns = intoColumns(tiles, 3)
+const tabletColumns = intoColumns(tiles, 2)
 ---
 
 {tiles.length > 0 ? (
-  <div class="masonry">
-    {tiles.map(({ post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, categoryChips }) => (
-      <a
-        href={`/blog/${post.slug}`}
-        class="masonry__item"
-        style={`aspect-ratio: ${aspectRatio}; --tile-accent: ${accent}`}
-      >
-        {imageUrl ? (
-          <img src={imageUrl} alt={heroImage?.alt ?? post.title} loading="lazy" />
-        ) : (
-          <div class="masonry__placeholder" aria-hidden="true"></div>
-        )}
-        <div class="masonry__scrim" aria-hidden="true"></div>
-        <div class="masonry__caption">
-          {categoryChips.length > 0 && (
-            <div class="masonry__categories">
-              {categoryChips.map(({ category, palette }) => (
-                <span class="pill" style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
-                  {category.title}
-                </span>
-              ))}
-            </div>
-          )}
-          <h3>{post.title}</h3>
-          <p class="masonry__date">{formatDate(post.publishedAt)}</p>
-          {post.author && (
-            <div class="masonry__byline">
-              {authorPhotoUrl ? (
-                <img class="masonry__author-photo" src={authorPhotoUrl} alt="" width="80" height="80" loading="lazy" />
-              ) : (
-                <span class="masonry__author-placeholder" aria-hidden="true"></span>
-              )}
-              <span class="masonry__author-name">{post.author.name}</span>
-            </div>
-          )}
+  <div class="masonry-wrap">
+    <div class="masonry-cols masonry-cols--desktop">
+      {desktopColumns.map((column) => (
+        <div class="masonry__col">
+          {column.map((tile) => <BlogMasonryTile {...tile} />)}
         </div>
-      </a>
-    ))}
+      ))}
+    </div>
+    <div class="masonry-cols masonry-cols--tablet">
+      {tabletColumns.map((column) => (
+        <div class="masonry__col">
+          {column.map((tile) => <BlogMasonryTile {...tile} />)}
+        </div>
+      ))}
+    </div>
+    <div class="masonry-cols masonry-cols--mobile">
+      <div class="masonry__col">
+        {tiles.map((tile) => <BlogMasonryTile {...tile} />)}
+      </div>
+    </div>
   </div>
 ) : (
   <p class="empty">{emptyMessage}</p>
 )}
 
 <style>
-  .masonry {
+  .masonry-wrap {
     max-width: var(--content-width);
     margin: 0 auto;
-    columns: 3;
-    column-gap: var(--space-6);
     padding: var(--space-10) var(--space-6) var(--space-24);
   }
 
-  .masonry__item {
-    position: relative;
-    display: block;
-    width: 100%;
-    break-inside: avoid;
-    margin-bottom: var(--space-6);
-    border-radius: var(--radius-2xl);
-    overflow: hidden;
-    background: var(--bg-surface);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  .masonry-cols {
+    display: none;
+    gap: var(--space-6);
+    align-items: flex-start;
   }
 
-  .masonry__item:hover {
-    box-shadow: 0 22px 46px -16px color-mix(in srgb, var(--tile-accent) 55%, transparent);
-    transform: translateY(-3px);
-  }
-
-  .masonry__item img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* Modest vibrancy boost — see frontmatter. */
-    filter: saturate(1.2) contrast(1.05);
-    transition: transform 0.4s ease;
-  }
-
-  .masonry__item:hover img {
-    transform: scale(1.04);
-  }
-
-  .masonry__placeholder {
-    width: 100%;
-    height: 100%;
-    background:
-      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.12), transparent 60%),
-      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.3), transparent 55%),
-      var(--color-green-dark);
-  }
-
-  /* Grounded-accent scrim (see frontmatter): a colored gradient
-   * instead of flat black — strongest right behind the caption, a
-   * soft tinted bloom in the top-left corner (echoing the callout
-   * boxes' "light catching" highlight), fading to clear over the rest
-   * of the photo. Hover deepens it slightly and the box picks up a
-   * matching colored glow (above). A flat dark wash sits underneath as
-   * the bottom-most layer — the tinted gradient alone leaves the top
-   * of the tile essentially unwashed, which read fine over darker
-   * placeholder art but isn't reliably dark enough for white caption
-   * text over bright real photography (Background Imagery pool /
-   * cover photos), so this guarantees a baseline contrast everywhere. */
-  .masonry__scrim {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(60% 50% at 12% 8%, color-mix(in srgb, var(--tile-accent) 38%, transparent), transparent 60%),
-      linear-gradient(
-        to top,
-        color-mix(in srgb, var(--tile-accent) 85%, black 15%) 0%,
-        color-mix(in srgb, var(--tile-accent) 40%, transparent) 45%,
-        transparent 70%
-      ),
-      rgb(0 0 0 / 0.3);
-    opacity: 0.9;
-    transition: opacity 0.3s ease;
-  }
-
-  .masonry__item:hover .masonry__scrim {
-    opacity: 1;
-  }
-
-  .masonry__caption {
-    position: absolute;
-    inset: auto 0 0 0;
-    z-index: 2;
-    padding: var(--space-5);
-    color: var(--color-white);
-  }
-
-  .masonry__categories {
+  .masonry__col {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-2);
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+    flex: 1 1 0;
   }
 
-  /* Category chip: a bright->deep gradient derived from the
-   * category's own grounded accent (see frontmatter), plus the same
-   * fine-grain texture CalloutSection paints its surfaces with — the
-   * "gradient/color/texture" language carried onto the pill itself,
-   * distinct from the per-post accent driving the tile's scrim/glow. */
-  .pill {
-    display: inline-block;
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
-      linear-gradient(135deg, var(--pill-bright), var(--pill-deep));
-    background-blend-mode: overlay, normal;
-    border: 1px solid rgb(255 255 255 / 0.25);
-    color: var(--color-white);
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-
-  .masonry__caption h3 {
-    font-family: var(--font-serif);
-    font-weight: var(--font-normal);
-    font-size: var(--text-xl);
-    line-height: var(--leading-tight);
-    color: var(--color-white);
-  }
-
-  .masonry__date {
-    margin-top: var(--space-1);
-    font-size: var(--text-sm);
-    color: rgb(255 255 255 / 0.8);
-  }
-
-  .masonry__byline {
+  .masonry-cols--desktop {
     display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    margin-top: var(--space-3);
-  }
-
-  .masonry__author-photo {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-full);
-    object-fit: cover;
-    border: 1px solid rgb(255 255 255 / 0.5);
-  }
-
-  .masonry__author-placeholder {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-full);
-    background: rgb(255 255 255 / 0.25);
-    border: 1px solid rgb(255 255 255 / 0.5);
-  }
-
-  .masonry__author-name {
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    color: rgb(255 255 255 / 0.95);
   }
 
   .empty {
@@ -292,14 +175,25 @@ const tiles = posts.map((post) => {
   }
 
   @media (max-width: 1023px) {
-    .masonry {
-      columns: 2;
+    .masonry-cols--desktop {
+      display: none;
+    }
+
+    .masonry-cols--tablet {
+      display: flex;
     }
   }
 
   @media (max-width: 639px) {
-    .masonry {
-      columns: 1;
+    .masonry-cols--tablet {
+      display: none;
+    }
+
+    .masonry-cols--mobile {
+      display: flex;
+    }
+
+    .masonry-wrap {
       padding-bottom: var(--space-16);
     }
   }

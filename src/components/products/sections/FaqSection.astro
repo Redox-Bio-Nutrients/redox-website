@@ -8,6 +8,7 @@
 // collapses on open) — same "no icon library" rule as the theme toggle.
 
 import { PortableText } from 'astro-portabletext'
+import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import type { FaqSection } from '../../../lib/types/sanity'
 
 interface Props {
@@ -27,7 +28,11 @@ const { section } = Astro.props
           <span class="faq__icon" aria-hidden="true"></span>
         </summary>
         <div class="faq__answer">
-          <PortableText value={item.answer} />
+          <PortableText
+            value={item.answer}
+            components={portableTextComponents}
+            onMissingComponent={onMissingPortableTextComponent}
+          />
         </div>
       </details>
     ))}

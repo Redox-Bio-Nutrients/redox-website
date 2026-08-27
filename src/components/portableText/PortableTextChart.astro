@@ -1,0 +1,46 @@
+---
+// src/components/portableText/PortableTextChart.astro
+//
+// Renders the "chartSection" custom block type wherever it appears
+// *nested inside* a blockContent field (a blog post body, a product's
+// callout/text/warning/FAQ body, a page body, a home page column) --
+// distinct from chartSection's other, older usage as a top-level
+// product-page section (ProductSections.astro's dispatcher already
+// renders it directly there, already appropriately sized by that
+// page's own section stack; this wrapper exists for the *embedded*
+// case, which needs its own width handling).
+//
+// chartSection already exists as a complete, reusable object type
+// (sanity/schemas/objects/productSections.ts, "Trial Chart") and
+// ChartSection.astro already renders it exactly as needed -- this is
+// just a thin wrapper reusing that component completely as-is (no
+// changes to either).
+//
+// No GROQ query change needed, unlike the image/gallery/product-embed
+// blocks -- chartSection is pure scalars (heading/source/unit/rows of
+// label+value+highlight), nothing that needs resolving from a bare ref.
+
+import ChartSection from '../products/sections/ChartSection.astro'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+import type { ChartSection as ChartSectionType } from '../../lib/types/sanity'
+
+type Props = PortableTextProps<ChartSectionType>
+
+const { node } = Astro.props
+---
+
+<div class="pt-chart">
+  <ChartSection section={node} />
+</div>
+
+<style>
+  /* --prose-width, when an ancestor defines it (currently just
+   * BlogPostDetail.astro's .body), keeps this pixel-identical with
+   * every other block in that reading column. Everywhere else, falls
+   * back to 100% of whatever width the container already provides --
+   * see PortableTextImage.astro's comment for why. */
+  .pt-chart {
+    max-width: var(--prose-width, 100%);
+    margin: var(--space-8) auto;
+  }
+</style>

@@ -1,0 +1,24 @@
+---
+// src/components/portableText/PortableTextUnknownMark.astro
+//
+// Renders whatever text a mark reference resolves to, no wrapper
+// element at all. Exists for one specific, confirmed data shape: a
+// handful of migrated WordPress posts have a span whose `marks` array
+// references a markDef _key that isn't actually present in that
+// block's own markDefs (found via a full production build -- e.g.
+// turfrx-oxycal-why-when-and-how's h3 headings reference a link markDef
+// that's missing, while the identical text elsewhere in the same post
+// *is* correctly linked -- a migration-script artifact, not a schema
+// gap or anything a future editor's content can trigger the same way).
+//
+// Without this, astro-portabletext's default fallback still renders
+// the text (so nothing was ever visually broken/missing), but wraps it
+// in `<span data-portabletext-unknown="mark">` and logs a console
+// warning on every build. This is strictly about that cosmetic/log
+// cleanup -- see src/lib/portableTextComponents.ts's comment for the
+// separate, actual content fix (restoring the missing links) that's
+// been flagged rather than done here, since guessing at the intended
+// href isn't a code change.
+
+---
+<slot />

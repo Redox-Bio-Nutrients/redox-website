@@ -1,0 +1,73 @@
+---
+// src/components/portableText/PortableTextImage.astro
+//
+// Renders inline images embedded in any blockContent field, site-wide
+// -- astro-portabletext has no built-in handler for Sanity's "image"
+// custom type (that's on the consumer to provide, same as any other
+// custom block); without this, the library logs
+// `[components.type] is missing "image"` to the console and drops an
+// error placeholder into the page instead of the photo. Registered
+// once, via src/lib/portableTextComponents.ts, and reused by every
+// PortableText call site in the codebase (see that file for the full
+// list) rather than each one wiring this up independently.
+//
+// The image node comes straight off whatever field it's part of -- no
+// GROQ expansion needed (a Portable Text array mixes block types GROQ
+// can't project uniformly with a flat field list, so every query just
+// passes blockContent through close to as-is; see
+// src/lib/queries/fragments.ts's blockContentField() for the one
+// member that *does* need expansion, productEmbed), so there's no
+// `dimensions`/`lqip` to reserve layout space or blur-up with the way
+// IMAGE_FRAGMENT gives every other image on the site -- just the bare
+// asset ref, which urlFor() resolves directly without needing it
+// dereferenced first.
+
+import { urlFor } from '../../lib/sanity'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+
+interface ImageNode {
+  _type: 'image'
+  asset: { _ref: string; _type: 'reference' }
+  alt?: string
+  caption?: string
+}
+
+type Props = PortableTextProps<ImageNode>
+
+const { node } = Astro.props
+const imageUrl = urlFor(node).width(1400).auto('format').quality(80).url()
+---
+
+<figure class="pt-image">
+  <img src={imageUrl} alt={node.alt ?? ''} loading="lazy" />
+  {node.caption && <figcaption>{node.caption}</figcaption>}
+</figure>
+
+<style>
+  /* --prose-width, when an ancestor defines it (currently just
+   * BlogPostDetail.astro's .body), keeps this pixel-identical with
+   * every other block sharing that same reading column instead of
+   * using its own `ch` measure (see BlogPostDetail.astro's comment on
+   * why `ch` alone caused mismatched edges). Everywhere else -- product
+   * sections, page bodies, home columns -- there's no such variable in
+   * scope, so this just fills 100% of whatever width its container
+   * already provides, rather than assuming a specific rem value that
+   * happens to fit the blog. */
+  .pt-image {
+    max-width: var(--prose-width, 100%);
+    margin: var(--space-8) auto;
+  }
+
+  .pt-image img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .pt-image figcaption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+</style>
