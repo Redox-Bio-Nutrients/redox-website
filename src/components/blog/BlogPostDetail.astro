@@ -15,6 +15,7 @@ import ProductGrid from '../products/ProductGrid.astro'
 import BlogPostImage from './BlogPostImage.astro'
 import BlogPostGallery from './BlogPostGallery.astro'
 import BlogPostProductEmbed from './BlogPostProductEmbed.astro'
+import BlogPostChart from './BlogPostChart.astro'
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
@@ -48,6 +49,7 @@ const portableTextComponents = {
     gallery: BlogPostGallery,
     imageGallery: BlogPostGallery,
     productEmbed: BlogPostProductEmbed,
+    chartSection: BlogPostChart,
   },
 }
 

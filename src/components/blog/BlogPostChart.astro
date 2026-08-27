@@ -1,0 +1,37 @@
+---
+// src/components/blog/BlogPostChart.astro
+//
+// Renders the "chartSection" custom block type inside a post body.
+// chartSection already exists as a complete, reusable object type
+// (sanity/schemas/objects/productSections.ts, "Trial Chart") and
+// ChartSection.astro already renders it exactly as needed -- this is
+// just a thin wrapper that reuses that component as-is (no changes to
+// either) and constrains it to the same centered prose column as
+// every other block in the post body (see BlogPostDetail.astro's
+// --prose-width), since ChartSection.astro assumes its parent already
+// handles width/placement, which is true on a product page's own
+// section stack but not here.
+//
+// No GROQ query change needed, unlike the image/gallery/product-embed
+// blocks -- chartSection is pure scalars (heading/source/unit/rows of
+// label+value+highlight), nothing that needs resolving from a bare ref.
+
+import ChartSection from '../products/sections/ChartSection.astro'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+import type { ChartSection as ChartSectionType } from '../../lib/types/sanity'
+
+type Props = PortableTextProps<ChartSectionType>
+
+const { node } = Astro.props
+---
+
+<div class="chart-embed">
+  <ChartSection section={node} />
+</div>
+
+<style>
+  .chart-embed {
+    max-width: var(--prose-width, 54rem);
+    margin: var(--space-8) auto;
+  }
+</style>

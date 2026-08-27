@@ -87,6 +87,12 @@ export const blockContent = defineType({
         },
       },
     }),
+    // Referenced by registered type name only -- chartSection is
+    // already a complete, standalone object type (productSections.ts),
+    // registered schema-wide in schemaTypes/index.ts. No need to import
+    // or redeclare its fields here, same as referencing the built-in
+    // "block"/"image" types works by name.
+    defineArrayMember({ type: 'chartSection' }),
     defineArrayMember({
       type: 'object',
       name: 'productEmbed',
