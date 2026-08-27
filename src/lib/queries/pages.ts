@@ -2,7 +2,7 @@
 
 import { sanityFetch } from '../sanity'
 import type { Page } from '../types/sanity'
-import { IMAGE_FRAGMENT, SEO_FRAGMENT } from './fragments'
+import { IMAGE_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
 
 export async function getAllPageSlugs(): Promise<string[]> {
   return sanityFetch(/* groq */ `*[_type == "page" && defined(slug.current)].slug.current`)
@@ -18,7 +18,7 @@ export async function getPage(slug: string): Promise<Page | null> {
       heroSubheading,
       "heroImage": heroImage ${IMAGE_FRAGMENT},
       heroCta,
-      body,
+      ${blockContentField('body')},
       ${SEO_FRAGMENT}
     }`,
     { slug },

@@ -11,6 +11,7 @@ import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
 import { deriveCalloutPalette } from '../../../lib/color'
 import { randomBetween, randomChoice, seededRandom } from '../../../lib/seededRandom'
+import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import type { CalloutSection, SanityImage } from '../../../lib/types/sanity'
 import PoolBackground from '../../ui/PoolBackground.astro'
 
@@ -80,7 +81,11 @@ const calloutVars = [
     {section.heading && <h2>{section.heading}</h2>}
     {hasBody && (
       <div class="callout__body">
-        <PortableText value={section.body} />
+        <PortableText
+          value={section.body}
+          components={portableTextComponents}
+          onMissingComponent={onMissingPortableTextComponent}
+        />
       </div>
     )}
   </div>

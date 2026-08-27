@@ -9,6 +9,7 @@ import {
   PRODUCT_CARD_FRAGMENT,
   SEO_FRAGMENT,
   TECHNOLOGY_CARD_FRAGMENT,
+  blockContentField,
 } from './fragments'
 
 export async function getProductsByMarket(market: Market): Promise<ProductCard[]> {
@@ -39,9 +40,28 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
   "calloutBackgrounds": calloutBackgrounds[] ${IMAGE_FRAGMENT},
   primaryColor,
   accentColor,
-  // sections is a discriminated union — spread everything and let
-  // the per-_type frontend renderers pick their fields
-  sections[]{ ... },
+  // sections is a discriminated union — spread everything and let the
+  // per-_type frontend renderers pick their fields, except the four
+  // section types with a blockContent field (textSection/
+  // calloutSection's "body", warningSection's "message", faqSection's
+  // per-item "answer") -- those need blockContentField()'s
+  // productEmbed-resolving projection, same as any other blockContent
+  // field site-wide (see fragments.ts).
+  sections[]{
+    ...,
+    _type in ["textSection", "calloutSection"] => {
+      ${blockContentField('body')}
+    },
+    _type == "warningSection" => {
+      ${blockContentField('message')}
+    },
+    _type == "faqSection" => {
+      "items": items[]{
+        ...,
+        ${blockContentField('answer')}
+      }
+    }
+  },
   crops,
   "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
   // url resolves to whichever source the editor used; isUpload

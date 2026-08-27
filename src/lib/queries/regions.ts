@@ -2,7 +2,7 @@
 
 import { sanityFetch } from '../sanity'
 import type { Region, RegionCard, Rep } from '../types/sanity'
-import { IMAGE_FRAGMENT, REP_FRAGMENT, SEO_FRAGMENT } from './fragments'
+import { IMAGE_FRAGMENT, REP_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
 
 export async function getAllRegions(): Promise<RegionCard[]> {
   return sanityFetch(
@@ -24,7 +24,7 @@ export async function getRegion(slug: string): Promise<Region | null> {
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
       states,
-      description,
+      ${blockContentField('description')},
       "reps": *[_type == "rep" && region._ref == ^._id] | order(name asc) ${REP_FRAGMENT},
       ${SEO_FRAGMENT}
     }`,

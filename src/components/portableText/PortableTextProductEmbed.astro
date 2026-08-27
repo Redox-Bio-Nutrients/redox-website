@@ -1,0 +1,70 @@
+---
+// src/components/portableText/PortableTextProductEmbed.astro
+//
+// Renders the "productEmbed" custom block type (sanity/schemas/objects/
+// blockContent.ts) -- an editor featuring one or more specific
+// products right where the surrounding text is talking about them,
+// available anywhere blockContent is used (blog post bodies, product
+// description/callout/warning/FAQ text, page bodies, home page
+// columns). On blog posts this is distinct from the "Related Products"
+// grid that always sits at the very end of every post. Reuses the
+// exact same ProductCard.astro everywhere else on the site uses, just
+// at a narrower grid (max 2 columns) sized for a prose column instead
+// of the full page width ProductGrid's own 4-column grid assumes.
+//
+// Needs `products` already resolved to real ProductCard data by the
+// time it gets here -- see src/lib/queries/fragments.ts's
+// blockContentField() for the conditional GROQ projection every
+// blockContent-fetching query uses to make that true (a raw
+// productEmbed block only has unresolved references, same as any
+// other reference field -- unlike an image block, urlFor() can't
+// build anything useful from a bare document reference).
+
+import ProductCard from '../products/ProductCard.astro'
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+import type { ProductCard as ProductCardType } from '../../lib/types/sanity'
+
+interface ProductEmbedNode {
+  _type: 'productEmbed'
+  products: ProductCardType[]
+}
+
+type Props = PortableTextProps<ProductEmbedNode>
+
+const { node } = Astro.props
+const products = node.products ?? []
+---
+
+{products.length > 0 && (
+  <div class:list={['pt-product-embed', { 'pt-product-embed--single': products.length === 1 }]}>
+    {products.map((product) => <ProductCard product={product} />)}
+  </div>
+)}
+
+<style>
+  /* --prose-width, when an ancestor defines it (currently just
+   * BlogPostDetail.astro's .body), keeps this pixel-identical with
+   * every other block in that reading column. Everywhere else, falls
+   * back to 100% of whatever width the container already provides --
+   * see PortableTextImage.astro's comment for why. */
+  .pt-product-embed {
+    max-width: var(--prose-width, 100%);
+    margin: var(--space-8) auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+
+  /* A single featured product reads better narrower and centered than
+   * stretched to fill the full available width. */
+  .pt-product-embed--single {
+    grid-template-columns: minmax(0, 18rem);
+    justify-content: center;
+  }
+
+  @media (max-width: 479px) {
+    .pt-product-embed {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

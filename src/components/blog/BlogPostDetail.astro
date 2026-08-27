@@ -12,13 +12,10 @@
 
 import { PortableText } from 'astro-portabletext'
 import ProductGrid from '../products/ProductGrid.astro'
-import BlogPostImage from './BlogPostImage.astro'
-import BlogPostGallery from './BlogPostGallery.astro'
-import BlogPostProductEmbed from './BlogPostProductEmbed.astro'
-import BlogPostChart from './BlogPostChart.astro'
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
+import { onMissingPortableTextComponent, portableTextComponents } from '../../lib/portableTextComponents'
 import type { BlogPost } from '../../lib/types/sanity'
 import type { PortableTextBlock } from '@portabletext/types'
 
@@ -28,41 +25,18 @@ interface Props {
 
 const { post } = Astro.props
 
-// Without this, astro-portabletext has no renderer for Sanity's
-// "image" custom type -- see BlogPostImage.astro's frontmatter for
-// why (it logs a console warning and drops an error placeholder into
-// the page instead of the photo).
-//
-// Two different _type values share BlogPostGallery.astro as their
-// renderer, since both resolve to the same { images: [...] } shape:
-// "gallery" is the real schema type (sanity/schemas/objects/
-// blockContent.ts) an editor deliberately inserts when writing a new
-// post; "imageGallery" is a synthetic type that doesn't exist in the
-// schema at all -- it's manufactured by groupImageRuns() below, purely
-// to give migrated WordPress posts (which have no idea "gallery" is a
-// choice, they just have N image blocks in a row) the same grouped
-// treatment without an editor having to go back and manually convert
-// every one.
-const portableTextComponents = {
-  type: {
-    image: BlogPostImage,
-    gallery: BlogPostGallery,
-    imageGallery: BlogPostGallery,
-    productEmbed: BlogPostProductEmbed,
-    chartSection: BlogPostChart,
-  },
-}
-
 // A run of 2+ consecutive image blocks collapses into one synthetic
 // "imageGallery" node instead of rendering as N separate full-width
-// images stacked one per row -- see BlogPostGallery.astro for the full
-// story (the original WordPress posts used a gallery plugin that only
-// ever displayed a curated few images at once even though every photo
-// lived in the page's markup; migration pulled every <img> tag it
-// found with no way to tell gallery photos from a genuine standalone
-// inline image). A lone image -- not adjacent to another -- passes
-// through untouched and still renders via BlogPostImage.astro exactly
-// as before; this only changes posts that actually have image runs.
+// images stacked one per row -- see src/lib/portableTextComponents.ts
+// for the full story (the original WordPress posts used a gallery
+// plugin that only ever displayed a curated few images at once even
+// though every photo lived in the page's markup; migration pulled
+// every <img> tag it found with no way to tell gallery photos from a
+// genuine standalone inline image). A lone image -- not adjacent to
+// another -- passes through untouched and still renders via
+// PortableTextImage.astro exactly as before; this is blog-only (the
+// only content type with this migration-artifact problem) and only
+// changes posts that actually have image runs.
 function groupImageRuns(blocks: PortableTextBlock[]): PortableTextBlock[] {
   const grouped: PortableTextBlock[] = []
   let run: PortableTextBlock[] = []
@@ -147,7 +121,11 @@ const authorPhotoUrl = post.author?.photo
 </div>
 
 <div class="body">
-  <PortableText value={groupedBody} components={portableTextComponents} />
+  <PortableText
+    value={groupedBody}
+    components={portableTextComponents}
+    onMissingComponent={onMissingPortableTextComponent}
+  />
 </div>
 
 {post.author?.bio && (

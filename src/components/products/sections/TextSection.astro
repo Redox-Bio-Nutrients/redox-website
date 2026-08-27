@@ -5,6 +5,7 @@
 // Lapalma "MEET PLUS" section). Collapses on mobile.
 
 import { PortableText } from 'astro-portabletext'
+import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import type { TextSection } from '../../../lib/types/sanity'
 
 interface Props {
@@ -17,7 +18,11 @@ const { section } = Astro.props
 <section class="text-section">
   {section.heading && <h2>{section.heading}</h2>}
   <div class="text-section__body">
-    <PortableText value={section.body} />
+    <PortableText
+      value={section.body}
+      components={portableTextComponents}
+      onMissingComponent={onMissingPortableTextComponent}
+    />
   </div>
 </section>
 

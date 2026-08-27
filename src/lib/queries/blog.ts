@@ -8,6 +8,7 @@ import {
   IMAGE_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,
   SEO_FRAGMENT,
+  blockContentField,
 } from './fragments'
 
 // Shared by getBlogPost/getBlogPostPreview — one projection, two
@@ -29,19 +30,7 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
     "photo": photo ${IMAGE_FRAGMENT},
     bio
   },
-  // Passed through as-is for every block type except "productEmbed" --
-  // that one references product *documents*, which a flat passthrough
-  // can't resolve (unlike an image block, where urlFor() can build a
-  // URL straight off the bare asset ref with no expansion needed).
-  // The conditional projection overlays a resolved "products" field
-  // only on productEmbed blocks, overriding their raw unresolved one;
-  // every other block type is untouched by the "..." spread.
-  "body": body[]{
-    ...,
-    _type == "productEmbed" => {
-      "products": products[]-> ${PRODUCT_CARD_FRAGMENT}
-    }
-  },
+  ${blockContentField('body')},
   "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
   ${SEO_FRAGMENT}
 }`

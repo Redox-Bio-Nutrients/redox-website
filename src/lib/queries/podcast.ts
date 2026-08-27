@@ -2,7 +2,7 @@
 
 import { sanityFetch } from '../sanity'
 import type { PodcastEpisode, PodcastEpisodeCard } from '../types/sanity'
-import { EPISODE_CARD_FRAGMENT, IMAGE_FRAGMENT, SEO_FRAGMENT } from './fragments'
+import { EPISODE_CARD_FRAGMENT, IMAGE_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
 
 export async function getAllEpisodes(): Promise<PodcastEpisodeCard[]> {
   return sanityFetch(
@@ -22,7 +22,7 @@ export async function getEpisode(slug: string): Promise<PodcastEpisode | null> {
       "coverImage": coverImage ${IMAGE_FRAGMENT},
       buzzsproutEpisodeId,
       guests,
-      showNotes,
+      ${blockContentField('showNotes')},
       ${SEO_FRAGMENT}
     }`,
     { slug },

@@ -10,6 +10,7 @@
 
 import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
+import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import type { HomeColumnSection } from '../../../lib/types/sanity'
 
 interface Props {
@@ -49,7 +50,11 @@ const bgImageUrl =
           {item.heading && <h3 class="column__heading">{item.heading}</h3>}
           {item.body && (
             <div class="column__body">
-              <PortableText value={item.body} />
+              <PortableText
+                value={item.body}
+                components={portableTextComponents}
+                onMissingComponent={onMissingPortableTextComponent}
+              />
             </div>
           )}
           {item.cta && (

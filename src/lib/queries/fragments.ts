@@ -4,6 +4,18 @@
 // here as template strings. Every query that returns an image, seo
 // block, or card shape composes these — change a projection once and
 // every query stays in sync with src/lib/types.
+//
+// Declaration order matters here in a way it wouldn't in most modules:
+// these are top-level `const`s built from template literals that
+// reference each other, evaluated in file order at module load. A
+// fragment that calls another (e.g. HOME_SECTIONS_FRAGMENT calling
+// blockContentField(), which itself closes over PRODUCT_CARD_FRAGMENT)
+// must be declared *after* everything it depends on, or it's a
+// "Cannot access '...' before initialization" TDZ error — one that
+// `astro check` won't catch (it's a runtime evaluation-order issue,
+// not a type error) but a production build will, immediately, on
+// every single page. Confirmed the hard way once already; keep
+// dependency order in mind when adding to this file.
 
 export const IMAGE_FRAGMENT = /* groq */ `{
   asset,
@@ -37,6 +49,46 @@ export const BG_POOL_FRAGMENT = /* groq */ `select(
   *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
 )`
 
+export const COLLECTION_FRAGMENT = /* groq */ `{
+  _id,
+  title,
+  "slug": slug.current,
+  description,
+  color,
+  kind,
+  "icon": icon ${IMAGE_FRAGMENT}
+}`
+
+export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
+  _id,
+  title,
+  "slug": slug.current,
+  tagline,
+  markets,
+  "image": image ${IMAGE_FRAGMENT},
+  "backgrounds": ${BG_POOL_FRAGMENT},
+  "collections": collections[]-> ${COLLECTION_FRAGMENT}
+}`
+
+// Every blockContent-typed field (sanity/schemas/objects/
+// blockContent.ts) site-wide needs this same projection, not just
+// `body,`/`message,`/`answer,` passed straight through -- of its
+// custom block types, only "productEmbed" holds a *reference* to
+// another document (a product) rather than something urlFor() can
+// resolve on its own from a bare ref (an image block) or that's
+// already plain scalars (a chartSection block). The conditional
+// overlay only touches productEmbed items; every other block type in
+// the array passes through the "..." spread completely untouched.
+// Usage: `${blockContentField('body')}` in place of a bare `body,`.
+export function blockContentField(fieldName: string): string {
+  return /* groq */ `"${fieldName}": ${fieldName}[]{
+    ...,
+    _type == "productEmbed" => {
+      "products": products[]-> ${PRODUCT_CARD_FRAGMENT}
+    }
+  }`
+}
+
 // Shared page-builder sections projection — used by any document type
 // with a `sections` array of homeHeroSection / homeHeroCarouselSection
 // / homeColumnSection / chartSection (Homepage, Technology, ...). One
@@ -66,7 +118,7 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
     _key,
     "image": image ${IMAGE_FRAGMENT},
     heading,
-    body,
+    ${blockContentField('body')},
     cta
   },
   backgroundType,
@@ -76,27 +128,6 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   unit,
   rows,
   footnote
-}`
-
-export const COLLECTION_FRAGMENT = /* groq */ `{
-  _id,
-  title,
-  "slug": slug.current,
-  description,
-  color,
-  kind,
-  "icon": icon ${IMAGE_FRAGMENT}
-}`
-
-export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
-  _id,
-  title,
-  "slug": slug.current,
-  tagline,
-  markets,
-  "image": image ${IMAGE_FRAGMENT},
-  "backgrounds": ${BG_POOL_FRAGMENT},
-  "collections": collections[]-> ${COLLECTION_FRAGMENT}
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{
