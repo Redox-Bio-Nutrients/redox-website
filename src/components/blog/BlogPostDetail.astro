@@ -29,10 +29,20 @@ const { post } = Astro.props
 // Without this, astro-portabletext has no renderer for Sanity's
 // "image" custom type -- see BlogPostImage.astro's frontmatter for
 // why (it logs a console warning and drops an error placeholder into
-// the page instead of the photo). "imageGallery" is a synthetic type
-// that doesn't exist in Sanity's schema -- see groupImageRuns() below.
+// the page instead of the photo).
+//
+// Two different _type values share BlogPostGallery.astro as their
+// renderer, since both resolve to the same { images: [...] } shape:
+// "gallery" is the real schema type (sanity/schemas/objects/
+// blockContent.ts) an editor deliberately inserts when writing a new
+// post; "imageGallery" is a synthetic type that doesn't exist in the
+// schema at all -- it's manufactured by groupImageRuns() below, purely
+// to give migrated WordPress posts (which have no idea "gallery" is a
+// choice, they just have N image blocks in a row) the same grouped
+// treatment without an editor having to go back and manually convert
+// every one.
 const portableTextComponents = {
-  type: { image: BlogPostImage, imageGallery: BlogPostGallery },
+  type: { image: BlogPostImage, gallery: BlogPostGallery, imageGallery: BlogPostGallery },
 }
 
 // A run of 2+ consecutive image blocks collapses into one synthetic

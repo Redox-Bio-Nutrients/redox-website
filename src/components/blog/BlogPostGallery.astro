@@ -1,19 +1,19 @@
 ---
 // src/components/blog/BlogPostGallery.astro
 //
-// Renders a run of 2+ consecutive inline images (grouped by
-// groupImageRuns() in BlogPostDetail.astro's frontmatter -- see its
-// comment there for the full story) as a real photo grid instead of
-// stacking them full-width, one per row, via BlogPostImage.astro.
-//
-// Why this exists: the original WordPress posts used a gallery plugin
-// that only ever *displayed* a curated handful of images at once even
-// though every photo lived in the page's raw markup. Our migration
-// pulled every <img> tag it found with no way to know which ones the
-// plugin actually surfaced, so a post built as a real photo gallery
-// (e.g. a "30 years in photos" anniversary retrospective, 244 images)
-// came through as 244 flat, full-width, one-per-row images -- everything
-// technically rendered, nothing that read like a gallery.
+// Renders a photo grid instead of stacking images full-width, one per
+// row (BlogPostImage.astro). Shared by two different _type values that
+// both resolve to the same { images: [...] } shape -- see
+// BlogPostDetail.astro's portableTextComponents comment for why there
+// are two: "gallery" is the real schema type (sanity/schemas/objects/
+// blockContent.ts) an editor deliberately inserts when writing a new
+// post; "imageGallery" is a synthetic type manufactured by
+// groupImageRuns() for migrated WordPress posts that have a run of 2+
+// plain image blocks in a row with no idea "gallery" was ever a
+// choice (e.g. a "30 years in photos" anniversary retrospective that
+// came through the migration as 244 flat, full-width, one-per-row
+// images -- everything technically rendered, nothing that read like a
+// gallery).
 //
 // Deliberately no lightbox / no client JS, consistent with every other
 // blog component on this page (BlogMasonry, BlogFeatured are both
@@ -30,7 +30,7 @@ interface ImageNode {
 }
 
 interface GalleryNode {
-  _type: 'imageGallery'
+  _type: 'gallery' | 'imageGallery'
   images: ImageNode[]
 }
 

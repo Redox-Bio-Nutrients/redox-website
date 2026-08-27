@@ -57,5 +57,35 @@ export const blockContent = defineType({
         { name: 'caption', type: 'string', title: 'Caption' },
       ],
     }),
+    defineArrayMember({
+      type: 'object',
+      name: 'gallery',
+      title: 'Photo Gallery',
+      description: 'A grid of photos, not one-per-row -- pick this instead of adding several images in a row.',
+      fields: [
+        {
+          name: 'images',
+          title: 'Images',
+          type: 'array',
+          of: [
+            {
+              type: 'image',
+              options: { hotspot: true },
+              fields: [
+                { name: 'alt', type: 'string', title: 'Alt text', validation: (rule: any) => rule.required() },
+              ],
+            },
+          ],
+          validation: (rule: any) => rule.min(2),
+        },
+      ],
+      preview: {
+        select: { images: 'images' },
+        prepare({ images }: { images?: unknown[] }) {
+          const count = images?.length ?? 0
+          return { title: `Photo Gallery (${count} image${count === 1 ? '' : 's'})`, media: images?.[0] as any }
+        },
+      },
+    }),
   ],
 })
