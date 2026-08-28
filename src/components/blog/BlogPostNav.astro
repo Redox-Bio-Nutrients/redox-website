@@ -1,0 +1,107 @@
+---
+// src/components/blog/BlogPostNav.astro
+//
+// Prev/next navigation between blog posts, sitting right after the
+// author box. "Previous" is the post published just before this one
+// (older), "Next" is published just after (newer) -- chronological
+// reading order, independent of how /blog's own listing happens to
+// sort (see blog.ts's BLOG_POST_QUERY for where these are resolved:
+// a GROQ neighbor lookup by publishedAt, not client-side). Either side
+// can be absent at the ends of the timeline; the whole thing is
+// omitted if both are (a single-post site, or the odd fully-isolated
+// draft in preview).
+
+import { normalizeTitleCase } from '../../lib/format'
+
+interface AdjacentPost {
+  title: string
+  slug: string
+}
+
+interface Props {
+  previousPost?: AdjacentPost | null
+  nextPost?: AdjacentPost | null
+}
+
+const { previousPost, nextPost } = Astro.props
+---
+
+{(previousPost || nextPost) && (
+  <nav class="post-nav" aria-label="More posts">
+    {previousPost ? (
+      <a href={`/blog/${previousPost.slug}`} class="post-nav__link post-nav__link--prev">
+        <span class="post-nav__eyebrow">← Previous Post</span>
+        <span class="post-nav__title">{normalizeTitleCase(previousPost.title)}</span>
+      </a>
+    ) : (
+      <span aria-hidden="true"></span>
+    )}
+    {nextPost ? (
+      <a href={`/blog/${nextPost.slug}`} class="post-nav__link post-nav__link--next">
+        <span class="post-nav__eyebrow">Next Post →</span>
+        <span class="post-nav__title">{normalizeTitleCase(nextPost.title)}</span>
+      </a>
+    ) : (
+      <span aria-hidden="true"></span>
+    )}
+  </nav>
+)}
+
+<style>
+  .post-nav {
+    max-width: var(--prose-width, 54rem);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    border-top: var(--border-thin) solid var(--border-subtle);
+  }
+
+  .post-nav__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    transition: background 0.15s ease;
+  }
+
+  .post-nav__link:hover {
+    background: var(--bg-surface);
+  }
+
+  .post-nav__eyebrow {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .post-nav__title {
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+    color: var(--color-text-primary);
+  }
+
+  /* Next reads right-to-left (text hugs the arrow it points toward),
+   * mirroring Previous's natural left alignment -- both flow toward
+   * the direction they navigate. */
+  .post-nav__link--next {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  @media (max-width: 640px) {
+    .post-nav {
+      grid-template-columns: 1fr;
+    }
+
+    .post-nav__link--next {
+      text-align: left;
+      align-items: flex-start;
+    }
+  }
+</style>
