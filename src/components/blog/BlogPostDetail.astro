@@ -13,8 +13,9 @@
 import { PortableText } from 'astro-portabletext'
 import ProductGrid from '../products/ProductGrid.astro'
 import AuthorBoxFooter from './AuthorBoxFooter.astro'
+import BlogPostNav from './BlogPostNav.astro'
 import { urlFor } from '../../lib/sanity'
-import { formatDate } from '../../lib/format'
+import { formatDate, normalizeTitleCase } from '../../lib/format'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../lib/portableTextComponents'
 import type { BlogPost } from '../../lib/types/sanity'
@@ -91,7 +92,7 @@ const coverImageUrl = heroImage
           {post.categories.map((category) => <span class="pill">{category.title}</span>)}
         </div>
       )}
-      <h1 class="hero__title">{post.title}</h1>
+      <h1 class="hero__title">{normalizeTitleCase(post.title)}</h1>
       <p class="hero__meta">
         {post.author && <span>{post.author.name}</span>}
         <span>{formatDate(post.publishedAt)}</span>
@@ -105,7 +106,7 @@ const coverImageUrl = heroImage
         {post.categories.map((category) => <span class="pill pill--light">{category.title}</span>)}
       </div>
     )}
-    <h1>{post.title}</h1>
+    <h1>{normalizeTitleCase(post.title)}</h1>
     <p class="page-header__meta">
       {post.author && <span>{post.author.name}</span>}
       <span>{formatDate(post.publishedAt)}</span>
@@ -126,6 +127,8 @@ const coverImageUrl = heroImage
 </div>
 
 {post.author && <AuthorBoxFooter author={post.author} />}
+
+<BlogPostNav previousPost={post.previousPost} nextPost={post.nextPost} />
 
 {post.relatedProducts && post.relatedProducts.length > 0 && (
   <section class="related">

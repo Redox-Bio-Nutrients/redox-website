@@ -7,7 +7,7 @@
 // for why there are three separate renders) without hand-duplicating
 // this JSX three times.
 
-import { formatDate } from '../../lib/format'
+import { formatDate, normalizeTitleCase } from '../../lib/format'
 import { marketPalette } from '../../lib/color'
 import type { BlogPostCard, SanityImage } from '../../lib/types/sanity'
 
@@ -67,7 +67,7 @@ const marketChips = markets.map((market) => ({
     </div>
   )}
   <div class="masonry__caption">
-    <h3>{post.title}</h3>
+    <h3>{normalizeTitleCase(post.title)}</h3>
     <p class="masonry__date">{formatDate(post.publishedAt)}</p>
     {post.author && (
       <div class="masonry__byline">

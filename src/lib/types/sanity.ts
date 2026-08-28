@@ -245,6 +245,10 @@ export interface BlogPost extends BlogPostCard {
   author?: Author
   body: PortableTextBlock[]
   relatedProducts?: ProductCard[]
+  /** chronological neighbors (by publishedAt) for BlogPostNav.astro's
+   * prev/next widget -- null at either end of the timeline */
+  previousPost?: { title: string; slug: string } | null
+  nextPost?: { title: string; slug: string } | null
   seo?: Seo
 }
 

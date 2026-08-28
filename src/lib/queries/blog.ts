@@ -33,6 +33,14 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
   },
   ${blockContentField('body')},
   "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
+  // Chronological neighbors for the prev/next nav on the detail page
+  // (BlogPostNav.astro) -- "previous" is the post published just
+  // before this one (older), "next" is published just after (newer),
+  // independent of how /blog's own listing happens to sort. ^ escapes
+  // back to this outer document from inside each nested filter, which
+  // otherwise iterates its own "blogPost" scope.
+  "previousPost": *[_type == "blogPost" && publishedAt < ^.publishedAt] | order(publishedAt desc) [0]{ title, "slug": slug.current },
+  "nextPost": *[_type == "blogPost" && publishedAt > ^.publishedAt] | order(publishedAt asc) [0]{ title, "slug": slug.current },
   ${SEO_FRAGMENT}
 }`
 

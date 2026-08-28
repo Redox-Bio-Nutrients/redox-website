@@ -21,7 +21,7 @@
 // .featured__bg--fallback gradient below.
 
 import { urlFor } from '../../lib/sanity'
-import { formatDate } from '../../lib/format'
+import { formatDate, normalizeTitleCase } from '../../lib/format'
 import { deriveCalloutPalette, groundedAccent, marketPalette } from '../../lib/color'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { BlogPostCard } from '../../lib/types/sanity'
@@ -81,7 +81,7 @@ const marketChips = (post.markets ?? []).map((market) => ({
   )}
 
   <div class="featured__content">
-    <h2>{post.title}</h2>
+    <h2>{normalizeTitleCase(post.title)}</h2>
     <p class="featured__date">{formatDate(post.publishedAt)}</p>
     {post.excerpt && <p class="featured__excerpt">{post.excerpt}</p>}
     <span class="featured__link">
@@ -139,7 +139,17 @@ const marketChips = (post.markets ?? []).map((market) => ({
     z-index: 2;
     width: min(var(--content-width), 100%);
     margin: 0 auto;
-    padding: calc(var(--space-16) + var(--header-space)) calc(var(--space-6) * 2) calc(var(--space-12) * 2);
+    /* Top padding isn't just nav clearance -- .featured__categories
+     * floats independently at the very top of the same box (see
+     * below), and since this block is bottom-anchored (align-items:
+     * flex-end on .featured), growing this padding is what actually
+     * buys clearance between the pill and the headline rather than
+     * moving the headline itself. space-6 was the first bump (the two
+     * were nearly touching before it); +9.375rem (150px, kept in rem
+     * rather than a raw px value to stay consistent with the rest of
+     * the site's responsive spacing scale) is Curtis's follow-up ask
+     * for real breathing room, not just clearing the overlap. */
+    padding: calc(var(--space-16) + var(--space-6) + 9.375rem + var(--header-space)) calc(var(--space-6) * 2) calc(var(--space-12) * 2);
   }
 
   /* Pinned to the hero's top border instead of living inline at the
@@ -165,9 +175,13 @@ const marketChips = (post.markets ?? []).map((market) => ({
    * fine-grain texture CalloutSection paints its surfaces with — the
    * same "gradient/color/texture" language as the masonry tiles'
    * scrims and glow, just carried onto the pill itself this time. */
+  /* Hero pill scale: was 2x the base --space-1/--space-3/--text-xs
+   * tokens, decreased 25% (2 * 0.75 = 1.5) per Curtis's ask. Only
+   * affects the Market pill here — .pill--category below sets its own
+   * explicit, already-smaller size rather than scaling off this one. */
   .pill {
     display: inline-block;
-    padding: calc(var(--space-1) * 2) calc(var(--space-3) * 2);
+    padding: calc(var(--space-1) * 1.5) calc(var(--space-3) * 1.5);
     border-radius: var(--radius-full);
     background:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
@@ -176,7 +190,7 @@ const marketChips = (post.markets ?? []).map((market) => ({
     border: 1px solid rgb(255 255 255 / 0.25);
     color: var(--color-white);
     text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-    font-size: calc(var(--text-xs) * 2);
+    font-size: calc(var(--text-xs) * 1.5);
     font-weight: var(--font-medium);
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -201,7 +215,11 @@ const marketChips = (post.markets ?? []).map((market) => ({
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
     font-size: calc(var(--text-4xl) * 2);
-    line-height: var(--leading-tight);
+    /* Tighter than --leading-tight (1.25, the tightest named token) —
+     * a large serif display headline like this can go tighter still
+     * without crowding the ascenders/descenders, and reads more
+     * confidently at this size. */
+    line-height: 1.05;
     letter-spacing: -0.01em;
     color: var(--color-white);
     max-width: 16ch;
@@ -246,7 +264,7 @@ const marketChips = (post.markets ?? []).map((market) => ({
     }
 
     .featured__content {
-      padding: calc(var(--space-10) + var(--header-space)) var(--space-6) var(--space-10);
+      padding: calc(var(--space-10) + var(--space-8) + var(--header-space)) var(--space-6) var(--space-10);
     }
 
     .featured__categories {
