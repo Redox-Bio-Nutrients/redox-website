@@ -22,7 +22,7 @@
 
 import { urlFor } from '../../lib/sanity'
 import { formatDate } from '../../lib/format'
-import { deriveCalloutPalette, groundedAccent } from '../../lib/color'
+import { deriveCalloutPalette, groundedAccent, marketPalette } from '../../lib/color'
 import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { BlogPostCard } from '../../lib/types/sanity'
 
@@ -39,13 +39,21 @@ const imageUrl = heroImage
   ? urlFor(heroImage).width(2400).height(1400).fit('crop').auto('format').quality(80).url()
   : null
 
-// Category pill color: derived from the category's own slug (not the
-// post's), so every "Agronomy" pill anywhere on the site is the same
-// color — the accent is a category identity, not a per-post one (that's
-// what the masonry tiles' per-post accent is for).
+// Category pill color: an editor-set category.color (Studio) wins when
+// present; otherwise derived from the category's own slug (not the
+// post's), so every un-colored "Agronomy" pill anywhere on the site
+// still lands on the same automatic color — the accent is a category
+// identity, not a per-post one (that's what the masonry tiles' and
+// this hero's per-post accent is for elsewhere).
 const categoryChips = (post.categories ?? []).map((category) => ({
   category,
-  palette: deriveCalloutPalette(groundedAccent(category.slug)),
+  palette: deriveCalloutPalette(category.color ?? groundedAccent(category.slug)),
+}))
+
+const marketChips = (post.markets ?? []).map((market) => ({
+  market,
+  label: market === 'agriculture' ? 'Agriculture' : 'Turf',
+  palette: marketPalette(market),
 }))
 ---
 
@@ -57,16 +65,22 @@ const categoryChips = (post.categories ?? []).map((category) => ({
   )}
   <div class="featured__scrim" aria-hidden="true"></div>
 
+  {(marketChips.length > 0 || categoryChips.length > 0) && (
+    <div class="featured__categories">
+      {marketChips.map(({ market, label, palette }) => (
+        <span class="pill" data-market={market} style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
+          {label}
+        </span>
+      ))}
+      {categoryChips.map(({ category, palette }) => (
+        <span class="pill pill--category" data-category={category.slug} style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
+          {category.title}
+        </span>
+      ))}
+    </div>
+  )}
+
   <div class="featured__content">
-    {categoryChips.length > 0 && (
-      <div class="featured__categories">
-        {categoryChips.map(({ category, palette }) => (
-          <span class="pill" style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
-            {category.title}
-          </span>
-        ))}
-      </div>
-    )}
     <h2>{post.title}</h2>
     <p class="featured__date">{formatDate(post.publishedAt)}</p>
     {post.excerpt && <p class="featured__excerpt">{post.excerpt}</p>}
@@ -128,11 +142,22 @@ const categoryChips = (post.categories ?? []).map((category) => ({
     padding: calc(var(--space-16) + var(--header-space)) calc(var(--space-6) * 2) calc(var(--space-12) * 2);
   }
 
+  /* Pinned to the hero's top border instead of living inline at the
+   * start of the bottom content block — same reasoning as the masonry
+   * tiles' version: badges read as metadata about the post, the
+   * title/blurb/link read as the caption proper. Mirrors
+   * .featured__content's own width/centering so the pills' left edge
+   * lines up with the headline below. */
   .featured__categories {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 2;
+    width: min(var(--content-width), 100%);
+    margin: 0 auto;
+    padding: calc(var(--space-8) + var(--header-space)) calc(var(--space-6) * 2) 0;
     display: flex;
     flex-wrap: wrap;
     gap: calc(var(--space-2) * 2);
-    margin-bottom: calc(var(--space-3) * 2);
   }
 
   /* Category chip: a bright->deep gradient derived from the
@@ -155,6 +180,16 @@ const categoryChips = (post.categories ?? []).map((category) => ({
     font-weight: var(--font-medium);
     letter-spacing: 0.02em;
     text-transform: uppercase;
+  }
+
+  /* Category pill shrunk to 40% of the base pill above (a 60%
+   * reduction, same as the masonry tiles' version) — keeps it clearly
+   * secondary to the Market pill beside it. Base here is already the
+   * 2x-scaled hero size, so 0.8 (= 2 * 0.4) lands the category pill at
+   * 40% of *that*, not 40% of the un-scaled --space-1/--text-xs. */
+  .pill--category {
+    padding: calc(var(--space-1) * 0.8) calc(var(--space-3) * 0.8);
+    font-size: calc(var(--text-xs) * 0.8);
   }
 
   /* Headline vs. blurb now sit at a clearly different scale — the
@@ -212,6 +247,10 @@ const categoryChips = (post.categories ?? []).map((category) => ({
 
     .featured__content {
       padding: calc(var(--space-10) + var(--header-space)) var(--space-6) var(--space-10);
+    }
+
+    .featured__categories {
+      padding: calc(var(--space-6) + var(--header-space)) var(--space-6) 0;
     }
 
     .featured__content h2 {

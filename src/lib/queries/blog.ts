@@ -22,7 +22,8 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
   excerpt,
   "coverImage": coverImage ${IMAGE_FRAGMENT},
   "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
-  "categories": categories[]->{ title, "slug": slug.current },
+  markets,
+  "categories": categories[]->{ title, "slug": slug.current, color },
   "author": author->{
     name,
     "slug": slug.current,

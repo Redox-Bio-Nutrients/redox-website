@@ -230,7 +230,13 @@ export interface BlogPostCard {
    * post has no coverImage of its own — see BlogPostDetail.astro and
    * BlogMasonry.astro, which both pick a deterministic photo from it */
   fallbackPool?: SanityImage[]
-  categories?: { title: string; slug: string }[]
+  /** optional, unset on every WordPress-migrated post — see blogPost.ts.
+   * Drives which Background Imagery pool `fallbackPool` above draws
+   * from when set; not yet surfaced as filterable UI. */
+  markets?: Market[]
+  /** color is optional — editor-set in Studio (category.ts) overrides
+   * the automatic groundedAccent(slug) pick when present */
+  categories?: { title: string; slug: string; color?: string }[]
   /** just enough for a card byline (avatar + name) — the full bio/role/slug live on `Author`, used by the detail page */
   author?: { name: string; photo?: SanityImage }
 }

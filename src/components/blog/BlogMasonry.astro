@@ -94,12 +94,14 @@ const tiles = posts.map((post) => {
     authorPhotoUrl: post.author?.photo
       ? urlFor(post.author.photo).width(80).height(80).fit('crop').auto('format').url()
       : null,
-    // Category chip color: derived from the category's own slug (not
-    // the post's), so e.g. every "Agronomy" pill site-wide is the same
-    // color, distinct from the per-post accent used for the scrim/glow.
+    // Category chip color: an editor-set category.color (Studio) wins
+    // when present; otherwise derived from the category's own slug
+    // (not the post's), so e.g. every un-colored "Agronomy" pill
+    // site-wide still lands on the same automatic color, distinct from
+    // the per-post accent used for the scrim/glow.
     categoryChips: (post.categories ?? []).map((category) => ({
       category,
-      palette: deriveCalloutPalette(groundedAccent(category.slug)),
+      palette: deriveCalloutPalette(category.color ?? groundedAccent(category.slug)),
     })),
   }
 })
@@ -119,6 +121,19 @@ const tabletColumns = intoColumns(tiles, 2)
 
 {tiles.length > 0 ? (
   <div class="masonry-wrap">
+    {/* Prototype filter — client-side only, no re-query. Hides tiles
+       via the data-markets attribute BlogMasonryTile.astro sets on
+       each one; doesn't rebalance the round-robin columns for the
+       filtered subset, so a filtered view can look column-heavy
+       until/unless this is worth a real reflow pass. An untagged post
+       (every WordPress-migrated one, today) counts as Agriculture —
+       same convention the background-pool fallback uses, so
+       "Agriculture" isn't a near-empty view relative to "All Posts". */}
+    <div class="masonry-filter" role="group" aria-label="Filter by market">
+      <button type="button" class="filter-btn is-active" data-filter="all">All Posts</button>
+      <button type="button" class="filter-btn" data-filter="agriculture">Agriculture</button>
+      <button type="button" class="filter-btn" data-filter="turf">Turf</button>
+    </div>
     <div class="masonry-cols masonry-cols--desktop">
       {desktopColumns.map((column) => (
         <div class="masonry__col">
@@ -138,16 +153,96 @@ const tabletColumns = intoColumns(tiles, 2)
         {tiles.map((tile) => <BlogMasonryTile {...tile} />)}
       </div>
     </div>
+    <p class="empty masonry-filter-empty" hidden></p>
   </div>
 ) : (
   <p class="empty">{emptyMessage}</p>
 )}
+
+<script>
+  const wrap = document.querySelector<HTMLElement>('.masonry-wrap')
+  const buttons = wrap?.querySelectorAll<HTMLButtonElement>('.filter-btn')
+  const tiles = wrap?.querySelectorAll<HTMLElement>('.masonry__item')
+  const emptyEl = wrap?.querySelector<HTMLElement>('.masonry-filter-empty')
+
+  function applyFilter(filter: string) {
+    if (!tiles) return
+    let visibleCount = 0
+    tiles.forEach((tile) => {
+      const markets = (tile.dataset.markets ?? '').split(',').filter(Boolean)
+      const matches =
+        filter === 'all' ||
+        (filter === 'agriculture' && (markets.length === 0 || markets.includes('agriculture'))) ||
+        (filter === 'turf' && markets.includes('turf'))
+      tile.classList.toggle('is-filtered-out', !matches)
+      if (matches) visibleCount += 1
+    })
+    if (emptyEl) {
+      emptyEl.hidden = visibleCount > 0
+      if (visibleCount === 0) {
+        const label = filter === 'turf' ? 'Turf' : filter === 'agriculture' ? 'Agriculture' : 'these'
+        emptyEl.textContent = `No ${label} posts yet — check back soon.`
+      }
+    }
+  }
+
+  buttons?.forEach((button) => {
+    button.addEventListener('click', () => {
+      buttons.forEach((b) => b.classList.remove('is-active'))
+      button.classList.add('is-active')
+      applyFilter(button.dataset.filter ?? 'all')
+    })
+  })
+</script>
 
 <style>
   .masonry-wrap {
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-10) var(--space-6) var(--space-24);
+  }
+
+  .masonry-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-8);
+  }
+
+  .filter-btn {
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    border: var(--border-thin) solid var(--border-subtle);
+    background: var(--bg-page);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--color-green);
+    color: var(--color-text-primary);
+  }
+
+  .filter-btn.is-active {
+    background: var(--color-green-dark);
+    border-color: var(--color-green-dark);
+    color: var(--color-white);
+  }
+
+  /* .masonry__item itself is scoped to BlogMasonryTile.astro, not this
+   * file -- Astro's per-component style scoping means a plain rule
+   * here would silently never match it, so this one rule has to
+   * escape scoping deliberately. */
+  :global(.masonry__item.is-filtered-out) {
+    display: none;
+  }
+
+  .masonry-filter-empty {
+    margin-top: var(--space-4);
   }
 
   .masonry-cols {
