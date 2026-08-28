@@ -34,6 +34,21 @@ export const blogPost = defineType({
       to: [{ type: 'author' }],
     }),
     defineField({
+      name: 'markets',
+      title: 'Markets',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        list: [
+          { title: 'Agriculture', value: 'agriculture' },
+          { title: 'Turf', value: 'turf' },
+        ],
+        layout: 'grid',
+      },
+      description:
+        'A post can cover Agriculture, Turf, or both — same field/values as a product’s Markets. Optional and unset on every post migrated from WordPress; tag going forward, backfilling existing posts is a separate pass.',
+    }),
+    defineField({
       name: 'categories',
       title: 'Categories',
       type: 'array',

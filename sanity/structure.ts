@@ -93,14 +93,26 @@ export const structure: StructureResolver = (S) =>
 
       S.documentTypeListItem('page').title('Pages'),
 
-      // Site-level singleton — one shared document, no list
+      // Two market-specific singletons sharing one document type — see
+      // sanity/schemas/documents/backgroundPool.ts. Split 2026-08-27
+      // from a single shared pool now that Ag and Turf need separate
+      // image libraries.
       S.listItem()
-        .title('Background Imagery')
+        .title('Ag Background Imagery')
         .child(
           S.document()
             .schemaType('backgroundPool')
-            .documentId('backgroundPool')
-            .title('Background Imagery'),
+            .documentId('agBackgroundPool')
+            .title('Ag Background Imagery'),
+        ),
+
+      S.listItem()
+        .title('Turf Background Imagery')
+        .child(
+          S.document()
+            .schemaType('backgroundPool')
+            .documentId('turfBackgroundPool')
+            .title('Turf Background Imagery'),
         ),
 
       // Site-level singleton — one shared document, no list

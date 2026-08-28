@@ -113,6 +113,23 @@ export function deriveCalloutPalette(hex: string, accentHex?: string): CalloutPa
   }
 }
 
+// Fixed, deliberate colors for the two Markets — unlike a category's
+// pill (deriveCalloutPalette(groundedAccent(slug)), an arbitrary but
+// consistent random pick since categories are an open taxonomy),
+// there are only ever two possible Markets, so their color should mean
+// something rather than being seeded randomly: Agriculture gets the
+// site's actual brand green, Turf gets --chart-2 (already vetted for
+// contrast on both themes elsewhere) so the two read as clearly
+// distinct at a glance without introducing a brand-new hue.
+const MARKET_BASE_COLOR: Record<'agriculture' | 'turf', string> = {
+  agriculture: '#3A7D50',
+  turf: '#4A86C2',
+}
+
+export function marketPalette(market: 'agriculture' | 'turf'): CalloutPalette {
+  return deriveCalloutPalette(MARKET_BASE_COLOR[market])
+}
+
 // ── Grounded accent palette ──────────────────────────────────────
 //
 // WHY: revives the curated hue/saturation/lightness bands from an

@@ -37,16 +37,37 @@ export const SEO_FRAGMENT = /* groq */ `seo {
   noIndex
 }`
 
+// Picks the right Background Imagery pool for whatever document is in
+// scope, based on its own `markets` field (product.ts's is required;
+// blogPost.ts's is optional — this reads safely either way, since
+// `"x" in markets` on an undefined `markets` is just falsy, not an
+// error, falling through to the Ag default). Turf-only → Turf pool;
+// tagged both → the union of both pools (Curtis's call: a dual-market
+// item should draw from either, not just one); anything else
+// (Agriculture-only, or no `markets` at all — every WordPress-migrated
+// blog post) → Ag, matching the pool's own pre-split, all-agriculture
+// content. See redox-ag-turf-background-split memory.
+const MARKET_POOL_SELECT = /* groq */ `select(
+  "turf" in markets && !("agriculture" in markets) =>
+    *[_id == "turfBackgroundPool"][0].images[] ${IMAGE_FRAGMENT},
+  "agriculture" in markets && "turf" in markets =>
+    array::compact(
+      *[_id == "agBackgroundPool"][0].images[] ${IMAGE_FRAGMENT} +
+      *[_id == "turfBackgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+    ),
+  *[_id == "agBackgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+)`
+
 // Background pool, in priority order: the product's own backgrounds
 // gallery (plus its hero) → its dedicated hero image (a set hero wins
-// over the shared pool — no rotation) → the site-wide shared pool
-// (backgroundPool singleton). Cards and heroes pick one at random
+// over the shared pool — no rotation) → the market-matched shared pool
+// (MARKET_POOL_SELECT above). Cards and heroes pick one at random
 // client-side on each load.
 export const BG_POOL_FRAGMENT = /* groq */ `select(
   count(coalesce(backgrounds, [])) > 0 =>
     array::compact([heroImage ${IMAGE_FRAGMENT}] + backgrounds[] ${IMAGE_FRAGMENT}),
   defined(heroImage) => [heroImage ${IMAGE_FRAGMENT}],
-  *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+  ${MARKET_POOL_SELECT}
 )`
 
 export const COLLECTION_FRAGMENT = /* groq */ `{
@@ -141,9 +162,12 @@ export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{
 // Only fetched when the post has no cover image of its own — a
 // deterministic pick from it (seeded on _id) stands in instead, both
 // on the detail page hero and the masonry grid card. See
-// BlogPostDetail.astro / BlogMasonry.astro.
+// BlogPostDetail.astro / BlogMasonry.astro. Market-matched via
+// MARKET_POOL_SELECT, same as products — a post's own optional
+// `markets` field (blogPost.ts) drives it; every WordPress-migrated
+// post has it unset, which resolves to the Ag default.
 export const BLOG_FALLBACK_POOL_FRAGMENT = /* groq */ `select(
-  !defined(coverImage) => *[_type == "backgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+  !defined(coverImage) => ${MARKET_POOL_SELECT}
 )`
 
 export const BLOG_CARD_FRAGMENT = /* groq */ `{
@@ -154,7 +178,8 @@ export const BLOG_CARD_FRAGMENT = /* groq */ `{
   excerpt,
   "coverImage": coverImage ${IMAGE_FRAGMENT},
   "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
-  "categories": categories[]->{ title, "slug": slug.current },
+  markets,
+  "categories": categories[]->{ title, "slug": slug.current, color },
   "author": author->{ name, "photo": photo ${IMAGE_FRAGMENT} }
 }`
 

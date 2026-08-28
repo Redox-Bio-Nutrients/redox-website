@@ -8,6 +8,7 @@
 // this JSX three times.
 
 import { formatDate } from '../../lib/format'
+import { marketPalette } from '../../lib/color'
 import type { BlogPostCard, SanityImage } from '../../lib/types/sanity'
 
 interface CategoryChip {
@@ -26,11 +27,23 @@ interface Props {
 }
 
 const { post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, categoryChips } = Astro.props
+
+// Market chips render first, ahead of category chips, and also drive
+// the client-side filter toolbar in BlogMasonry.astro via
+// data-markets — see that component for the "untagged post reads as
+// Agriculture" convention (matches the background-pool fallback).
+const markets = post.markets ?? []
+const marketChips = markets.map((market) => ({
+  market,
+  label: market === 'agriculture' ? 'Agriculture' : 'Turf',
+  palette: marketPalette(market),
+}))
 ---
 
 <a
   href={`/blog/${post.slug}`}
   class="masonry__item"
+  data-markets={markets.join(',')}
   style={`aspect-ratio: ${aspectRatio}; --tile-accent: ${accent}`}
 >
   {imageUrl ? (
@@ -39,16 +52,21 @@ const { post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, category
     <div class="masonry__placeholder" aria-hidden="true"></div>
   )}
   <div class="masonry__scrim" aria-hidden="true"></div>
+  {(marketChips.length > 0 || categoryChips.length > 0) && (
+    <div class="masonry__categories">
+      {marketChips.map(({ market, label, palette }) => (
+        <span class="pill" data-market={market} style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
+          {label}
+        </span>
+      ))}
+      {categoryChips.map(({ category, palette }) => (
+        <span class="pill pill--category" data-category={category.slug} style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
+          {category.title}
+        </span>
+      ))}
+    </div>
+  )}
   <div class="masonry__caption">
-    {categoryChips.length > 0 && (
-      <div class="masonry__categories">
-        {categoryChips.map(({ category, palette }) => (
-          <span class="pill" style={`--pill-bright: ${palette.bright}; --pill-deep: ${palette.deep}`}>
-            {category.title}
-          </span>
-        ))}
-      </div>
-    )}
     <h3>{post.title}</h3>
     <p class="masonry__date">{formatDate(post.publishedAt)}</p>
     {post.author && (
@@ -144,11 +162,19 @@ const { post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, category
     color: var(--color-white);
   }
 
+  /* Pinned to the tile's top border instead of living inline at the
+   * start of the bottom caption -- badges read as metadata about the
+   * photo/post, title+date+byline read as the caption proper, so
+   * separating them top/bottom now that there can be two pill types
+   * (Market + Category) keeps that badge row from crowding the title. */
   .masonry__categories {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 2;
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-bottom: var(--space-2);
+    padding: var(--space-5);
   }
 
   /* Category chip: a bright->deep gradient derived from the
@@ -171,6 +197,14 @@ const { post, heroImage, imageUrl, aspectRatio, accent, authorPhotoUrl, category
     font-weight: var(--font-medium);
     letter-spacing: 0.02em;
     text-transform: uppercase;
+  }
+
+  /* Category pill shrunk to 40% of the base pill (a 60% reduction) —
+   * Curtis's call, keeps it clearly secondary to the Market pill
+   * beside it rather than reading as equally important. */
+  .pill--category {
+    padding: calc(var(--space-1) * 0.4) calc(var(--space-3) * 0.4);
+    font-size: calc(var(--text-xs) * 0.4);
   }
 
   .masonry__caption h3 {
