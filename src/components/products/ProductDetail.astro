@@ -81,15 +81,6 @@ const logoUrl = product.logo
   ? urlFor(product.logo).width(700).fit('max').auto('format').url()
   : null
 
-// Turf products carry the full "TurfRx X" name in product.title (real
-// name for listings/SEO/"Pairs Well With" cards) but the hero already
-// shows a separate "TurfRx®" eyebrow above the big wordmark — stripping
-// a leading "TurfRx" from just the big-text fallback avoids "TurfRx® /
-// TurfRx Ca" doubling up. Doesn't touch product.title itself, or the
-// image-logo path (a logo graphic isn't redundant with the eyebrow the
-// way repeated text would be).
-const heroDisplayTitle = isTurf ? product.title.replace(/^TurfRx\s+/i, '') : product.title
-
 // "Product Support" is ungated — supplemental/supporting materials the
 // product's Label/Brochure/SDS (which do go through
 // ResourceRequestDialog) aren't meant to cover. Sanity CDN assets force
@@ -162,12 +153,11 @@ const documents = (product.documents ?? []).map((doc) => ({
 
   <div class="hero__content">
     <div class="hero__text">
-      {isTurf && <p class="hero__brand">TurfRx®</p>}
       <h1 class:list={['hero__title', { 'hero__title--logo': logoUrl }]}>
         {logoUrl ? (
           <img class="hero__logo" src={logoUrl} alt={product.logo?.alt ?? product.title} />
         ) : (
-          heroDisplayTitle
+          product.title
         )}
       </h1>
       <hr class="hero__rule" />
@@ -1009,15 +999,6 @@ const documents = (product.documents ?? []).map((doc) => ({
     width: 64px;
     height: 14px;
     color: rgb(255 255 255 / 0.55);
-  }
-
-  .hero__brand {
-    font-family: var(--turf-font-display);
-    font-style: italic;
-    font-weight: 700;
-    font-size: var(--text-lg);
-    color: rgb(255 255 255 / 0.85);
-    margin-bottom: var(--space-2);
   }
 
   .hero--turf .hero__title {
