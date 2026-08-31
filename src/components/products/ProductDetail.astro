@@ -19,6 +19,7 @@
 import ProductSections from './ProductSections.astro'
 import ResourceRequestDialog from './ResourceRequestDialog.astro'
 import { urlFor } from '../../lib/sanity'
+import { getProductVariant } from '../../lib/productVariant'
 import type { Product } from '../../lib/types/sanity'
 
 interface Props {
@@ -29,6 +30,11 @@ const { product } = Astro.props
 
 const color = product.primaryColor ?? '#2E6B3E'
 const accentColor = product.accentColor
+// Which visual system the sections below render in — see
+// src/lib/productVariant.ts for the exact rule. No real Turf-only
+// product exists yet, so this branch is currently dead in production;
+// wired ahead of the content so it's ready the moment one is tagged.
+const variant = getProductVariant(product.markets)
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.
@@ -52,6 +58,15 @@ const relatedCards = (product.relatedProducts ?? []).map((p) => ({
 // never cropped
 const productShotUrl = product.image
   ? urlFor(product.image).width(900).fit('max').url()
+  : null
+
+// Stylized wordmark, when a product has one — replaces the plain text
+// hero title on every product page, regardless of market (the hero
+// itself isn't market-specific yet, so this one change already covers
+// both). Falls back to the text title when empty, same as every other
+// optional-image field on this page.
+const logoUrl = product.logo
+  ? urlFor(product.logo).width(700).fit('max').auto('format').url()
   : null
 
 // "Product Support" is ungated — supplemental/supporting materials the
@@ -115,7 +130,13 @@ const documents = (product.documents ?? []).map((doc) => ({
 
   <div class="hero__content">
     <div class="hero__text">
-      <h1 class="hero__title">{product.title}</h1>
+      <h1 class:list={['hero__title', { 'hero__title--logo': logoUrl }]}>
+        {logoUrl ? (
+          <img class="hero__logo" src={logoUrl} alt={product.logo?.alt ?? product.title} />
+        ) : (
+          product.title
+        )}
+      </h1>
       <hr class="hero__rule" />
       <div class="hero__meta">
         {product.tagline && <p class="hero__tagline">{product.tagline}</p>}
@@ -135,6 +156,7 @@ const documents = (product.documents ?? []).map((doc) => ({
     {product.sections && product.sections.length > 0 && (
       <ProductSections
         sections={product.sections}
+        variant={variant}
         productColor={color}
         productAccentColor={accentColor}
         backgrounds={
@@ -396,6 +418,25 @@ const documents = (product.documents ?? []).map((doc) => ({
     line-height: 1;
     letter-spacing: -0.02em;
     color: var(--color-white);
+  }
+
+  /* Stylized wordmark in place of the text title — sized to roughly
+   * match the text state's visual weight rather than the font's own
+   * intrinsic size (logos vary wildly in aspect ratio/whitespace), and
+   * given a soft shadow since an arbitrary uploaded logo can't be
+   * guaranteed to have the same built-in contrast against photo
+   * imagery that --hero__scrim gives plain white text. */
+  .hero__title--logo {
+    line-height: 0;
+  }
+
+  .hero__logo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(100%, 560px);
+    max-height: clamp(4rem, 10vw, 7.5rem);
+    filter: drop-shadow(0 4px 18px rgb(0 0 0 / 0.35));
   }
 
   .hero__rule {

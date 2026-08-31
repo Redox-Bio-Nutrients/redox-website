@@ -70,6 +70,15 @@ export const product = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      name: 'logo',
+      title: 'Product Logo',
+      type: 'image',
+      description:
+        'Optional stylized product wordmark/logotype (e.g. a designed "OxyCal" logo graphic), shown in place of the plain text product name on the page hero when set. Works for both Agriculture and Turf products — falls back to plain text when empty. Prefer a transparent-background file.',
+      options: { hotspot: true },
+      fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
+    defineField({
       name: 'backgrounds',
       title: 'Background Imagery',
       type: 'array',

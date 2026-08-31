@@ -6,6 +6,7 @@
 // case here.
 
 import type { ProductSection, SanityImage } from '../../lib/types/sanity'
+import type { ProductVariant } from '../../lib/productVariant'
 import TextSection from './sections/TextSection.astro'
 import CalloutSection from './sections/CalloutSection.astro'
 import BulletSection from './sections/BulletSection.astro'
@@ -18,6 +19,8 @@ import WarningSection from './sections/WarningSection.astro'
 
 interface Props {
   sections: ProductSection[]
+  /** which visual system to render section content in — see src/lib/productVariant.ts */
+  variant?: ProductVariant
   productColor?: string
   /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
   productAccentColor?: string
@@ -25,7 +28,7 @@ interface Props {
   backgrounds?: SanityImage[]
 }
 
-const { sections, productColor, productAccentColor, backgrounds } = Astro.props
+const { sections, variant = 'agriculture', productColor, productAccentColor, backgrounds } = Astro.props
 ---
 
 <div class="product-sections">
@@ -35,20 +38,42 @@ const { sections, productColor, productAccentColor, backgrounds } = Astro.props
     const inner = (() => {
       switch (section._type) {
         case 'textSection':
-          return <TextSection section={section} />
+          return (
+            <TextSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'calloutSection':
           return (
             <CalloutSection
               section={section}
+              variant={variant}
               productColor={productColor}
               productAccentColor={productAccentColor}
               backgrounds={backgrounds}
             />
           )
         case 'bulletSection':
-          return <BulletSection section={section} />
+          return (
+            <BulletSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'analysisSection':
-          return <AnalysisSection section={section} />
+          return (
+            <AnalysisSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'chartSection':
           return <ChartSection section={section} />
         case 'faqSection':

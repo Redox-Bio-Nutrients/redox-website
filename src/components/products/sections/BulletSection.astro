@@ -1,25 +1,51 @@
 ---
 // src/components/products/sections/BulletSection.astro
 //
-// Points render as soft rounded tiles in a 1–3 column grid; the
-// bullet dot picks up the product color via --product-color.
+// Agriculture: points render as soft rounded tiles in a 1–3 column
+// grid; the bullet dot picks up the product color via --product-color.
+//
+// Turf: same items, as diagonal-cut tiles with a checkbox-style
+// leader mark (matching the catalog's "✓ Benefits at a Glance"
+// treatment) instead of a dot — see src/styles/turf-livery.css.
 
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { BulletSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: BulletSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
 const columns = section.columns ?? 1
+const color = productColor ?? '#2E6B3E'
+const accent = deriveCalloutPalette(color, productAccentColor).complement
 ---
 
-<section class="bullets">
-  {section.heading && <h2>{section.heading}</h2>}
-  <ul class="bullets__list" style={`--columns: ${columns}`}>
-    {section.items.map((item) => <li>{item}</li>)}
-  </ul>
-</section>
+{variant === 'turf' ? (
+  <section class="t-bullets" style={`--t-bullets-accent: ${accent};`}>
+    {section.heading && <h2>{section.heading}</h2>}
+    <ul class="t-bullets__list" style={`--columns: ${columns}`}>
+      {section.items.map((item) => (
+        <li>
+          <span class="t-bullets__mark turf-cut" aria-hidden="true">✓</span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  </section>
+) : (
+  <section class="bullets">
+    {section.heading && <h2>{section.heading}</h2>}
+    <ul class="bullets__list" style={`--columns: ${columns}`}>
+      {section.items.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+)}
 
 <style>
   .bullets h2 {
@@ -73,6 +99,56 @@ const columns = section.columns ?? 1
     .bullets__list {
       grid-template-columns: 1fr;
       gap: var(--space-3);
+    }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-bullets h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: var(--text-2xl);
+    color: var(--t-bullets-accent);
+    margin-bottom: var(--space-6);
+  }
+
+  .t-bullets__list {
+    display: grid;
+    grid-template-columns: repeat(var(--columns), 1fr);
+    gap: var(--space-4);
+    list-style: none;
+  }
+
+  .t-bullets__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .t-bullets__mark {
+    --turf-cut: 5px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-top: 0.15em;
+    background: var(--t-bullets-accent);
+    color: var(--color-white);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 767px) {
+    .t-bullets h2 {
+      margin-bottom: var(--space-4);
+    }
+
+    .t-bullets__list {
+      grid-template-columns: 1fr;
     }
   }
 </style>

@@ -1,32 +1,67 @@
 ---
 // src/components/products/sections/AnalysisSection.astro
 //
-// Rows live inside a soft rounded slab; dotted leader in the product
-// color between the chemical name and value, values in tabular
-// numerals. No separator rules between rows — the leaders carry the
-// line-by-line rhythm.
+// Agriculture: rows live inside a soft rounded slab; dotted leader in
+// the product color between the chemical name and value, values in
+// tabular numerals. No separator rules between rows — the leaders
+// carry the line-by-line rhythm.
+//
+// Turf: same data (heading + label/value rows — this is also where
+// Rate/Timing/Special Notes content lives, as three rows, rather than
+// a bespoke table type; see redox-turf-product-pages-prep memory),
+// rendered as the diagonal-cut livery slab instead — see
+// src/styles/turf-livery.css for the shared corner-cut/font tokens.
 
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { AnalysisSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: AnalysisSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const color = productColor ?? '#2E6B3E'
+const accent = deriveCalloutPalette(color, productAccentColor).complement
 ---
 
-<section class="analysis">
-  {section.heading && <h2>{section.heading}</h2>}
-  <dl class="analysis__slab">
-    {section.rows.map((row) => (
-      <div class="analysis__row">
-        <dt>{row.label}</dt>
-        <span class="analysis__leader" aria-hidden="true"></span>
-        <dd>{row.value}</dd>
-      </div>
-    ))}
-  </dl>
-</section>
+{variant === 'turf' ? (
+  <section class="t-analysis">
+    <div
+      class="t-analysis__slab turf-cut-bordered"
+      style={`--turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${accent}; --t-analysis-accent: ${accent};`}
+    >
+      {section.heading && <h2>{section.heading}</h2>}
+      <table>
+        <tbody>
+          {section.rows.map((row) => (
+            <tr>
+              <th>{row.label}</th>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+) : (
+  <section class="analysis">
+    {section.heading && <h2>{section.heading}</h2>}
+    <dl class="analysis__slab">
+      {section.rows.map((row) => (
+        <div class="analysis__row">
+          <dt>{row.label}</dt>
+          <span class="analysis__leader" aria-hidden="true"></span>
+          <dd>{row.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+)}
 
 <style>
   .analysis h2 {
@@ -80,5 +115,62 @@ const { section } = Astro.props
     .analysis__slab {
       padding: var(--space-6);
     }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-analysis__slab {
+    max-width: var(--max-width-lg);
+    overflow: hidden;
+    background: var(--color-text-primary);
+    color: var(--color-white);
+  }
+
+  .t-analysis__slab h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: var(--text-2xl);
+    padding: var(--space-6) var(--space-6) 0;
+    margin: 0;
+    color: var(--t-analysis-accent);
+  }
+
+  .t-analysis__slab table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-4);
+  }
+
+  .t-analysis__slab tr:first-child th,
+  .t-analysis__slab tr:first-child td {
+    padding-top: var(--space-2);
+  }
+
+  .t-analysis__slab th {
+    text-align: left;
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-size: var(--text-lg);
+    padding: var(--space-3) var(--space-6);
+    color: rgb(255 255 255 / 0.75);
+    white-space: nowrap;
+  }
+
+  .t-analysis__slab td {
+    width: 100%;
+    padding: var(--space-3) var(--space-6);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-variant-numeric: tabular-nums;
+    color: rgb(255 255 255 / 0.92);
+    border-bottom: 1px dotted rgb(255 255 255 / 0.16);
+  }
+
+  .t-analysis__slab tr:last-child td {
+    border-bottom: none;
+    padding-bottom: var(--space-6);
   }
 </style>

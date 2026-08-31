@@ -1,30 +1,61 @@
 ---
 // src/components/products/sections/TextSection.astro
 //
-// Editorial two-column: heading sits left, prose right (reference:
-// Lapalma "MEET PLUS" section). Collapses on mobile.
+// Agriculture: editorial two-column, heading sits left, prose right
+// (reference: Lapalma "MEET PLUS" section). Collapses on mobile.
+//
+// Turf: same heading + body content, in the diagonal-cut livery
+// treatment (an eyebrow-styled italic heading over the prose, cut
+// accent rule) instead of the two-column layout — see
+// src/styles/turf-livery.css for the shared tokens.
 
 import { PortableText } from 'astro-portabletext'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { TextSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: TextSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const color = productColor ?? '#2E6B3E'
+const accent = deriveCalloutPalette(color, productAccentColor).complement
 ---
 
-<section class="text-section">
-  {section.heading && <h2>{section.heading}</h2>}
-  <div class="text-section__body">
-    <PortableText
-      value={section.body}
-      components={portableTextComponents}
-      onMissingComponent={onMissingPortableTextComponent}
-    />
-  </div>
-</section>
+{variant === 'turf' ? (
+  <section class="t-text" style={`--t-text-accent: ${accent};`}>
+    {section.heading && (
+      <h2>
+        <span class="t-text__rule turf-cut" aria-hidden="true"></span>
+        {section.heading}
+      </h2>
+    )}
+    <div class="t-text__body">
+      <PortableText
+        value={section.body}
+        components={portableTextComponents}
+        onMissingComponent={onMissingPortableTextComponent}
+      />
+    </div>
+  </section>
+) : (
+  <section class="text-section">
+    {section.heading && <h2>{section.heading}</h2>}
+    <div class="text-section__body">
+      <PortableText
+        value={section.body}
+        components={portableTextComponents}
+        onMissingComponent={onMissingPortableTextComponent}
+      />
+    </div>
+  </section>
+)}
 
 <style>
   .text-section {
@@ -68,5 +99,41 @@ const { section } = Astro.props
     .text-section h2 {
       position: static;
     }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-text h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: var(--text-2xl);
+    letter-spacing: 0.01em;
+    color: var(--t-text-accent);
+    margin-bottom: var(--space-6);
+  }
+
+  .t-text__rule {
+    width: 28px;
+    height: 3px;
+    flex-shrink: 0;
+    background: currentColor;
+  }
+
+  .t-text__body {
+    max-width: var(--max-width-lg);
+    font-size: var(--text-lg);
+  }
+
+  .t-text__body :global(p) {
+    margin-bottom: var(--space-5);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .t-text__body :global(p:last-child) {
+    margin-bottom: 0;
   }
 </style>
