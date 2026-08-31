@@ -1,21 +1,34 @@
 ---
 // src/components/products/sections/ChartSection.astro
 //
-// Trial bar chart rendered natively (no chart library): horizontal
-// bars scale with the section width, so it works at every viewport.
-// Highlighted rows (the treated result) wear the product color;
-// controls are a neutral reference gray. Every bar carries a direct
-// value label in text ink — identity and magnitude never rely on
-// color alone. The markup is real text, so screen readers get the
+// Agriculture: trial bar chart rendered natively (no chart library) —
+// horizontal bars scale with the section width, so it works at every
+// viewport. Highlighted rows (the treated result) wear the product
+// color; controls are a neutral reference gray. Every bar carries a
+// direct value label in text ink — identity and magnitude never rely
+// on color alone. The markup is real text, so screen readers get the
 // data without a separate table.
+//
+// Turf: same rows/plot logic (nothing about the data or math changes),
+// diagonal-cut dark slab instead of the cream rounded one — see
+// src/styles/turf-livery.css.
 
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { ChartSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: ChartSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const isTurf = variant === 'turf'
+const color = productColor ?? '#2E6B3E'
+const accent = deriveCalloutPalette(color, productAccentColor).complement
 const values = section.rows.map((r) => r.value)
 const max = Math.max(...values)
 const min = Math.min(...values)
@@ -38,18 +51,20 @@ const rows = section.rows.map((r) => ({
   ...r,
   pct: Math.max(((r.value - base) / denominator) * 100, 6),
   color: r.highlight
-    ? 'var(--product-color, var(--color-green))'
+    ? isTurf
+      ? accent
+      : 'var(--product-color, var(--color-green))'
     : supportColors[supportIdx++ % supportColors.length],
 }))
 ---
 
-<section class="chart">
+<section class:list={['chart', { 't-chart': isTurf }]} style={isTurf ? `--t-chart-accent: ${accent};` : undefined}>
   <header class="chart__header">
     <h2>{section.heading}</h2>
     {section.source && <p class="chart__source">{section.source}</p>}
   </header>
 
-  <div class="chart__plot" role="list">
+  <div class:list={['chart__plot', { 'turf-cut-bordered': isTurf }]} style={isTurf ? `--turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${accent};` : undefined} role="list">
     {rows.map((row) => (
       <div class="chart__row" role="listitem">
         <span class="chart__label">{row.label}</span>
@@ -166,5 +181,42 @@ const rows = section.rows.map((r) => ({
     .chart__bar {
       height: 22px;
     }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-chart .chart__header h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--t-chart-accent);
+  }
+
+  .t-chart .chart__source {
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  .t-chart .chart__plot {
+    background: var(--color-text-primary);
+    border-radius: 0;
+  }
+
+  .t-chart .chart__label {
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .t-chart .chart__bar {
+    /* flat both ends — livery bars, not rounded pills */
+    border-radius: 0;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+  }
+
+  .t-chart .chart__value {
+    font-family: var(--font-mono);
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .t-chart .chart__footnote {
+    color: rgb(255 255 255 / 0.5);
   }
 </style>

@@ -4,22 +4,32 @@
 // Fixed alert styling (--color-warning in src/styles/tokens.css) —
 // deliberately NOT derived from the product's own primaryColor, unlike
 // CalloutSection. A caution box needs to read the same way on every
-// product regardless of that product's brand hue. Optional numbered
-// `steps` render as a plain <ol> below the message — for things like
-// mixing/handling instructions.
+// product regardless of that product's brand hue — **this stays true
+// for the Turf variant too**: only the shape changes (diagonal cut,
+// same dark-slab convention as the other turf sections), the color
+// itself is still the fixed --color-warning either way. Optional
+// numbered `steps` render as a plain <ol> below the message — for
+// things like mixing/handling instructions.
 
 import { PortableText } from 'astro-portabletext'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
+import '../../../styles/turf-livery.css'
 import type { WarningSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: WarningSection
+  variant?: ProductVariant
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture' } = Astro.props
+const isTurf = variant === 'turf'
 ---
 
-<section class="warning">
+<section
+  class:list={['warning', { 't-warning': isTurf, 'turf-cut-bordered': isTurf }]}
+  style={isTurf ? `--turf-cut: var(--turf-cut-sm); --turf-cut-border-color: var(--color-warning);` : undefined}
+>
   <div class="warning__icon" aria-hidden="true">!</div>
   <div class="warning__body">
     {section.heading && <h2>{section.heading}</h2>}
@@ -106,5 +116,26 @@ const { section } = Astro.props
       flex-direction: column;
       padding: var(--space-6);
     }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-warning {
+    background: color-mix(in srgb, var(--color-warning) 14%, var(--color-text-primary));
+    border-radius: 0;
+  }
+
+  .t-warning h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+
+  .t-warning .warning__message :global(p) {
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  .t-warning .warning__steps li {
+    color: rgb(255 255 255 / 0.75);
   }
 </style>

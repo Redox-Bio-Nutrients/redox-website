@@ -75,15 +75,43 @@ const { sections, variant = 'agriculture', productColor, productAccentColor, bac
             />
           )
         case 'chartSection':
-          return <ChartSection section={section} />
+          return (
+            <ChartSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'faqSection':
-          return <FaqSection section={section} />
+          return (
+            <FaqSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'testimonialSection':
-          return <TestimonialSection section={section} productColor={productColor} />
+          return (
+            <TestimonialSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'videoSection':
-          return <VideoSection section={section} />
+          return (
+            <VideoSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
         case 'warningSection':
-          return <WarningSection section={section} />
+          return <WarningSection section={section} variant={variant} />
         default:
           return null
       }

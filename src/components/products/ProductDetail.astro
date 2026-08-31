@@ -20,6 +20,8 @@ import ProductSections from './ProductSections.astro'
 import ResourceRequestDialog from './ResourceRequestDialog.astro'
 import { urlFor } from '../../lib/sanity'
 import { getProductVariant } from '../../lib/productVariant'
+import { deriveCalloutPalette } from '../../lib/color'
+import '../../styles/turf-livery.css'
 import type { Product } from '../../lib/types/sanity'
 
 interface Props {
@@ -35,6 +37,11 @@ const accentColor = product.accentColor
 // product exists yet, so this branch is currently dead in production;
 // wired ahead of the content so it's ready the moment one is tagged.
 const variant = getProductVariant(product.markets)
+const isTurf = variant === 'turf'
+// Second gradient stop for the turf hero/sidebar wash — the real
+// accentColor when a product has set one, otherwise the same derived
+// complement every other turf section already uses.
+const turfAccent = deriveCalloutPalette(color, accentColor).complement
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.
@@ -69,6 +76,15 @@ const logoUrl = product.logo
   ? urlFor(product.logo).width(700).fit('max').auto('format').url()
   : null
 
+// Turf products carry the full "TurfRx X" name in product.title (real
+// name for listings/SEO/"Pairs Well With" cards) but the hero already
+// shows a separate "TurfRx®" eyebrow above the big wordmark — stripping
+// a leading "TurfRx" from just the big-text fallback avoids "TurfRx® /
+// TurfRx Ca" doubling up. Doesn't touch product.title itself, or the
+// image-logo path (a logo graphic isn't redundant with the eyebrow the
+// way repeated text would be).
+const heroDisplayTitle = isTurf ? product.title.replace(/^TurfRx\s+/i, '') : product.title
+
 // "Product Support" is ungated — supplemental/supporting materials the
 // product's Label/Brochure/SDS (which do go through
 // ResourceRequestDialog) aren't meant to cover. Sanity CDN assets force
@@ -86,7 +102,11 @@ const documents = (product.documents ?? []).map((doc) => ({
 }))
 ---
 
-<header class="hero" data-header-theme="light" style={`--product-color: ${color}`}>
+<header
+  class:list={['hero', { 'hero--turf': isTurf }]}
+  data-header-theme="light"
+  style={`--product-color: ${color}; --product-accent-color: ${turfAccent};`}
+>
   {heroImage ? (
     <>
       <div
@@ -109,6 +129,13 @@ const documents = (product.documents ?? []).map((doc) => ({
     <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
   )}
   <div class="hero__scrim" aria-hidden="true"></div>
+  {isTurf && (
+    <>
+      <div class="hero__turf-wash" aria-hidden="true"></div>
+      <div class="hero__turf-navscrim" aria-hidden="true"></div>
+      <div class="hero__turf-stripes turf-stripes" aria-hidden="true"></div>
+    </>
+  )}
   <script is:inline>
     // Randomize the hero background per load — runs during parse,
     // before first paint. The pick's LQIP placeholder shows blurred
@@ -130,11 +157,12 @@ const documents = (product.documents ?? []).map((doc) => ({
 
   <div class="hero__content">
     <div class="hero__text">
+      {isTurf && <p class="hero__brand">TurfRx®</p>}
       <h1 class:list={['hero__title', { 'hero__title--logo': logoUrl }]}>
         {logoUrl ? (
           <img class="hero__logo" src={logoUrl} alt={product.logo?.alt ?? product.title} />
         ) : (
-          product.title
+          heroDisplayTitle
         )}
       </h1>
       <hr class="hero__rule" />
@@ -145,13 +173,13 @@ const documents = (product.documents ?? []).map((doc) => ({
             <a href={m.href}>{m.label}</a>
           ))}
         </nav>
-        <a class="hero__cta" href="#content">Explore ↓</a>
+        <a class:list={['hero__cta', { 'turf-cut': isTurf }]} href="#content">Explore ↓</a>
       </div>
     </div>
   </div>
 </header>
 
-<div class="layout" id="content" style={`--product-color: ${color}`}>
+<div class="layout" id="content" style={`--product-color: ${color}; --product-accent-color: ${turfAccent};`}>
   <div class="layout__main">
     {product.sections && product.sections.length > 0 && (
       <ProductSections
@@ -168,8 +196,8 @@ const documents = (product.documents ?? []).map((doc) => ({
     )}
   </div>
 
-  <aside class="sidebar" aria-label="Product resources">
-    <div class="sidebar__inner">
+  <aside class:list={['sidebar', { 'sidebar--turf': isTurf }]} aria-label="Product resources">
+    <div class:list={['sidebar__inner', { 'turf-cut-bordered': isTurf }]} style={isTurf ? `--turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${turfAccent};` : undefined}>
       <figure class="sidebar__product">
         {productShotUrl ? (
           <img
@@ -184,7 +212,11 @@ const documents = (product.documents ?? []).map((doc) => ({
         )}
       </figure>
 
-      <button type="button" class="sidebar__doc-request" data-dialog-open="resource-request-dialog">
+      <button
+        type="button"
+        class:list={['sidebar__doc-request', { 'turf-cut': isTurf }]}
+        data-dialog-open="resource-request-dialog"
+      >
         Product Information Request
       </button>
 
@@ -192,7 +224,7 @@ const documents = (product.documents ?? []).map((doc) => ({
         <div class="sidebar__support" data-support>
           <button
             type="button"
-            class="sidebar__support-toggle"
+            class:list={['sidebar__support-toggle', { 'turf-cut': isTurf }]}
             aria-expanded="false"
             aria-haspopup="true"
             data-support-toggle
@@ -299,7 +331,7 @@ const documents = (product.documents ?? []).map((doc) => ({
         </section>
       )}
 
-      <a class="sidebar__cta" href="/contact">
+      <a class:list={['sidebar__cta', { 'turf-cut': isTurf }]} href="/contact">
         Talk to an agronomist
       </a>
     </div>
@@ -925,5 +957,185 @@ const documents = (product.documents ?? []).map((doc) => ({
     .layout {
       padding-top: var(--space-16);
     }
+  }
+
+  /* ── Turf variant: hero ───────────────────────────────────────────
+   * Same markup/content as the Agriculture hero above (same image
+   * pool, same tagline/markets/CTA) — only the skin changes: a
+   * two-tone diagonal wash over the photo (--product-color ->
+   * --product-accent-color) instead of a flat dark scrim, the
+   * diagonal-cut CTA, and the italic condensed display face in place
+   * of the serif. See src/pages/preview/turf-concept.astro for the
+   * reviewed concept this was built from. */
+  .hero--turf .hero__turf-wash {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--product-color) 62%, transparent) 0%,
+      color-mix(in srgb, var(--product-accent-color) 48%, transparent) 100%
+    );
+  }
+
+  /* Flat dark band across exactly the strip the floating nav occupies
+   * — the diagonal wash above fades to near-transparent on its accent
+   * side, which would otherwise wash out the nav's forced-white text
+   * whenever it crosses that lighter half. See the same fix worked
+   * out in the reviewed concept page for the full reasoning. */
+  .hero--turf .hero__turf-navscrim {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 110px;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0.55) 0%, transparent 100%);
+  }
+
+  .hero--turf .hero__turf-stripes {
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-8);
+    width: 64px;
+    height: 14px;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .hero__brand {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: var(--text-lg);
+    color: rgb(255 255 255 / 0.85);
+    margin-bottom: var(--space-2);
+  }
+
+  .hero--turf .hero__title {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .hero--turf .hero__tagline {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+
+  .hero--turf .hero__markets {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  .hero--turf .hero__cta {
+    --turf-cut: var(--turf-cut-sm);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-text-primary);
+    border-bottom: none;
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  .hero--turf .hero__cta:hover {
+    background: color-mix(in srgb, var(--product-color) 30%, var(--color-text-primary));
+  }
+
+  /* ── Turf variant: sidebar ────────────────────────────────────────
+   * Same content blocks as the Agriculture sidebar (product shot, doc
+   * request, Powered By, Crops, Markets, Pairs Well With, CTA) — only
+   * the shell and buttons reskin. Deliberately a fixed dark surface
+   * regardless of site light/dark theme, same reasoning as every
+   * other turf section: this is the product's own "livery," not
+   * themed chrome. */
+  .sidebar--turf .sidebar__inner {
+    background: var(--color-text-primary);
+    border: none;
+  }
+
+  .sidebar--turf .sidebar__product {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .sidebar--turf .sidebar__product-ph {
+    background:
+      linear-gradient(115deg, var(--product-color) 0%, var(--product-accent-color) 100%);
+  }
+
+  .sidebar--turf .sidebar__product-ph span {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+  }
+
+  .sidebar--turf .sidebar__group h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  .sidebar--turf .sidebar__link,
+  .sidebar--turf .sidebar__doc,
+  .sidebar--turf .sidebar__related {
+    background: rgb(255 255 255 / 0.06);
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  .sidebar--turf .sidebar__related-text small {
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  .sidebar--turf .sidebar__doc-icon {
+    background: color-mix(in srgb, var(--product-accent-color) 22%, transparent);
+    color: var(--product-accent-color);
+  }
+
+  .sidebar--turf .sidebar__doc-request,
+  .sidebar--turf .sidebar__support-toggle {
+    background: transparent;
+    border: 1.5px solid var(--product-accent-color);
+    border-radius: 0;
+    color: var(--product-accent-color);
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  .sidebar--turf .sidebar__doc-request:hover,
+  .sidebar--turf .sidebar__support-toggle:hover {
+    background: color-mix(in srgb, var(--product-accent-color) 14%, transparent);
+  }
+
+  .sidebar--turf .sidebar__support-count {
+    background: color-mix(in srgb, var(--product-accent-color) 22%, transparent);
+    color: var(--product-accent-color);
+  }
+
+  .sidebar--turf .sidebar__support-panel-inner {
+    background: var(--color-text-primary);
+    border-color: rgb(255 255 255 / 0.14);
+  }
+
+  .sidebar--turf .sidebar__support-panel-title {
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  .sidebar--turf .sidebar__doc-view {
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  .sidebar--turf .sidebar__tags li {
+    background: rgb(255 255 255 / 0.06);
+    border-color: rgb(255 255 255 / 0.18);
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .sidebar--turf .sidebar__cta {
+    background: linear-gradient(100deg, var(--product-color), var(--product-accent-color));
+    border-radius: 0;
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
   }
 </style>
