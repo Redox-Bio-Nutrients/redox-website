@@ -1,0 +1,341 @@
+---
+// src/pages/preview/turf-concept.astro
+//
+// Throwaway design-review page — NOT part of the real product page
+// yet, not linked from anywhere, not meant to ship. Renders the
+// diagonal-cut "livery" system against TurfRx OxyCal's real catalog
+// copy, using the real site chrome (BaseLayout -> Header/Footer, same
+// as any real page) so it reads the way an actual visitor would see
+// it, plus a real randomized pick from the live `turfBackgroundPool`
+// Sanity singleton for the hero and callout imagery — same
+// pool/mechanism ProductDetail.astro and CalloutSection.astro already
+// use via BG_POOL_FRAGMENT / MARKET_POOL_SELECT (see fragments.ts),
+// just pointed at a demo product instead of a real one, since no Turf
+// product docs exist yet.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { sanityFetch, urlFor } from '../../lib/sanity'
+import { IMAGE_FRAGMENT } from '../../lib/queries/fragments'
+import PoolBackground from '../../components/ui/PoolBackground.astro'
+import ProductSections from '../../components/products/ProductSections.astro'
+import '../../styles/turf-livery.css'
+import type { ProductSection, SanityImage } from '../../lib/types/sanity'
+import type { PortableTextBlock } from '@portabletext/types'
+
+export const prerender = false
+
+const rawPool = await sanityFetch<SanityImage[]>(
+  /* groq */ `*[_id == "turfBackgroundPool"][0].images[] ${IMAGE_FRAGMENT}`,
+)
+
+const heroPool = rawPool.map((img) => ({
+  url: urlFor(img).width(2400).height(1400).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
+}))
+// Demo product identity — no real Turf product doc exists yet, so
+// these stand in for what a real product's primaryColor/accentColor
+// would be. Matches the hero's own gradient stops below.
+const PRODUCT_COLOR = '#B5321C'
+const PRODUCT_ACCENT = '#EE9A3C'
+
+// A minimal helper, not a real Portable Text editor output — good
+// enough to prove the real section renderers work, not meant to be a
+// template for authoring real content in Studio (that's just typed
+// prose in the block editor).
+let blockKey = 0
+const textBlock = (text: string): PortableTextBlock =>
+  ({
+    _type: 'block',
+    _key: `b${blockKey++}`,
+    style: 'normal',
+    markDefs: [],
+    children: [{ _type: 'span', _key: `s${blockKey++}`, text, marks: [] }],
+  }) as unknown as PortableTextBlock
+
+// The actual Sanity `sections[]` module system — same schema types,
+// same renderer components (via ProductSections below) real product
+// pages use, just fed by-hand content instead of a real doc's fields.
+// This is the direct answer to "is this a Studio module or baked in":
+// these ARE the modules, rendered through the real pipeline.
+const sections: ProductSection[] = [
+  {
+    _type: 'bulletSection',
+    _key: 'benefits',
+    heading: 'OxyCal Benefits at a Glance',
+    columns: 2,
+    items: [
+      'Boosts Photosynthesis — enhances photosynthetic activity, even in shaded or low-light areas.',
+      'Powers Energy Production — activates the same carbon pathways plants create during photosynthesis.',
+      'Strengthens Antioxidant Defense — neutralizes harmful oxygen free radicals.',
+      'Supports Recovery — accelerates repair after aerification, verticutting, or heavy traffic.',
+      'Enhances Abiotic Stress Resistance — builds defense against heat, cold, and drought.',
+    ],
+  },
+  {
+    _type: 'calloutSection',
+    _key: 'quote',
+    tone: 'solid',
+    body: [
+      textBlock(
+        'Shield your surface. Elevate play. TurfRx OxyCal keeps turf maintaining color, density, and playability — even under intense pressure.',
+      ),
+    ],
+  },
+  {
+    _type: 'analysisSection',
+    _key: 'rate',
+    heading: 'Suggested Rate',
+    rows: [
+      { label: 'Rate', value: '1–3 lbs/acre (foliar)' },
+      { label: 'Timing', value: 'Before / after cultural practices' },
+      { label: 'Special Notes', value: 'Water in that evening' },
+    ],
+  },
+]
+---
+
+<BaseLayout
+  title="TurfRx OxyCal (concept preview)"
+  description="Diagonal-cut livery system concept for Turf product pages."
+>
+  <div class="turf-page">
+    <header class="t-hero" data-header-theme="light">
+      {heroPool.length > 0 && <PoolBackground pool={heroPool} />}
+      <div class="t-hero__wash" aria-hidden="true"></div>
+      <div class="t-hero__navscrim" aria-hidden="true"></div>
+      <div class="t-hero__stripes turf-stripes" aria-hidden="true"></div>
+      <div class="t-hero__content">
+        <div class="t-brand">TurfRx®</div>
+        <div class="t-hero__name">
+          <h1>OxyCal</h1>
+          <span class="t-hero__ratio">1-5-5</span>
+        </div>
+        <div class="t-hero__tagline">Energize Your Turf.</div>
+        <div class="t-hero__rule"></div>
+        <div class="t-hero__lede">
+          <span class="t-check" aria-hidden="true">✓</span>
+          <p>Shield Your Surface. Elevate Play.</p>
+        </div>
+        <p class="t-hero__body">
+          TurfRx OxyCal is a potent bio-stimulant that delivers a precise
+          balance of potassium, calcium, phosphorus, and sulfate sulfur,
+          paired with proprietary Redox Active Molecules — that drive
+          energy production and support strong, resilient growth.
+        </p>
+        <a class="t-hero__cta turf-cut" href="#content">Explore OxyCal ↓</a>
+      </div>
+    </header>
+
+    <div id="content" class="t-body">
+      <div class="t-body__main">
+        <ProductSections
+          sections={sections}
+          variant="turf"
+          productColor={PRODUCT_COLOR}
+          productAccentColor={PRODUCT_ACCENT}
+          backgrounds={rawPool}
+        />
+      </div>
+
+      <aside class="t-sidebar turf-cut-bordered">
+        <div class="t-sidebar__shot">OxyCal</div>
+        <a class="t-sidebar__cta turf-cut" href="#">Product Information Request</a>
+        <div class="t-sidebar__group">
+          <h3>Powered By</h3>
+          <ul><li><a href="#">RAM Technology</a></li></ul>
+        </div>
+        <div class="t-sidebar__group">
+          <h3>Surfaces</h3>
+          <ul class="t-sidebar__tags"><li>Greens</li><li>Fairways</li><li>Sports Turf</li></ul>
+        </div>
+        <div class="t-sidebar__group">
+          <h3>Markets</h3>
+          <ul><li><a href="#">Turf</a></li></ul>
+        </div>
+        <div class="t-sidebar__group">
+          <h3>Pairs Well With</h3>
+          <ul><li><a href="#">TurfRx Linx</a></li><li><a href="#">TurfRx Si</a></li></ul>
+        </div>
+        <a class="t-sidebar__talk turf-cut" href="#">Talk to an agronomist</a>
+      </aside>
+    </div>
+
+    <div class="t-page-end"></div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Font, .turf-cut/.turf-cut-bordered/.turf-stripes utilities, and
+     the --turf-cut-* size tokens all come from the shared
+     src/styles/turf-livery.css import above — every section renderer
+     that has a turf variant imports the same file, so this page's
+     hero/sidebar (not themselves Studio modules) use it too rather
+     than keeping a second copy of the same utilities. */
+  .turf-page {
+    --turf-primary: #B5321C;
+    --turf-accent: #EE9A3C;
+    --turf-steel: #211D1A;
+    background: var(--turf-steel);
+    color: #F7F2E9;
+  }
+
+  /* -- hero: full-bleed behind the fixed nav, same pattern as the
+     real ProductDetail.astro hero (margin-top cancels header-space,
+     data-header-theme="light" flips the nav to its light variant) -- */
+  .t-hero {
+    position: relative;
+    margin-top: calc(-1 * var(--header-space));
+    min-height: calc(min(70vh, 720px) + var(--header-space));
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+  .t-hero :global(.pool-bg) { z-index: 0; }
+  .t-hero__wash {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(100deg, rgb(0 0 0 / 0.55) 0%, rgb(0 0 0 / 0.2) 45%, rgb(0 0 0 / 0.05) 100%),
+      linear-gradient(
+        115deg,
+        color-mix(in srgb, var(--turf-primary) 70%, transparent) 0%,
+        color-mix(in srgb, var(--turf-accent) 55%, transparent) 100%
+      );
+  }
+  /* A dedicated dark band across the exact strip the floating nav
+     occupies, layered on top of the diagonal wash above. The wash
+     alone isn't enough here — it fades to near-transparent on its
+     accent (amber) side, and the nav's forced-white text loses all
+     contrast wherever it crosses that lighter half, in either site
+     theme. This band is flat and uniform left-to-right specifically
+     so nav legibility doesn't depend on where in the gradient it
+     lands. Height roughly matches --header-space at rest (measured
+     JS-side after first paint; this covers the pre-measurement
+     fallback and the desktop-scale header comfortably either way). */
+  .t-hero__navscrim {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 1;
+    height: 110px;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0.6) 0%, transparent 100%);
+  }
+  .t-hero__stripes {
+    position: absolute;
+    z-index: 2;
+    top: var(--space-6);
+    right: var(--space-8);
+    width: 64px;
+    height: 14px;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  /* Constrained to the same container as the sections below it (was
+     drifting to its own ad hoc width — this ties the hero's left edge
+     to the exact same guide as "OxyCal Benefits at a Glance" etc.) */
+  .t-hero__content {
+    position: relative;
+    z-index: 2;
+    width: min(var(--content-width), 100%);
+    margin: 0 auto;
+    padding: var(--space-32) var(--space-8) var(--space-12);
+  }
+
+  .t-brand {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: rgb(255 255 255 / 0.85);
+  }
+  .t-hero__name {
+    margin-top: var(--space-2);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .t-hero__name h1 {
+    margin: 0;
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 800;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    line-height: 0.85;
+    color: #fff;
+  }
+  .t-hero__ratio {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9375rem;
+    color: rgb(255 255 255 / 0.75);
+  }
+  .t-hero__tagline {
+    margin-top: var(--space-1);
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: 1.0625rem;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.92);
+  }
+  .t-hero__rule { margin-top: var(--space-5); width: 44px; height: 3px; background: #fff; }
+  .t-hero__lede { margin-top: var(--space-5); display: flex; gap: var(--space-3); max-width: 58ch; }
+  .t-check {
+    flex-shrink: 0; width: 20px; height: 20px; margin-top: 0.15em;
+    border: 2px solid #fff; display: grid; place-items: center;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .t-hero__lede p { margin: 0; font-weight: 700; font-size: 1.0625rem; }
+  .t-hero__body {
+    margin-top: var(--space-5); max-width: 58ch; font-size: 0.9375rem;
+    line-height: 1.65; color: rgb(255 255 255 / 0.88);
+  }
+  .t-hero__cta {
+    margin-top: var(--space-8); display: inline-flex; align-items: center;
+    gap: var(--space-2); padding: var(--space-3) var(--space-6);
+    background: var(--turf-steel); color: #fff; font-family: var(--turf-font-display);
+    font-style: italic; font-weight: 700; font-size: 0.9375rem;
+    text-transform: uppercase; text-decoration: none;
+  }
+
+  /* -- body grid: the real ProductSections module output (benefits,
+     callout, rate) in the main column + sidebar -- */
+  .t-body {
+    display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--space-8);
+    padding: var(--space-8); max-width: var(--content-width); margin: 0 auto;
+  }
+  .t-body__main { display: flex; flex-direction: column; gap: var(--space-8); min-width: 0; }
+
+  .t-sidebar {
+    --turf-cut: var(--turf-cut-sm); --turf-cut-b: 1.5px; --turf-cut-border-color: rgb(255 255 255 / 0.22);
+    align-self: start; padding: var(--space-5);
+    background: rgb(255 255 255 / 0.04); display: flex; flex-direction: column; gap: var(--space-5);
+  }
+  .t-sidebar__shot {
+    aspect-ratio: 4 / 3; display: grid; place-items: center; background: rgb(255 255 255 / 0.06);
+    font-family: var(--turf-font-display); font-style: italic; font-weight: 700; font-size: 0.9375rem;
+    color: rgb(255 255 255 / 0.55);
+  }
+  .t-sidebar__cta, .t-sidebar__talk {
+    --turf-cut: 10px; display: block; text-align: center; padding: var(--space-3) var(--space-4);
+    font-family: var(--turf-font-display); font-style: italic; font-weight: 700; font-size: 0.8125rem;
+    text-transform: uppercase; text-decoration: none;
+  }
+  .t-sidebar__cta { background: transparent; border: 1.5px solid var(--turf-accent); color: var(--turf-accent); }
+  .t-sidebar__talk { background: linear-gradient(100deg, var(--turf-primary), var(--turf-accent)); color: #fff; }
+  .t-sidebar__group h3 {
+    margin: 0; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600;
+    text-transform: uppercase; color: rgb(255 255 255 / 0.45);
+  }
+  .t-sidebar__group ul { margin: var(--space-2) 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-1); }
+  .t-sidebar__group li a { display: block; padding: var(--space-2) 0; font-size: 0.8125rem; color: rgb(255 255 255 / 0.82); border-bottom: 1px dotted rgb(255 255 255 / 0.12); text-decoration: none; }
+  .t-sidebar__tags { flex-direction: row !important; flex-wrap: wrap; gap: var(--space-2) !important; }
+  .t-sidebar__tags li { padding: var(--space-1) var(--space-3); border: 1px solid rgb(255 255 255 / 0.2); font-size: 0.6875rem; color: rgb(255 255 255 / 0.75); }
+
+  .t-page-end { height: var(--space-16); }
+
+  @media (max-width: 900px) {
+    .t-body { grid-template-columns: 1fr; }
+  }
+</style>

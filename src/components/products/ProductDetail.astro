@@ -19,6 +19,7 @@
 import ProductSections from './ProductSections.astro'
 import ResourceRequestDialog from './ResourceRequestDialog.astro'
 import { urlFor } from '../../lib/sanity'
+import { getProductVariant } from '../../lib/productVariant'
 import type { Product } from '../../lib/types/sanity'
 
 interface Props {
@@ -29,6 +30,11 @@ const { product } = Astro.props
 
 const color = product.primaryColor ?? '#2E6B3E'
 const accentColor = product.accentColor
+// Which visual system the sections below render in — see
+// src/lib/productVariant.ts for the exact rule. No real Turf-only
+// product exists yet, so this branch is currently dead in production;
+// wired ahead of the content so it's ready the moment one is tagged.
+const variant = getProductVariant(product.markets)
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.
@@ -135,6 +141,7 @@ const documents = (product.documents ?? []).map((doc) => ({
     {product.sections && product.sections.length > 0 && (
       <ProductSections
         sections={product.sections}
+        variant={variant}
         productColor={color}
         productAccentColor={accentColor}
         backgrounds={

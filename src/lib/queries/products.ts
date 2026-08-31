@@ -35,6 +35,7 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
   tagline,
   markets,
   "image": image ${IMAGE_FRAGMENT},
+  "logo": logo ${IMAGE_FRAGMENT},
   "heroImage": heroImage ${IMAGE_FRAGMENT},
   "backgrounds": ${BG_POOL_FRAGMENT},
   "calloutBackgrounds": calloutBackgrounds[] ${IMAGE_FRAGMENT},

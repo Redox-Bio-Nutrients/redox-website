@@ -1,0 +1,64 @@
+/* src/styles/turf-livery.css
+ *
+ * WHY: The Turf-market visual system ("diagonal-cut livery" —
+ * see the reviewed concept, src/pages/preview/turf-concept.astro)
+ * needs the same handful of primitives — a font, a corner-cut shape,
+ * a set of cut sizes — in every product section component that grows
+ * a `variant="turf"` branch. Centralized here once instead of
+ * duplicated per component, the same reasoning as tokens.css for the
+ * rest of the site. This file is plain global CSS (not an
+ * Astro-scoped <style> block) so `.turf-cut`/`.turf-cut-bordered` work
+ * as real reusable classes across component boundaries — import it
+ * from any section component that has a turf variant.
+ *
+ * Deliberately NOT merged into tokens.css: these tokens only apply
+ * inside a Turf-market product page's sections, never site-wide, so
+ * keeping them in their own file makes that scope obvious rather than
+ * bloating the global token set with values 95% of the site never
+ * reads.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700;1,800&display=swap');
+
+:root {
+  --turf-font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --turf-cut-sm: 14px;
+  --turf-cut-md: 26px;
+  --turf-cut-lg: 46px;
+}
+
+/* Diagonal top-right corner cut — the Turf-market counterpart to
+ * --radius-leaf's soft curve. `--turf-cut` picks the size (default
+ * --turf-cut-md); set it inline per use-site for a bigger/smaller cut. */
+.turf-cut {
+  --turf-cut: var(--turf-cut-md);
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - var(--turf-cut)) 0, 100% var(--turf-cut), 100% 100%, 0 100%);
+}
+
+/* Same shape, plus a thin border in --turf-cut-border-color (defaults
+ * to currentColor so it inherits sensibly without a value set) —
+ * faked via an inset pseudo-element sharing the same clip-path, since
+ * clip-path itself clips away a plain CSS border. */
+.turf-cut-bordered {
+  --turf-cut: var(--turf-cut-md);
+  --turf-cut-b: 1.5px;
+  --turf-cut-border-color: currentColor;
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - var(--turf-cut)) 0, 100% var(--turf-cut), 100% 100%, 0 100%);
+}
+
+.turf-cut-bordered::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--turf-cut-b));
+  clip-path: polygon(0 0, calc(100% - var(--turf-cut)) 0, 100% var(--turf-cut), 100% 100%, 0 100%);
+  background: var(--turf-cut-border-color);
+  z-index: -1;
+}
+
+/* Small diagonal "speed line" hash accent — matches the catalog's
+ * corner mark, used sparingly (one per section, in a corner). */
+.turf-stripes {
+  background-image: repeating-linear-gradient(115deg, currentColor 0 3px, transparent 3px 9px);
+}

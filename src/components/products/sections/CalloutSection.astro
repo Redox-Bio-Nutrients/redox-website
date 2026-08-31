@@ -1,29 +1,38 @@
 ---
 // src/components/products/sections/CalloutSection.astro
 //
-// Callouts float on randomized imagery from the product's background
-// pool (the full Biorg pattern — panels over photography). Solid: the
-// image shows through a heavy product-color overlay, so it stays
-// on-brand. Tint: frosted-glass panel directly over the photo. Both
-// fall back to their gradient looks when no pool exists.
+// Agriculture: callouts float on randomized imagery from the
+// product's background pool (the full Biorg pattern — panels over
+// photography). Solid: the image shows through a heavy product-color
+// overlay, so it stays on-brand. Tint: frosted-glass panel directly
+// over the photo. Both fall back to their gradient looks when no pool
+// exists.
+//
+// Turf: same pool imagery, same overlay idea (a heavy on-brand wash so
+// photo texture shows through), but as a diagonal-cut slab with a
+// two-tone livery sweep (primary -> accent) instead of the
+// leaf-sprig/rounded treatment — see src/styles/turf-livery.css.
 
 import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
 import { deriveCalloutPalette } from '../../../lib/color'
 import { randomBetween, randomChoice, seededRandom } from '../../../lib/seededRandom'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
+import '../../../styles/turf-livery.css'
 import type { CalloutSection, SanityImage } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 import PoolBackground from '../../ui/PoolBackground.astro'
 
 interface Props {
   section: CalloutSection
+  variant?: ProductVariant
   productColor?: string
   /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
   productAccentColor?: string
   backgrounds?: SanityImage[]
 }
 
-const { section, productColor, productAccentColor, backgrounds } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds } = Astro.props
 const color = productColor ?? 'var(--color-green)'
 const palette = deriveCalloutPalette(color, productAccentColor)
 const solid = section.tone !== 'tint'
@@ -66,30 +75,52 @@ const calloutVars = [
 ].join('; ')
 ---
 
-<section
-  class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
-  style={calloutVars}
->
-  {hasBg ? (
-    <PoolBackground pool={pool} />
-  ) : (
-    !solid && <div class="callout__wash" aria-hidden="true"></div>
-  )}
-  {hasBg && solid && <div class="callout__overlay" aria-hidden="true"></div>}
-
-  <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
-    {section.heading && <h2>{section.heading}</h2>}
-    {hasBody && (
-      <div class="callout__body">
-        <PortableText
-          value={section.body}
-          components={portableTextComponents}
-          onMissingComponent={onMissingPortableTextComponent}
-        />
-      </div>
+{variant === 'turf' ? (
+  <section
+    class="t-callout turf-cut"
+    style={`--turf-cut: var(--turf-cut-lg); --t-callout-primary: ${palette.base}; --t-callout-accent: ${palette.complement};`}
+  >
+    {hasBg && <PoolBackground pool={pool} />}
+    <div class="t-callout__wash" aria-hidden="true"></div>
+    <div class="t-callout__panel">
+      {section.heading && <h2>{section.heading}</h2>}
+      {hasBody && (
+        <div class="t-callout__body">
+          <PortableText
+            value={section.body}
+            components={portableTextComponents}
+            onMissingComponent={onMissingPortableTextComponent}
+          />
+        </div>
+      )}
+    </div>
+  </section>
+) : (
+  <section
+    class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
+    style={calloutVars}
+  >
+    {hasBg ? (
+      <PoolBackground pool={pool} />
+    ) : (
+      !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}
-  </div>
-</section>
+    {hasBg && solid && <div class="callout__overlay" aria-hidden="true"></div>}
+
+    <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
+      {section.heading && <h2>{section.heading}</h2>}
+      {hasBody && (
+        <div class="callout__body">
+          <PortableText
+            value={section.body}
+            components={portableTextComponents}
+            onMissingComponent={onMissingPortableTextComponent}
+          />
+        </div>
+      )}
+    </div>
+  </section>
+)}
 
 <style>
   .callout {
@@ -270,6 +301,61 @@ const calloutVars = [
 
     .callout__panel--glass {
       padding: var(--space-8) 86px var(--space-8) var(--space-6);
+    }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-callout {
+    position: relative;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: var(--space-8) var(--space-10);
+  }
+
+  .t-callout :global(.pool-bg) {
+    position: absolute;
+    inset: 0;
+  }
+
+  .t-callout__wash {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--t-callout-accent) 85%, transparent) 0%,
+      color-mix(in srgb, var(--t-callout-primary) 82%, transparent) 100%
+    );
+  }
+
+  .t-callout__panel {
+    position: relative;
+    max-width: 60ch;
+  }
+
+  .t-callout h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: var(--text-2xl);
+    color: var(--color-white);
+  }
+
+  .t-callout__body {
+    margin-top: var(--space-3);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .t-callout__body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 767px) {
+    .t-callout {
+      padding: var(--space-6);
     }
   }
 </style>
