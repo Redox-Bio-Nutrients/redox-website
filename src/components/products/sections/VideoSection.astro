@@ -11,7 +11,7 @@
 // there's less to change here than the other section types.
 
 import '../../../styles/turf-livery.css'
-import { deriveCalloutPalette } from '../../../lib/color'
+import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
 import type { VideoSection } from '../../../lib/types/sanity'
 import type { ProductVariant } from '../../../lib/productVariant'
 
@@ -24,7 +24,7 @@ interface Props {
 
 const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
 const isTurf = variant === 'turf'
-const accent = deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement
+const accent = ensureReadableOnDark(deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement)
 
 function toEmbedSrc(url: string): string {
   try {

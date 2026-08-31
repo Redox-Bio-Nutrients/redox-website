@@ -76,36 +76,47 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
         ))}
       </nav>
     )}
-    {groups.map((group) => (
-      <section class="catalog__group" id={group.collection?.slug ?? 'more-products'}>
-        <div
-          class="catalog__group-head"
-          style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}
-        >
-          <div class="catalog__group-head-row">
-            {group.collection?.icon && (
-              <img
-                class="catalog__icon"
-                src={urlFor(group.collection.icon).width(96).fit('max').url()}
-                alt={group.collection.icon.alt ?? ''}
-                width="40"
-                height="40"
-              />
-            )}
-            <div class="catalog__group-head-text">
-              <span class="catalog__eyebrow">{group.collection?.title ?? 'More Products'}</span>
-              {group.collection?.description && <p class="catalog__desc">{group.collection.description}</p>}
+    {groups.map((group) => {
+      // A lone "More Products" bucket (no real Collection exists for
+      // any product on the page) is the whole page, not a category
+      // within it — the eyebrow/rule exist to label one group among
+      // several, so they're just noise here. Once real Collections
+      // exist (or there's more than one group), the header earns its
+      // place back automatically.
+      const showHeader = group.collection !== null || groups.length > 1
+      return (
+        <section class="catalog__group" id={group.collection?.slug ?? 'more-products'}>
+          {showHeader && (
+            <div
+              class="catalog__group-head"
+              style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}
+            >
+              <div class="catalog__group-head-row">
+                {group.collection?.icon && (
+                  <img
+                    class="catalog__icon"
+                    src={urlFor(group.collection.icon).width(96).fit('max').url()}
+                    alt={group.collection.icon.alt ?? ''}
+                    width="40"
+                    height="40"
+                  />
+                )}
+                <div class="catalog__group-head-text">
+                  <span class="catalog__eyebrow">{group.collection?.title ?? 'More Products'}</span>
+                  {group.collection?.description && <p class="catalog__desc">{group.collection.description}</p>}
+                </div>
+              </div>
+              <hr class="catalog__rule" />
             </div>
+          )}
+          <div class="catalog__grid">
+            {group.products.map((product) => (
+              <ProductCard product={product} accentColor={group.collection?.color} />
+            ))}
           </div>
-          <hr class="catalog__rule" />
-        </div>
-        <div class="catalog__grid">
-          {group.products.map((product) => (
-            <ProductCard product={product} accentColor={group.collection?.color} />
-          ))}
-        </div>
-      </section>
-    ))}
+        </section>
+      )
+    })}
   </div>
 ) : (
   <p class="catalog__empty">{emptyMessage}</p>

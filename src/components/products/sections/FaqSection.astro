@@ -13,7 +13,7 @@
 import { PortableText } from 'astro-portabletext'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import '../../../styles/turf-livery.css'
-import { deriveCalloutPalette } from '../../../lib/color'
+import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
 import type { FaqSection } from '../../../lib/types/sanity'
 import type { ProductVariant } from '../../../lib/productVariant'
 
@@ -27,7 +27,7 @@ interface Props {
 const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
 const isTurf = variant === 'turf'
 const color = productColor ?? '#2E6B3E'
-const accent = deriveCalloutPalette(color, productAccentColor).complement
+const accent = ensureReadableOnDark(deriveCalloutPalette(color, productAccentColor).complement)
 ---
 
 <section class:list={['faq', { 't-faq': isTurf }]} style={isTurf ? `--t-faq-accent: ${accent};` : undefined}>

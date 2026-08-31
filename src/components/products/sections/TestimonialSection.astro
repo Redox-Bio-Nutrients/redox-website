@@ -14,7 +14,7 @@
 
 import { urlFor } from '../../../lib/sanity'
 import '../../../styles/turf-livery.css'
-import { deriveCalloutPalette } from '../../../lib/color'
+import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
 import type { TestimonialSection } from '../../../lib/types/sanity'
 import type { ProductVariant } from '../../../lib/productVariant'
 
@@ -28,7 +28,7 @@ interface Props {
 const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
 const isTurf = variant === 'turf'
 const color = productColor ?? 'var(--color-green)'
-const accent = deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement
+const accent = ensureReadableOnDark(deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement)
 const avatarUrl = section.avatar
   ? urlFor(section.avatar).width(96).height(96).fit('crop').auto('format').quality(80).url()
   : null

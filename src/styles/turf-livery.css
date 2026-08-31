@@ -37,24 +37,35 @@
 }
 
 /* Same shape, plus a thin border in --turf-cut-border-color (defaults
- * to currentColor so it inherits sensibly without a value set) —
- * faked via an inset pseudo-element sharing the same clip-path, since
- * clip-path itself clips away a plain CSS border. */
+ * to currentColor so it inherits sensibly without a value set).
+ *
+ * FIXED 2026-08-31: this used to fake the border with an inset
+ * ::before sharing the same clip-path, on the theory that clip-path
+ * clips away a plain CSS border. That premise was wrong — clip-path
+ * clips the whole rendered box (border-box, its default reference),
+ * so a real `border` renders on the straight edges and then gets
+ * clipped along with everything else, same as any other paint. The
+ * ::before version was a real, live bug, not a stylistic choice: at
+ * only -1.5px inset it was nearly the card's full size, and as a
+ * *negative* z-index child it paints in front of the card's own
+ * background (stacking order: element background, then negative-z
+ * children, then normal content) — so it covered almost the entire
+ * card in the border color, not just a thin ring. Invisible when the
+ * border color happened to be very dark (blended into an
+ * already-dark card), glaringly obvious once that color was
+ * brightened for a text-contrast fix — same underlying bug, just a
+ * different symptom. A plain `border` has one real trade-off: it
+ * won't trace the diagonal cut itself (CSS borders are straight
+ * per-side, so the cut corner shows as a clean stroke-less edge
+ * where the polygon slices through) — a minor, common look for
+ * cut-corner UI, not a bug. */
 .turf-cut-bordered {
   --turf-cut: var(--turf-cut-md);
   --turf-cut-b: 1.5px;
   --turf-cut-border-color: currentColor;
   position: relative;
   clip-path: polygon(0 0, calc(100% - var(--turf-cut)) 0, 100% var(--turf-cut), 100% 100%, 0 100%);
-}
-
-.turf-cut-bordered::before {
-  content: '';
-  position: absolute;
-  inset: calc(-1 * var(--turf-cut-b));
-  clip-path: polygon(0 0, calc(100% - var(--turf-cut)) 0, 100% var(--turf-cut), 100% 100%, 0 100%);
-  background: var(--turf-cut-border-color);
-  z-index: -1;
+  border: var(--turf-cut-b) solid var(--turf-cut-border-color);
 }
 
 /* Small diagonal "speed line" hash accent — matches the catalog's
