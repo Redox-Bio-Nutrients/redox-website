@@ -1044,7 +1044,7 @@ const documents = (product.documents ?? []).map((doc) => ({
   .hero--turf .hero__cta {
     --turf-cut: var(--turf-cut-sm);
     padding: var(--space-3) var(--space-6);
-    background: var(--color-text-primary);
+    background: var(--turf-ink);
     border-bottom: none;
     font-family: var(--turf-font-display);
     font-style: italic;
@@ -1052,7 +1052,7 @@ const documents = (product.documents ?? []).map((doc) => ({
   }
 
   .hero--turf .hero__cta:hover {
-    background: color-mix(in srgb, var(--product-color) 30%, var(--color-text-primary));
+    background: color-mix(in srgb, var(--product-color) 30%, var(--turf-ink));
   }
 
   /* ── Turf variant: sidebar ────────────────────────────────────────
@@ -1063,7 +1063,7 @@ const documents = (product.documents ?? []).map((doc) => ({
    * other turf section: this is the product's own "livery," not
    * themed chrome. */
   .sidebar--turf .sidebar__inner {
-    background: var(--color-text-primary);
+    background: var(--turf-ink);
     border: none;
   }
 
@@ -1126,7 +1126,7 @@ const documents = (product.documents ?? []).map((doc) => ({
   }
 
   .sidebar--turf .sidebar__support-panel-inner {
-    background: var(--color-text-primary);
+    background: var(--turf-ink);
     border-color: rgb(255 255 255 / 0.14);
   }
 

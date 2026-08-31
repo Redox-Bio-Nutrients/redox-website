@@ -25,6 +25,16 @@
   --turf-cut-sm: 14px;
   --turf-cut-md: 26px;
   --turf-cut-lg: 46px;
+  /* Fixed dark surface for turf slabs (analysis/chart/faq/testimonial/
+   * video, the hero CTA, the sidebar) — deliberately NOT
+   * --color-text-primary. That token is theme-*relative* (it's
+   * "whatever color reads as foreground text on the current theme",
+   * which flips to near-white in dark mode) — using it as a
+   * background was a real bug: in dark theme the "dark" turf slabs
+   * rendered near-white instead. The turf livery is meant to be a
+   * fixed dark surface regardless of site theme, same as the real
+   * product hero photo always renders white-on-photo either way. */
+  --turf-ink: #17140F;
 }
 
 /* Diagonal top-right corner cut — the Turf-market counterpart to
