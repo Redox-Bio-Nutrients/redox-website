@@ -449,7 +449,10 @@ const documents = (product.documents ?? []).map((doc) => ({
   .hero__title {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
-    font-size: var(--text-display);
+    /* 25% over the shared --text-display token, on purpose — a local
+     * override rather than changing the token itself, which also
+     * drives the home hero sections. */
+    font-size: calc(var(--text-display) * 1.25);
     line-height: 1;
     letter-spacing: -0.02em;
     color: var(--color-white);
@@ -469,8 +472,10 @@ const documents = (product.documents ?? []).map((doc) => ({
     display: block;
     width: auto;
     height: auto;
-    max-width: min(100%, 560px);
-    max-height: clamp(4rem, 10vw, 7.5rem);
+    /* Kept proportional to .hero__title's own 25% bump above, so a
+     * logo and the plain-text fallback carry the same visual weight. */
+    max-width: min(100%, 700px);
+    max-height: clamp(5rem, 12.5vw, 9.375rem);
     filter: drop-shadow(0 4px 18px rgb(0 0 0 / 0.35));
   }
 
