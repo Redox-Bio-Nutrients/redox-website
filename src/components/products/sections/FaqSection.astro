@@ -1,26 +1,41 @@
 ---
 // src/components/products/sections/FaqSection.astro
 //
-// Native <details>/<summary> accordion — no JS required, works with
-// find-in-page and screen readers out of the box. Rows live in one
-// --radius-3xl slab (analysis-table pattern), joined by hairline
-// dividers. The +/− icon is CSS-drawn (two bars, vertical bar
+// Agriculture: native <details>/<summary> accordion — no JS required,
+// works with find-in-page and screen readers out of the box. Rows
+// live in one --radius-3xl slab (analysis-table pattern), joined by
+// hairline dividers. The +/− icon is CSS-drawn (two bars, vertical bar
 // collapses on open) — same "no icon library" rule as the theme toggle.
+//
+// Turf: same accordion/PortableText answers, diagonal-cut dark slab
+// instead — see src/styles/turf-livery.css.
 
 import { PortableText } from 'astro-portabletext'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { FaqSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: FaqSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const isTurf = variant === 'turf'
+const color = productColor ?? '#2E6B3E'
+const accent = deriveCalloutPalette(color, productAccentColor).complement
 ---
 
-<section class="faq">
+<section class:list={['faq', { 't-faq': isTurf }]} style={isTurf ? `--t-faq-accent: ${accent};` : undefined}>
   {section.heading && <h2>{section.heading}</h2>}
-  <div class="faq__slab">
+  <div
+    class:list={['faq__slab', { 'turf-cut-bordered': isTurf }]}
+    style={isTurf ? `--turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${accent};` : undefined}
+  >
     {section.items.map((item) => (
       <details class="faq__item">
         <summary class="faq__question">
@@ -141,5 +156,36 @@ const { section } = Astro.props
     .faq__answer {
       padding: 0 var(--space-6) var(--space-5);
     }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-faq h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--t-faq-accent);
+  }
+
+  .t-faq .faq__slab {
+    background: var(--color-text-primary);
+    border-radius: 0;
+  }
+
+  .t-faq .faq__item {
+    border-bottom-color: rgb(255 255 255 / 0.12);
+  }
+
+  .t-faq .faq__question {
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .t-faq .faq__icon::before,
+  .t-faq .faq__icon::after {
+    background: var(--t-faq-accent);
+  }
+
+  .t-faq .faq__answer {
+    color: rgb(255 255 255 / 0.72);
   }
 </style>

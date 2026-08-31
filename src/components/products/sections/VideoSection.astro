@@ -5,14 +5,26 @@
 // comment in productSections.ts for why). The URL is parsed server-side
 // into a plain embed src; unrecognized URLs fall back to using the
 // given URL as-is so an already-correct embed link still works.
+//
+// Turf variant only reskins the heading/frame border/caption — the
+// iframe itself is already a black rectangle regardless of market, so
+// there's less to change here than the other section types.
 
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { VideoSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: VideoSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
 }
 
-const { section } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const isTurf = variant === 'turf'
+const accent = deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement
 
 function toEmbedSrc(url: string): string {
   try {
@@ -36,9 +48,12 @@ function toEmbedSrc(url: string): string {
 const src = toEmbedSrc(section.url)
 ---
 
-<section class="video">
+<section
+  class:list={['video', { 't-video': isTurf, 'turf-cut-bordered': isTurf }]}
+  style={isTurf ? `--t-video-accent: ${accent}; --turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${accent};` : undefined}
+>
   {section.heading && <h2>{section.heading}</h2>}
-  <div class="video__frame">
+  <div class:list={['video__frame', { 'turf-cut': isTurf }]} style={isTurf ? `--turf-cut: var(--turf-cut-lg);` : undefined}>
     <iframe
       src={src}
       title={section.heading ?? 'Product video'}
@@ -82,5 +97,33 @@ const src = toEmbedSrc(section.url)
     margin-top: var(--space-4);
     color: var(--color-text-muted);
     font-size: var(--text-sm);
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-video {
+    background: var(--color-text-primary);
+    padding: var(--space-8);
+  }
+
+  .t-video h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--t-video-accent);
+  }
+
+  .t-video .video__frame {
+    border-radius: 0;
+  }
+
+  .t-video .video__caption {
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  @media (max-width: 767px) {
+    .t-video {
+      padding: var(--space-5);
+    }
   }
 </style>

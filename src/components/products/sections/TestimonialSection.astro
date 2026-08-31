@@ -1,29 +1,46 @@
 ---
 // src/components/products/sections/TestimonialSection.astro
 //
-// A grower/trial-partner pull-quote. Oversized serif quotation mark in
-// --product-color behind the copy (the "confident oversized display
-// type" principle applied to a decorative glyph instead of a heading).
-// Avatar is optional — falls back to an initial in a tinted circle so
-// the meta row never looks unfinished.
+// Agriculture: a grower/trial-partner pull-quote. Oversized serif
+// quotation mark in --product-color behind the copy (the "confident
+// oversized display type" principle applied to a decorative glyph
+// instead of a heading). Avatar is optional — falls back to an
+// initial in a tinted circle so the meta row never looks unfinished.
+//
+// Turf: same quote/avatar content, diagonal-cut dark slab instead —
+// see src/styles/turf-livery.css. Quote stays in the body face (an
+// italic condensed display face reads poorly at paragraph length);
+// only the name/role and the mark switch to it.
 
 import { urlFor } from '../../../lib/sanity'
+import '../../../styles/turf-livery.css'
+import { deriveCalloutPalette } from '../../../lib/color'
 import type { TestimonialSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
 
 interface Props {
   section: TestimonialSection
+  variant?: ProductVariant
   productColor?: string
+  productAccentColor?: string
 }
 
-const { section, productColor } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const isTurf = variant === 'turf'
 const color = productColor ?? 'var(--color-green)'
+const accent = deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement
 const avatarUrl = section.avatar
   ? urlFor(section.avatar).width(96).height(96).fit('crop').auto('format').quality(80).url()
   : null
 const initial = section.name.trim().charAt(0).toUpperCase()
 ---
 
-<section class="testimonial" style={`--testimonial-color: ${color}`}>
+<section
+  class:list={['testimonial', { 't-testimonial': isTurf, 'turf-cut-bordered': isTurf }]}
+  style={isTurf
+    ? `--testimonial-color: ${accent}; --turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${accent};`
+    : `--testimonial-color: ${color}`}
+>
   <p class="testimonial__quote">
     <span class="testimonial__mark" aria-hidden="true">&ldquo;</span>
     {section.quote}
@@ -125,5 +142,27 @@ const initial = section.name.trim().charAt(0).toUpperCase()
     .testimonial__quote {
       font-size: var(--text-xl);
     }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-testimonial {
+    background: var(--color-text-primary);
+    border-radius: 0;
+  }
+
+  .t-testimonial .testimonial__quote {
+    font-family: var(--font-sans);
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .t-testimonial .testimonial__name {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .t-testimonial .testimonial__role {
+    color: rgb(255 255 255 / 0.5);
   }
 </style>
