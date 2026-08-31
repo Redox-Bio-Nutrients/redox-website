@@ -20,7 +20,7 @@ import ProductSections from './ProductSections.astro'
 import ResourceRequestDialog from './ResourceRequestDialog.astro'
 import { urlFor } from '../../lib/sanity'
 import { getProductVariant } from '../../lib/productVariant'
-import { deriveCalloutPalette } from '../../lib/color'
+import { deriveCalloutPalette, ensureReadableOnDark } from '../../lib/color'
 import '../../styles/turf-livery.css'
 import type { Product } from '../../lib/types/sanity'
 
@@ -41,7 +41,12 @@ const isTurf = variant === 'turf'
 // Second gradient stop for the turf hero/sidebar wash — the real
 // accentColor when a product has set one, otherwise the same derived
 // complement every other turf section already uses.
-const turfAccent = deriveCalloutPalette(color, accentColor).complement
+// Lifted to a minimum lightness — used both as a background gradient
+// stop (fine at any lightness) and as sidebar text/border/icon color
+// on the dark card (not fine — see ensureReadableOnDark's own comment
+// for why an explicit accentColor picked as a hero-gradient "shadow"
+// side can otherwise be nearly invisible as foreground text).
+const turfAccent = ensureReadableOnDark(deriveCalloutPalette(color, accentColor).complement)
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.

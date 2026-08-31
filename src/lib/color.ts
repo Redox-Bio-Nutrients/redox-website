@@ -113,6 +113,26 @@ export function deriveCalloutPalette(hex: string, accentHex?: string): CalloutPa
   }
 }
 
+/** Lifts a hex color to a minimum lightness — only ever brightens,
+ * never darkens a color that's already light enough. For the Turf
+ * livery system's headings/borders/icons, which sit on a fixed
+ * near-black slab (--color-text-primary) and get their color from
+ * `deriveCalloutPalette(...).complement`: when a product HAS an
+ * explicit accentColor, `complement` renders it exactly as given
+ * (see above) with no lightness floor — an accent picked to be the
+ * dark "shadow" side of a hero gradient (a legitimate, common choice)
+ * becomes illegible as foreground text on an already-dark card.
+ * Backgrounds/gradients (hero wash, card wash, button fills behind
+ * white text) don't have this problem and should keep using the raw
+ * value — only wrap this around uses where the color IS the
+ * foreground/text/border against a dark surface. */
+export function ensureReadableOnDark(hex: string, minLightness = 58): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex
+  const [h, s, l] = hexToHsl(hex)
+  if (l >= minLightness) return hex
+  return hslToHex(h, Math.max(s, 45), minLightness)
+}
+
 // Fixed, deliberate colors for the two Markets — unlike a category's
 // pill (deriveCalloutPalette(groundedAccent(slug)), an arbitrary but
 // consistent random pick since categories are an open taxonomy),

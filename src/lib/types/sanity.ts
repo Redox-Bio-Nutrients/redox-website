@@ -135,15 +135,15 @@ export interface ProductCard {
   image?: SanityImage
   /** optional stylized wordmark shown instead of the plain text product name — hero and cards alike */
   logo?: SanityImage
+  primaryColor?: string
+  /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
+  accentColor?: string
   /** heroImage + backgrounds pool — pick one at random per load */
   backgrounds?: SanityImage[]
   collections?: Collection[]
 }
 
 export interface Product extends ProductCard {
-  primaryColor?: string
-  /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
-  accentColor?: string
   heroImage?: SanityImage
   /** optional dedicated pool for callout sections; falls back to backgrounds */
   calloutBackgrounds?: SanityImage[]
