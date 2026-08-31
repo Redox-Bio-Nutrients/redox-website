@@ -87,6 +87,7 @@ export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   tagline,
   markets,
   "image": image ${IMAGE_FRAGMENT},
+  "logo": logo ${IMAGE_FRAGMENT},
   "backgrounds": ${BG_POOL_FRAGMENT},
   "collections": collections[]-> ${COLLECTION_FRAGMENT}
 }`

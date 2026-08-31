@@ -432,11 +432,19 @@ const documents = (product.documents ?? []).map((doc) => ({
     );
   }
 
+  /* Width/padding intentionally match .layout below exactly (same
+     max-width, same horizontal padding) — was drifting to its own
+     wider container (--max-width-2xl + --space-8) instead of the
+     page's real content guide (--content-width + --space-6), so the
+     hero title/logo sat at a different left edge than everything
+     below it. Same bug, same fix already made once for the turf
+     concept page; this is the real shared rule both markets render
+     through, so fixing it here covers both at once. */
   .hero__content {
     position: relative;
-    width: min(var(--max-width-2xl), 100%);
+    width: min(var(--content-width), 100%);
     margin: 0 auto;
-    padding: var(--space-32) var(--space-8) var(--space-12);
+    padding: var(--space-32) var(--space-6) var(--space-12);
   }
 
   .hero__text {

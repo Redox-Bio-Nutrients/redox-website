@@ -29,6 +29,13 @@ const imageUrl = product.image
   ? urlFor(product.image).width(800).fit('max').url()
   : null
 
+// Stylized wordmark in place of the plain text name, same fallback
+// pattern as the hero (src/components/products/ProductDetail.astro) —
+// falls back to product.title when a product has no logo uploaded.
+const logoUrl = product.logo
+  ? urlFor(product.logo).width(400).fit('max').auto('format').url()
+  : null
+
 const bgPool = (product.backgrounds ?? []).map((img) => ({
   url: urlFor(img).width(1000).height(1200).fit('crop').auto('format').quality(75).url(),
   lqip: img.lqip ?? null,
@@ -61,7 +68,9 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   </div>
   <span class="card__leaves" aria-hidden="true"></span>
   <div class="card__caption">
-    <h3>{product.title}</h3>
+    <h3 class:list={{ 'card__title--logo': logoUrl }}>
+      {logoUrl ? <img class="card__logo" src={logoUrl} alt={product.title} /> : product.title}
+    </h3>
     {product.tagline && <p>{product.tagline}</p>}
   </div>
 </a>
@@ -315,6 +324,24 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
     font-size: var(--text-2xl);
     line-height: var(--leading-tight);
     color: var(--color-white);
+  }
+
+  /* Logo replaces the text — sized to roughly the same visual weight
+   * as the text state rather than the image's own intrinsic size,
+   * with a soft shadow since an arbitrary uploaded logo isn't
+   * guaranteed the same contrast against card imagery plain text gets
+   * from .card__scrim alone (same reasoning as the hero's .hero__logo). */
+  .card__title--logo {
+    line-height: 0;
+  }
+
+  .card__logo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 2.25rem;
+    filter: drop-shadow(0 2px 10px rgb(0 0 0 / 0.35));
   }
 
   .card__caption p {
