@@ -131,6 +131,14 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     padding: var(--space-3);
     background: var(--bg-surface);
     border-radius: var(--radius-full);
+    /* Sticks just under the fixed header (--header-space is the
+     * header's live-measured height, kept in sync by Header.astro) so
+     * it's always reachable while scrolling a long catalog page.
+     * Below --z-nav (the header itself) so the header still overlaps
+     * it, but above ordinary page content. */
+    position: sticky;
+    top: calc(var(--header-space) + var(--space-4));
+    z-index: var(--z-raised);
   }
 
   .catalog__jump a {
