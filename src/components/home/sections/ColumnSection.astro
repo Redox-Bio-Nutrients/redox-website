@@ -12,6 +12,7 @@ import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import type { HomeColumnSection } from '../../../lib/types/sanity'
+import PoolBackground from '../../ui/PoolBackground.astro'
 
 interface Props {
   section: HomeColumnSection
@@ -23,6 +24,15 @@ const bgImageUrl =
   bgType === 'image' && section.backgroundImage
     ? urlFor(section.backgroundImage).width(2400).fit('max').auto('format').quality(75).url()
     : null
+// Same {url, lqip} shape PoolBackground/CalloutSection already use —
+// see HOME_SECTIONS_FRAGMENT's "pool" projection in fragments.ts.
+const pool =
+  bgType === 'pool'
+    ? (section.pool ?? []).map((img) => ({
+        url: urlFor(img).width(2400).height(1200).fit('crop').auto('format').quality(75).url(),
+        lqip: img.lqip ?? null,
+      }))
+    : []
 ---
 
 <section
@@ -32,7 +42,10 @@ const bgImageUrl =
   {bgImageUrl && (
     <img class="columns__bg" src={bgImageUrl} alt="" aria-hidden="true" loading="lazy" />
   )}
-  {bgType === 'image' && <div class="columns__scrim" aria-hidden="true"></div>}
+  {bgType === 'pool' && pool.length > 0 && <PoolBackground pool={pool} />}
+  {(bgType === 'image' || (bgType === 'pool' && pool.length > 0)) && (
+    <div class="columns__scrim" aria-hidden="true"></div>
+  )}
 
   <div class="columns__inner">
     {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
@@ -120,7 +133,8 @@ const bgImageUrl =
   }
 
   .columns--bg-color .columns__heading,
-  .columns--bg-image .columns__heading {
+  .columns--bg-image .columns__heading,
+  .columns--bg-pool .columns__heading {
     color: var(--color-white);
   }
 
@@ -147,7 +161,8 @@ const bgImageUrl =
   }
 
   .columns--bg-color .column__heading,
-  .columns--bg-image .column__heading {
+  .columns--bg-image .column__heading,
+  .columns--bg-pool .column__heading {
     color: var(--color-white);
   }
 
@@ -158,7 +173,8 @@ const bgImageUrl =
   }
 
   .columns--bg-color .column__body :global(p),
-  .columns--bg-image .column__body :global(p) {
+  .columns--bg-image .column__body :global(p),
+  .columns--bg-pool .column__body :global(p) {
     color: rgb(255 255 255 / 0.85);
   }
 

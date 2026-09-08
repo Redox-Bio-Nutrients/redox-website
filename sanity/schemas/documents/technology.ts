@@ -50,6 +50,12 @@ export const technology = defineType({
         { type: 'homeHeroCarouselSection' },
         { type: 'homeColumnSection' },
         { type: 'chartSection' },
+        // Reused as-is from the product page-builder — same components,
+        // same leaf-radius/leaf-sprig callout treatment and rounded-tile
+        // bullet treatment already used on product pages. See
+        // src/components/home/HomeSections.astro for the dispatcher.
+        { type: 'calloutSection' },
+        { type: 'bulletSection' },
       ],
       description:
         'Compose the technology detail page — same modular sections as the Homepage. A "Built Into These Products" list renders automatically below, based on which products reference this technology.',

@@ -10,20 +10,31 @@
 
 import { urlFor } from '../../../lib/sanity'
 import type { HomeHeroSection } from '../../../lib/types/sanity'
+import PoolBackground from '../../ui/PoolBackground.astro'
 
 interface Props {
   section: HomeHeroSection
 }
 
 const { section } = Astro.props
-const imageUrl = section.backgroundImage
+// Same {url, lqip} shape PoolBackground/CalloutSection already use —
+// see HOME_SECTIONS_FRAGMENT's "pool" projection in fragments.ts.
+const pool = section.useBackgroundPool
+  ? (section.pool ?? []).map((img) => ({
+      url: urlFor(img).width(2400).height(1400).fit('crop').auto('format').quality(75).url(),
+      lqip: img.lqip ?? null,
+    }))
+  : []
+const usePool = pool.length > 0
+const imageUrl = !usePool && section.backgroundImage
   ? urlFor(section.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
 const videoUrl = section.backgroundVideoUrl ?? null
-const hasMedia = Boolean(videoUrl || imageUrl)
+const hasMedia = Boolean(videoUrl || imageUrl || usePool)
+const centered = section.textAlign === 'center'
 ---
 
-<header class="hero" data-header-theme="light">
+<header class:list={['hero', { 'hero--center': centered }]} data-header-theme="light">
   {videoUrl ? (
     <video
       class="hero__bg"
@@ -34,6 +45,8 @@ const hasMedia = Boolean(videoUrl || imageUrl)
       loop
       playsinline
     />
+  ) : usePool ? (
+    <PoolBackground pool={pool} />
   ) : imageUrl ? (
     <img class="hero__bg" src={imageUrl} alt={section.backgroundImage?.alt ?? ''} loading="eager" />
   ) : (
@@ -132,6 +145,23 @@ const hasMedia = Boolean(videoUrl || imageUrl)
     color: rgb(255 255 255 / 0.9);
   }
 
+  /* Centered variant (textAlign: 'center' in Sanity) — the content box
+   * itself is already horizontally centered on the page (.hero__content
+   * above); this just centers the text/CTA row *within* that box too,
+   * instead of hugging its left edge. */
+  .hero--center .hero__content {
+    text-align: center;
+  }
+
+  .hero--center .hero__meta {
+    justify-content: center;
+  }
+
+  .hero--center .hero__subheading {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   /* CTA treatment under trial: a frosted pill button, rather than the
    * plain underlined-text link used on product hero — more visually
    * prominent for a section that isn't anchored by a product name. */
@@ -175,6 +205,10 @@ const hasMedia = Boolean(videoUrl || imageUrl)
       flex-direction: column;
       align-items: flex-start;
       gap: var(--space-5);
+    }
+
+    .hero--center .hero__meta {
+      align-items: center;
     }
   }
 </style>

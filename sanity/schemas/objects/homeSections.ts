@@ -59,7 +59,35 @@ export const homeHeroSection = defineType({
   name: 'homeHeroSection',
   title: 'Hero',
   type: 'object',
-  fields: heroContentFields(),
+  // Extra fields beyond the shared hero content (heading/subheading/
+  // media/cta) — scoped to the single Hero, not the Carousel's slides,
+  // where a per-slide random pool or alignment override would be an
+  // odd fit for a curated sequence.
+  fields: [
+    ...heroContentFields(),
+    defineField({
+      name: 'textAlign',
+      title: 'Text Alignment',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Left', value: 'left' },
+          { title: 'Center', value: 'center' },
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'left',
+    }),
+    defineField({
+      name: 'useBackgroundPool',
+      title: 'Use Background Pool',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Draws a random image from the shared background-imagery library instead of Background Image above (same pool products/blog posts fall back to) — re-rolls on every page load, no image to pick here.',
+    }),
+  ],
   preview: {
     select: { title: 'heading' },
     prepare({ title }) {
@@ -202,12 +230,13 @@ export const homeColumnSection = defineType({
           { title: 'None (page background)', value: 'none' },
           { title: 'Color', value: 'color' },
           { title: 'Image', value: 'image' },
+          { title: 'Pool (randomized brand imagery)', value: 'pool' },
         ],
         layout: 'radio',
       },
       initialValue: 'none',
       description:
-        'Color/Image backgrounds span the full viewport width; the columns inside still align to the standard content width.',
+        'Color/Image/Pool backgrounds span the full viewport width; the columns inside still align to the standard content width. Pool draws a random image from the shared background-imagery library (same pool products/blog posts fall back to) — re-rolls on every page load, no image to pick here.',
     }),
     defineField({
       name: 'backgroundColor',
