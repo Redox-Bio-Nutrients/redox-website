@@ -34,7 +34,7 @@ export interface PrimaryNavItem {
 export const primaryNav: PrimaryNavItem[] = [
   { label: 'Agriculture',      href: '/agriculture'  },
   { label: 'Turf',             href: '/turf'         },
-  { label: 'RAM Technologies', href: '/technologies' },
+  { label: 'RAM Technology',   href: '/technologies' },
   { label: 'Regions',          href: '/regions'      },
   {
     label: 'News',
@@ -52,11 +52,6 @@ export const utilityNav = {
     label: 'Dashboard',
     href: 'https://dashboard.redoxgrows.com',
     external: true,
-  },
-  universityLogin: {
-    label: 'University Login',
-    href: '/university/login',
-    external: false,
   },
 }
 
