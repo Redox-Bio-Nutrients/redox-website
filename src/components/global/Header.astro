@@ -101,6 +101,8 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
                 href={item.href}
                 class:list={['header__nav-link', { 'header__nav-link--active': isItemActive(item) }]}
                 aria-current={isItemActive(item) ? 'page' : undefined}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
               >
                 {item.label}
               </a>

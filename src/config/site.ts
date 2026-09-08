@@ -29,6 +29,7 @@ export interface PrimaryNavItem {
   label: string
   href?: string
   children?: PrimaryNavChild[]
+  external?: boolean
 }
 
 export const primaryNav: PrimaryNavItem[] = [
@@ -44,6 +45,7 @@ export const primaryNav: PrimaryNavItem[] = [
     ],
   },
   { label: 'Contact', href: '/contact' },
+  { label: 'Swag Store', href: 'https://stores.inksoft.com/redoxgrows/shop/home', external: true },
 ]
 
 // Utility navigation (header right-side)
