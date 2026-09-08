@@ -101,6 +101,8 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
                 href={item.href}
                 class:list={['header__nav-link', { 'header__nav-link--active': isItemActive(item) }]}
                 aria-current={isItemActive(item) ? 'page' : undefined}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
               >
                 {item.label}
               </a>
@@ -117,12 +119,6 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
         >
           <span class="header__theme-icon" aria-hidden="true"></span>
         </button>
-        <a
-          href={utilityNav.universityLogin.href}
-          class="header__utility-link"
-        >
-          {utilityNav.universityLogin.label}
-        </a>
         <a
           href={utilityNav.dashboard.href}
           class="header__utility-link header__utility-link--button"
