@@ -2,16 +2,12 @@
 // src/pages/technologies/[slug].astro
 //
 // Detail page is fully modular — same HomeSections dispatcher and
-// section types as the Homepage. Editors compose the page from Hero /
-// Hero Carousel / Columns; nothing here is a fixed template. The one
-// exception is "Built Into These Products" below, which is a fixed
-// data-driven block (from the product↔technology reference graph),
-// not an editorial section — so it always appears when applicable,
-// regardless of how the page above it is composed.
+// section types as the Homepage. Editors compose the page entirely
+// from the page-builder sections (Hero / Columns / Callout / Bullet
+// Points / ...); nothing here is a fixed template.
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import HomeSections from '../../components/home/HomeSections.astro'
-import ProductGrid from '../../components/products/ProductGrid.astro'
 import { getAllTechnologies, getTechnology } from '../../lib/queries'
 
 export async function getStaticPaths() {
@@ -49,15 +45,6 @@ const [firstSection, ...restSections] = sections
   </div>
 
   {restSections.length > 0 && <HomeSections sections={restSections} />}
-
-  {technology.products && technology.products.length > 0 && (
-    <section class="used-in">
-      <div class="used-in__inner">
-        <h2>Built Into These Products</h2>
-        <ProductGrid products={technology.products} />
-      </div>
-    </section>
-  )}
 </BaseLayout>
 
 <style>
@@ -88,25 +75,5 @@ const [firstSection, ...restSections] = sections
     margin-top: var(--space-3);
     font-size: var(--text-lg);
     color: var(--color-text-secondary);
-  }
-
-  .used-in {
-    padding: var(--space-24) 0;
-  }
-
-  .used-in__inner {
-    max-width: var(--content-width);
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-  }
-
-  .used-in h2 {
-    font-family: var(--font-serif);
-    font-weight: var(--font-normal);
-    font-size: var(--text-display-sm);
-    line-height: var(--leading-tight);
-    letter-spacing: -0.01em;
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-10);
   }
 </style>

@@ -53,6 +53,8 @@ export interface CalloutSection {
   heading?: string
   body: PortableTextBlock[]
   tone: 'solid' | 'tint'
+  color?: string
+  accentColor?: string
 }
 
 export interface BulletSection {
@@ -179,8 +181,6 @@ export interface Collection {
 export interface Technology extends TechnologyCard {
   /** modular page-builder sections — same shapes as Homepage */
   sections?: HomeSection[]
-  /** reverse reference: products whose `technologies` field points here */
-  products?: ProductCard[]
   seo?: Seo
 }
 
@@ -329,6 +329,10 @@ export interface HomeHeroSection {
   /** resolved file URL — takes priority over backgroundImage when present */
   backgroundVideoUrl?: string
   cta?: Cta
+  textAlign?: 'left' | 'center'
+  useBackgroundPool?: boolean
+  /** only populated when useBackgroundPool is true — see HOME_SECTIONS_FRAGMENT */
+  pool?: SanityImage[]
 }
 
 /** A single slide of a Hero Carousel — same shape as HomeHeroSection
@@ -358,7 +362,7 @@ export interface ColumnItem {
   cta?: Cta
 }
 
-export type SectionBackgroundType = 'none' | 'color' | 'image'
+export type SectionBackgroundType = 'none' | 'color' | 'image' | 'pool'
 
 export interface HomeColumnSection {
   _type: 'homeColumnSection'
@@ -369,9 +373,17 @@ export interface HomeColumnSection {
   backgroundType?: SectionBackgroundType
   backgroundColor?: string
   backgroundImage?: SanityImage
+  /** only populated when backgroundType is 'pool' — see HOME_SECTIONS_FRAGMENT */
+  pool?: SanityImage[]
 }
 
-export type HomeSection = HomeHeroSection | HomeHeroCarouselSection | HomeColumnSection | ChartSection
+export type HomeSection =
+  | HomeHeroSection
+  | HomeHeroCarouselSection
+  | HomeColumnSection
+  | ChartSection
+  | CalloutSection
+  | BulletSection
 
 export interface Homepage {
   _id: string
