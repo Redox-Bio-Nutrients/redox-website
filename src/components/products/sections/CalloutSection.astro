@@ -243,14 +243,26 @@ const calloutVars = [
   }
 
   .callout__panel--glass {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--callout-glass-bg, var(--glass-bg));
+    backdrop-filter: var(--callout-glass-blur, var(--glass-blur));
+    -webkit-backdrop-filter: var(--callout-glass-blur, var(--glass-blur));
     border: var(--glass-border);
     border-radius: var(--radius-2xl);
     /* extra right padding keeps content clear of the corner sprig */
     padding: var(--space-12) clamp(99px, 16.2%, 180px) var(--space-12) var(--space-10);
     box-shadow: var(--shadow-xl);
+  }
+
+  /* Light theme only: over a dark background photo, the shared
+   * --glass-bg (55% white, no boost) reads dull/gray — the photo's
+   * darkness dominates through the blur. Brighter + a light-lifting
+   * backdrop filter here, scoped to this panel so the header/hero/
+   * card glass (same shared tokens) stays untouched. Dark theme
+   * already contrasts fine against its own imagery, so it keeps the
+   * shared --glass-bg as-is. */
+  :global(html:not([data-theme='dark'])) .callout__panel--glass {
+    --callout-glass-bg: rgb(255 255 255 / 0.78);
+    --callout-glass-blur: blur(24px) saturate(140%) brightness(1.15);
   }
 
   .callout--tint h2 {
