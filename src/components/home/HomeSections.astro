@@ -9,11 +9,14 @@ import type { HomeSection } from '../../lib/types/sanity'
 import HeroSection from './sections/HeroSection.astro'
 import HeroCarouselSection from './sections/HeroCarouselSection.astro'
 import ColumnSection from './sections/ColumnSection.astro'
-// Reused as-is from the product page-builder — its highlight color
-// already falls back to brand green (var(--product-color, ...)) when
-// no product context sets --product-color, so it works unmodified
-// here too. See sanity/schemas/objects/productSections.ts.
+// Reused as-is from the product page-builder — their highlight colors
+// already fall back to brand green (var(--product-color, ...) / the
+// component's own default) when no product context sets
+// --product-color, so they work unmodified here too. See
+// sanity/schemas/objects/productSections.ts.
 import ChartSection from '../products/sections/ChartSection.astro'
+import CalloutSection from '../products/sections/CalloutSection.astro'
+import BulletSection from '../products/sections/BulletSection.astro'
 
 interface Props {
   sections: HomeSection[]
@@ -40,6 +43,22 @@ const { sections } = Astro.props
             <ChartSection section={section} />
           </div>
         )
+      case 'calloutSection':
+        // Same story as ChartSection above — no built-in width
+        // constraint of its own. Variant defaults to 'agriculture'
+        // inside the component, which is the leaf-radius/leaf-sprig
+        // treatment (not turf's diagonal cut) — the one we want here.
+        return (
+          <div class="home-sections__constrain">
+            <CalloutSection section={section} />
+          </div>
+        )
+      case 'bulletSection':
+        return (
+          <div class="home-sections__constrain">
+            <BulletSection section={section} />
+          </div>
+        )
       default:
         return null
     }
@@ -51,6 +70,15 @@ const { sections } = Astro.props
     display: flex;
     flex-direction: column;
     gap: var(--space-24);
+    /* Reserves page-background breathing room before whatever comes
+     * next (the site Footer) — the flex `gap` above only ever applies
+     * *between* sections, never after the last one, so a page whose
+     * final section has no self-contained bottom spacing of its own
+     * (bulletSection/chartSection/calloutSection — reused as-is from
+     * the product page-builder, see the imports above) otherwise butts
+     * straight up against the Footer's own background with no visible
+     * seam. Same rhythm as the inter-section gap for consistency. */
+    padding-bottom: var(--space-24);
   }
 
   .home-sections__constrain {
@@ -63,6 +91,7 @@ const { sections } = Astro.props
   @media (max-width: 767px) {
     .home-sections {
       gap: var(--space-16);
+      padding-bottom: var(--space-16);
     }
   }
 </style>

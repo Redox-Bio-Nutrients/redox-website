@@ -4,6 +4,11 @@
       "source": "/xprt-farm",
       "destination": "/regions/midwest",
       "permanent": true
+    },
+    {
+      "source": "/contact",
+      "destination": "/about-us",
+      "permanent": true
     }
   ]
 }

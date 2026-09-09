@@ -115,10 +115,13 @@ export function blockContentField(fieldName: string): string {
 
 // Shared page-builder sections projection — used by any document type
 // with a `sections` array of homeHeroSection / homeHeroCarouselSection
-// / homeColumnSection / chartSection (Homepage, Technology, ...). One
-// polymorphic projection covers every section _type; fields that don't
-// apply to a given _type just resolve to null and are ignored by the
-// HomeSections dispatcher, which switches on _type.
+// / homeColumnSection / chartSection / calloutSection / bulletSection
+// (Homepage, Technology, ...) — the last two reused as-is from the
+// product page-builder (sanity/schemas/objects/productSections.ts),
+// same components/styling, see src/components/home/HomeSections.astro.
+// One polymorphic projection covers every section _type; fields that
+// don't apply to a given _type just resolve to null and are ignored by
+// the HomeSections dispatcher, which switches on _type.
 export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   _type,
   _key,
@@ -127,6 +130,9 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
   "backgroundVideoUrl": backgroundVideo.asset->url,
   cta,
+  // homeHeroSection fields (Hero only, not Carousel slides)
+  textAlign,
+  useBackgroundPool,
   "slides": slides[]{
     _key,
     heading,
@@ -138,20 +144,47 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   autoplay,
   interval,
   columns,
-  "items": items[]{
-    _key,
-    "image": image ${IMAGE_FRAGMENT},
-    heading,
-    ${blockContentField('body')},
-    cta
-  },
+  // homeColumnSection's items are objects (image/heading/body/cta);
+  // bulletSection's items are a flat array of plain strings — same
+  // field name, incompatible shapes, so branch on the section's own
+  // _type rather than projecting both the same way (which silently
+  // nulls out bulletSection's strings, since a string has no
+  // sub-fields to select).
+  "items": select(
+    _type == "bulletSection" => items,
+    items[]{
+      _key,
+      "image": image ${IMAGE_FRAGMENT},
+      heading,
+      ${blockContentField('body')},
+      cta
+    }
+  ),
   backgroundType,
   backgroundColor,
+  // Shared "pool" background — same shared background-imagery library
+  // products/blog posts fall back to (see MARKET_POOL_SELECT above),
+  // used by both homeColumnSection (backgroundType == "pool") and
+  // homeHeroSection (useBackgroundPool == true). Homepage/Technology
+  // documents have no markets field of their own to match against, so
+  // this always draws from the Ag pool — the same default-when-unset
+  // behavior MARKET_POOL_SELECT already falls back to elsewhere. Only
+  // resolved when actually needed, since it's a cross-document lookup,
+  // not a field read.
+  "pool": select(
+    backgroundType == "pool" => *[_id == "agBackgroundPool"][0].images[] ${IMAGE_FRAGMENT},
+    useBackgroundPool == true => *[_id == "agBackgroundPool"][0].images[] ${IMAGE_FRAGMENT}
+  ),
   // chartSection fields
   source,
   unit,
   rows,
-  footnote
+  footnote,
+  // calloutSection fields
+  ${blockContentField('body')},
+  tone,
+  color,
+  accentColor
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{

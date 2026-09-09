@@ -33,8 +33,15 @@ interface Props {
 }
 
 const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds } = Astro.props
-const color = productColor ?? 'var(--color-green)'
-const palette = deriveCalloutPalette(color, productAccentColor)
+// A section-level color override (schema field, optional) wins over
+// the inherited product/page color — set on product pages too, not
+// just here, but only ever populated when an editor explicitly wants
+// this one callout off-brand; otherwise falls through to the same
+// productColor prop as before. See sanity/schemas/objects/
+// productSections.ts.
+const color = section.color ?? productColor ?? 'var(--color-green)'
+const accent = section.accentColor ?? productAccentColor
+const palette = deriveCalloutPalette(color, accent)
 const solid = section.tone !== 'tint'
 const hasBody = section.body?.some(
   (b: any) => b.children?.some((c: any) => c.text?.trim()),

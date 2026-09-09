@@ -70,6 +70,24 @@ export const calloutSection = defineType({
       },
       initialValue: 'solid',
     }),
+    defineField({
+      name: 'color',
+      title: 'Color Override',
+      type: 'string',
+      description:
+        'Hex color, e.g. #E07A2F. On a product page this overrides that product’s own brand color; on the Homepage/Technology page-builder (no product context to inherit from) this is the only way to set it. Leave blank to use the product color, or brand green as a last resort.',
+      validation: (rule) =>
+        rule.custom((val) => !val || /^#([0-9a-fA-F]{6})$/.test(val as string) || 'Must be a 6-digit hex color like #E07A2F'),
+    }),
+    defineField({
+      name: 'accentColor',
+      title: 'Secondary Color Override',
+      type: 'string',
+      description:
+        'Optional second hex color for the gradient sweep (see deriveCalloutPalette() in src/lib/color.ts) — same override rules as Color Override above.',
+      validation: (rule) =>
+        rule.custom((val) => !val || /^#([0-9a-fA-F]{6})$/.test(val as string) || 'Must be a 6-digit hex color like #6B3FA0'),
+    }),
   ],
   preview: {
     select: { title: 'heading', subtitle: 'tone' },
