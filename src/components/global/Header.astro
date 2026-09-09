@@ -10,18 +10,17 @@
 // e.g. GroupedProductCatalog's category jump row and
 // GroupedRegionRoster's region jump row: two floating rounded pills
 // stacked near the top read as visually competing shapes/clutter, not
-// two different levels of navigation). The header is still
-// `position: fixed` — out of flow, floating over whatever's beneath
-// it — with no visible background at rest, just the logo/links
-// sitting directly over the page. A scroll listener below toggles
-// `.header--scrolled` once the page scrolls past a small threshold,
-// which "solidifies" it into a frosted full-width bar (matching the
-// --glass-* tokens already used on the hero CTA) so it reads clearly
-// once content is passing underneath it. Only the bottom-right corner
-// keeps a radius — ties it back to the site's asymmetric "leaf" motif
-// (see CalloutSection etc.) without the top/left/right corners, which
-// sit flush against the viewport edges anyway and would look wrong
-// rounded.
+// two different levels of navigation). Perfectly square — no corner
+// radius at all, deliberately, so it reads as a plain full-bleed bar.
+// The header is still `position: fixed` — out of flow, floating over
+// whatever's beneath it — with no visible background at rest, just
+// the logo/links sitting directly over the page. A scroll listener
+// below toggles `.header--scrolled` once the page scrolls past a
+// small threshold, which solidifies it into a dark brand-green
+// gradient bar (picked over the earlier neutral frosted-glass look —
+// four "add life" treatments were prototyped, this brand-gradient one
+// won) with white/on-dark text and logo unconditionally, regardless
+// of site theme, since the bar's own color is now the surface.
 //
 // Two supporting scripts:
 // - Since the header no longer reserves space in flow, `--header-
@@ -35,8 +34,9 @@
 //   `data-header-theme="light"`; if one is sitting right at the top of
 //   the page, the header switches its resting text to white
 //   (`.header--on-dark`) to read against the hero's dark scrim. Once
-//   scrolled, the solidified pill has its own background either way,
-//   so normal dark text takes over regardless.
+//   scrolled, the solidified bar has its own (always-dark) background
+//   either way, so the on-dark text rules apply unconditionally there
+//   too — see `.header--scrolled` below.
 
 import { primaryNav, site, utilityNav } from '../../config/site'
 
@@ -148,12 +148,8 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     left: 0;
     right: 0;
     z-index: var(--z-nav);
-    /* Full-bleed bar now, not an inset floating pill — the header
-     * itself carries the visible shape/background (only once
-     * scrolled; see .header--scrolled below), spanning the entire
-     * viewport width. Only the bottom-right corner is rounded — see
-     * the file-top comment for why not all four. */
-    border-radius: 0 0 var(--radius-xl) 0;
+    /* Full-bleed bar, perfectly square — no corner radius. */
+    border-radius: 0;
     background: transparent;
     border-bottom: 1px solid transparent;
     box-shadow: none;
@@ -175,36 +171,47 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   }
 
   /* Solidified state — applied once the page scrolls past a small
-   * threshold (see script below). The bar's shape only becomes
-   * visible here: frosted glass background, bottom border, shadow all
-   * appear together so it reads clearly over whatever is scrolling
-   * underneath it. */
+   * threshold (see script below). A dark brand-green gradient sweep
+   * (grain texture layered in, same formula CalloutSection's solid
+   * tone uses) rather than neutral glass — same colors regardless of
+   * site theme, since the bar's own color is now the surface. Halved
+   * from the brand green tokens for a deeper, less saturated result
+   * that reads as "dark bar with brand color in it" rather than a
+   * bright green banner. */
   .header--scrolled {
-    /* Solid white behind the logo, easing into the shared frosted-
-     * glass look toward the nav side — the logo's green needs a fully
-     * opaque surface to stay legible (a flat translucent fill was
-     * still letting busy scrolled-past imagery wash it out), while the
-     * rest of the bar keeps the glass feel rather than going flat and
-     * blocky end to end. */
-    background: linear-gradient(
-      90deg,
-      rgb(255 255 255 / 0.96) 0%,
-      rgb(255 255 255 / 0.68) 55%
-    );
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-color: rgb(255 255 255 / 0.6);
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"),
+      linear-gradient(100deg, #25482E 0%, #17361F 45%, #0F2515 100%);
+    background-blend-mode: overlay, normal;
+    border-color: rgb(255 255 255 / 0.16);
     box-shadow: var(--shadow-lg);
   }
 
-  :global([data-theme='dark']) .header--scrolled {
-    background: linear-gradient(
-      90deg,
-      rgb(18 20 17 / 0.96) 0%,
-      rgb(18 20 17 / 0.68) 55%
-    );
-    border-color: rgb(255 255 255 / 0.14);
+  /* Text/logo go white/on-dark unconditionally while scrolled — same
+   * rules as the at-rest on-dark-hero state, just re-scoped to
+   * .header--scrolled instead of :not(.header--scrolled), and not
+   * gated behind [data-theme='dark'] since the bar's dark green reads
+   * the same in both site themes. */
+  .header--scrolled .header__logo-mark--on-light { display: none; }
+  .header--scrolled .header__logo-mark--on-dark { display: block; }
+  .header--scrolled .header__nav-link { color: rgb(255 255 255 / 0.9); }
+  .header--scrolled .header__nav-link:hover,
+  .header--scrolled .header__nav-link--active { color: var(--color-white); }
+  .header--scrolled .header__utility-link { color: rgb(255 255 255 / 0.9); }
+  .header--scrolled .header__utility-link:hover { color: var(--color-white); }
+  .header--scrolled .header__theme { border-color: rgb(255 255 255 / 0.4); }
+  .header--scrolled .header__theme:hover { background: rgb(255 255 255 / 0.12); }
+  .header--scrolled .header__toggle-bar { background: var(--color-white); }
+  .header--scrolled .header__theme-icon {
+    box-shadow: inset 5px -3px 0 0 var(--color-white);
   }
+  :global([data-theme='dark']) .header--scrolled .header__theme-icon {
+    box-shadow: none;
+    background: var(--color-white);
+    outline: 3px double transparent;
+    border: 2px solid var(--color-white);
+  }
+  .header--scrolled .header__nav-chip { background: rgb(255 255 255 / 0.22); }
 
   .header__logo {
     display: flex;
@@ -228,9 +235,9 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
 
   /* At rest over a full-bleed dark hero, swap to the white mark so it
    * reads against the hero's scrim (see script below for how this
-   * class gets applied). Scrolled state always wins in light theme —
-   * once the pill has its own (light, translucent-white) background,
-   * the normal on-light mark takes back over. */
+   * class gets applied). Scrolled state always wins (handled above) —
+   * once the bar has its own dark background, the white mark takes
+   * over regardless of theme or hero. */
   .header--on-dark:not(.header--scrolled) .header__logo-mark--on-light {
     display: none;
   }
@@ -239,13 +246,10 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     display: block;
   }
 
-  /* Dark site theme unconditionally needs the white mark — unlike the
-   * nav text/icons, which recolor themselves automatically via
-   * semantic tokens that are remapped for dark theme, the logo is a
-   * static image with no theme-aware color. This holds regardless of
-   * scroll: dark theme's own --bg-page and --glass-bg are both dark,
-   * so there's never a light surface under the header to put the
-   * on-light (dark wordmark) mark on. */
+  /* Dark site theme unconditionally needs the white mark at rest too —
+   * unlike the nav text/icons, which recolor themselves automatically
+   * via semantic tokens that are remapped for dark theme, the logo is
+   * a static image with no theme-aware color. */
   :global([data-theme='dark']) .header__logo-mark--on-light {
     display: none;
   }
@@ -342,7 +346,7 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   :global([data-theme='dark']) .header__nav-chip {
     /* The pale-green token goes quite dark in dark theme — fine as
      * text-on-light, too muddy as a fill against the already-dark
-     * solidified pill. A soft light wash reads more clearly here. */
+     * solidified bar. A soft light wash reads more clearly here. */
     background: rgb(255 255 255 / 0.1);
   }
 
@@ -528,9 +532,9 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     .header__nav {
       display: none;
       position: absolute;
-      /* Its own floating card below the pill — inset by the same
+      /* Its own floating card below the bar — inset by the same
        * amount as the header's horizontal padding so its edges line
-       * up with the pill above, not the viewport edges. */
+       * up with the content above, not the viewport edges. */
       top: calc(100% + var(--space-2));
       left: var(--space-6);
       right: var(--space-6);
@@ -646,7 +650,7 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     localStorage.setItem('theme', next)
   })
 
-  // Solidify the pill once the page has scrolled past a small
+  // Solidify the bar once the page has scrolled past a small
   // threshold. Passive + rAF-throttled so it doesn't add scroll jank.
   const header = document.getElementById('site-header')
   const SCROLL_THRESHOLD = 24

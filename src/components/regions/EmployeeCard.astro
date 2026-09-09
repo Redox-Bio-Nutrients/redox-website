@@ -1,11 +1,16 @@
 ---
 // src/components/regions/EmployeeCard.astro
 //
-// A region's team roster tile — name/title/email/phone, same
-// leaf-corner card surface + fallback-initial avatar as
-// AuthorBoxFooter.astro (blog byline card), just a vertical grid tile
-// instead of a horizontal full-width one. `author` here is the same
-// Team Member document a blog byline draws from — see author.ts.
+// A region's team roster tile — the agronomist's photo fills the
+// entire card (same leaf-corner surface as AuthorBoxFooter.astro's
+// blog byline card), with name/title/coverage/contact floated over it
+// on a bottom scrim, poster-card style rather than a small circular
+// avatar above a text block. No photo yet still gets the full-bleed
+// treatment — a brand-toned fill standing in for the image, with the
+// same big initial the old circular fallback used, just scaled up to
+// fill the frame — so a placeholder tile reads as "photo coming
+// soon," not a broken layout. `author` here is the same Team Member
+// document a blog byline draws from — see author.ts.
 
 import { urlFor } from '../../lib/sanity'
 import type { Author } from '../../lib/types/sanity'
@@ -17,25 +22,28 @@ interface Props {
 const { author } = Astro.props
 
 const photoUrl = author.photo
-  ? urlFor(author.photo).width(240).height(240).fit('crop').auto('format').quality(85).url()
+  ? urlFor(author.photo).width(480).height(600).fit('crop').auto('format').quality(85).url()
   : null
 
 const initial = author.name.trim().charAt(0).toUpperCase()
 ---
 
 <div class="employee">
-  {photoUrl ? (
-    <img
-      class="employee__photo"
-      src={photoUrl}
-      alt={author.name}
-      width="96"
-      height="96"
-      loading="lazy"
-    />
-  ) : (
-    <span class="employee__photo employee__photo--fallback" aria-hidden="true">{initial}</span>
-  )}
+  <div class="employee__media">
+    {photoUrl ? (
+      <img
+        class="employee__photo"
+        src={photoUrl}
+        alt={author.name}
+        width="480"
+        height="600"
+        loading="lazy"
+      />
+    ) : (
+      <span class="employee__photo employee__photo--fallback" aria-hidden="true">{initial}</span>
+    )}
+    <div class="employee__scrim" aria-hidden="true"></div>
+  </div>
   <div class="employee__body">
     <p class="employee__name">{author.name}</p>
     {author.role && <p class="employee__role">{author.role}</p>}
@@ -59,50 +67,87 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 <style>
   .employee {
     position: relative;
+    /* Poster-card aspect — tall enough for a portrait crop to read as
+     * a photo, not a banner. */
+    aspect-ratio: 4 / 5;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--space-4);
-    padding: var(--space-8) var(--space-6);
-    background: var(--bg-surface);
-    border: var(--border-thin) solid var(--border-subtle);
+    overflow: hidden;
     /* Same asymmetric leaf-radius language as the callout/author-box
      * cards, scaled down to a roster-tile size. */
     border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+    border: var(--border-thin) solid var(--border-subtle);
+    background: var(--bg-surface);
+  }
+
+  .employee__media {
+    position: absolute;
+    inset: 0;
   }
 
   .employee__photo {
-    width: 96px;
-    height: 96px;
-    border-radius: var(--radius-full);
+    width: 100%;
+    height: 100%;
     object-fit: cover;
   }
 
+  /* No photo yet — a brand-toned fill stands in for the image so the
+   * card still reads as a full-bleed poster tile, not a broken/empty
+   * one. Same big-initial idea the old circular fallback used, just
+   * scaled up to fill the frame. */
   .employee__photo--fallback {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--color-green) 18%, var(--bg-raised));
-    color: var(--color-green-dark);
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-green) 55%, var(--bg-raised)) 0%,
+      var(--color-green-dark) 100%
+    );
+    color: rgb(255 255 255 / 0.85);
     font-family: var(--font-serif);
-    font-size: var(--text-3xl);
+    font-size: 96px;
+  }
+
+  /* Bottom scrim — the info block sits on this, not directly on the
+   * photo, so contact links stay legible over any image. Strongest
+   * right behind the text, fading out toward the card's upper half so
+   * the photo itself still reads clearly above the fold. */
+  .employee__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgb(10 12 9 / 0.92) 0%,
+      rgb(10 12 9 / 0.72) 32%,
+      rgb(10 12 9 / 0.12) 62%,
+      transparent 80%
+    );
+  }
+
+  .employee__body {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    width: 100%;
+    padding: var(--space-6);
+    text-align: center;
+    color: rgb(255 255 255 / 0.92);
   }
 
   .employee__name {
     font-size: var(--text-lg);
     font-weight: var(--font-semi);
-    color: var(--color-text-primary);
+    color: var(--color-white);
   }
 
   .employee__role {
-    margin-top: calc(-1 * var(--space-2));
+    margin-top: calc(-1 * var(--space-1));
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: rgb(255 255 255 / 0.72);
   }
 
   .employee__coverage {
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
   }
 
   .employee__coverage-label {
@@ -110,13 +155,13 @@ const initial = author.name.trim().charAt(0).toUpperCase()
     font-weight: var(--font-medium);
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--color-text-muted);
+    color: rgb(255 255 255 / 0.58);
   }
 
   .employee__coverage-list {
     margin-top: var(--space-1);
     font-size: var(--text-sm);
-    color: var(--color-text-secondary);
+    color: rgb(255 255 255 / 0.85);
   }
 
   .employee__contact {
@@ -128,7 +173,7 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 
   .employee__link {
     font-size: var(--text-sm);
-    color: var(--color-green-dark);
+    color: var(--color-white);
     word-break: break-word;
   }
 
