@@ -28,7 +28,6 @@ import {
 import { product } from '../schemas/documents/product'
 import { technology } from '../schemas/documents/technology'
 import { region } from '../schemas/documents/region'
-import { rep } from '../schemas/documents/rep'
 import { blogPost } from '../schemas/documents/blogPost'
 import { category } from '../schemas/documents/category'
 import { collection } from '../schemas/documents/collection'
@@ -62,10 +61,9 @@ export const schemaTypes = [
   product,
   technology,
   collection,
-  // regions & reps
+  // regions
   region,
-  rep,
-  // editorial
+  // editorial (author doubles as regional team member — see author.ts)
   blogPost,
   category,
   author,

@@ -1,8 +1,8 @@
 // src/lib/queries/regions.ts
 
 import { sanityFetch } from '../sanity'
-import type { Region, RegionCard, Rep } from '../types/sanity'
-import { IMAGE_FRAGMENT, REP_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
+import type { Region, RegionCard } from '../types/sanity'
+import { AUTHOR_FRAGMENT, IMAGE_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
 
 export async function getAllRegions(): Promise<RegionCard[]> {
   return sanityFetch(
@@ -11,7 +11,10 @@ export async function getAllRegions(): Promise<RegionCard[]> {
       title,
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
-      states
+      states,
+      // team size for the listing card — full roster only fetched on
+      // the region's own detail page (getRegion below)
+      "teamCount": count(*[_type == "author" && region._ref == ^._id])
     }`,
   )
 }
@@ -25,18 +28,9 @@ export async function getRegion(slug: string): Promise<Region | null> {
       "image": image ${IMAGE_FRAGMENT},
       states,
       ${blockContentField('description')},
-      "reps": *[_type == "rep" && region._ref == ^._id] | order(name asc) ${REP_FRAGMENT},
+      "team": *[_type == "author" && region._ref == ^._id] | order(name asc) ${AUTHOR_FRAGMENT},
       ${SEO_FRAGMENT}
     }`,
     { slug },
-  )
-}
-
-// WHY: All reps are fetched at build time and zip matching happens
-// client-side in the rep locator — the dataset is small (dozens of
-// reps) and this avoids needing a runtime API endpoint.
-export async function getAllReps(): Promise<Rep[]> {
-  return sanityFetch(
-    /* groq */ `*[_type == "rep"] | order(name asc) ${REP_FRAGMENT}`,
   )
 }

@@ -1,8 +1,11 @@
 // sanity/schemas/documents/region.ts
 //
-// WHY: Regions group reps geographically and get their own landing
-// pages under /regions. The rep locator queries reps by region and
-// by the zip prefixes stored here.
+// WHY: Regions group agronomists/contacts geographically and get
+// their own landing pages under /regions. A person (author.ts —
+// doubles as a blog byline and/or a regional contact) is assigned to
+// a region via a reference on their own document, not an array here —
+// see getRegion() in src/lib/queries/regions.ts for the team roster
+// query.
 
 import { defineField, defineType } from 'sanity'
 

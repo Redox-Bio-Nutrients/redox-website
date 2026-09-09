@@ -63,13 +63,17 @@ export const structure: StructureResolver = (S) =>
         ),
 
       S.listItem()
-        .title('Regions & Reps')
+        .title('Regions')
         .child(
           S.list()
-            .title('Regions & Reps')
+            .title('Regions')
             .items([
               S.documentTypeListItem('region').title('Regions'),
-              S.documentTypeListItem('rep').title('Sales Reps'),
+              // Team Members again here (same document type as under
+              // Blog below) — convenient shortcut for assigning/
+              // reassigning a region's agronomists without hunting
+              // through the Blog section. See author.ts.
+              S.documentTypeListItem('author').title('Team Members'),
             ]),
         ),
 
@@ -81,7 +85,7 @@ export const structure: StructureResolver = (S) =>
             .items([
               S.documentTypeListItem('blogPost').title('Posts'),
               S.documentTypeListItem('category').title('Categories'),
-              S.documentTypeListItem('author').title('Authors'),
+              S.documentTypeListItem('author').title('Team Members'),
             ]),
         ),
 

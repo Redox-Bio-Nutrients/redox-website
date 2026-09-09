@@ -1,0 +1,114 @@
+---
+// src/components/regions/EmployeeCard.astro
+//
+// A region's team roster tile — name/title/email/phone, same
+// leaf-corner card surface + fallback-initial avatar as
+// AuthorBoxFooter.astro (blog byline card), just a vertical grid tile
+// instead of a horizontal full-width one. `author` here is the same
+// Team Member document a blog byline draws from — see author.ts.
+
+import { urlFor } from '../../lib/sanity'
+import type { Author } from '../../lib/types/sanity'
+
+interface Props {
+  author: Author
+}
+
+const { author } = Astro.props
+
+const photoUrl = author.photo
+  ? urlFor(author.photo).width(240).height(240).fit('crop').auto('format').quality(85).url()
+  : null
+
+const initial = author.name.trim().charAt(0).toUpperCase()
+---
+
+<div class="employee">
+  {photoUrl ? (
+    <img
+      class="employee__photo"
+      src={photoUrl}
+      alt={author.name}
+      width="96"
+      height="96"
+      loading="lazy"
+    />
+  ) : (
+    <span class="employee__photo employee__photo--fallback" aria-hidden="true">{initial}</span>
+  )}
+  <div class="employee__body">
+    <p class="employee__name">{author.name}</p>
+    {author.role && <p class="employee__role">{author.role}</p>}
+    <div class="employee__contact">
+      {author.email && (
+        <a class="employee__link" href={`mailto:${author.email}`}>{author.email}</a>
+      )}
+      {author.phone && (
+        <a class="employee__link" href={`tel:${author.phone.replace(/[^\d+]/g, '')}`}>{author.phone}</a>
+      )}
+    </div>
+  </div>
+</div>
+
+<style>
+  .employee {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-4);
+    padding: var(--space-8) var(--space-6);
+    background: var(--bg-surface);
+    border: var(--border-thin) solid var(--border-subtle);
+    /* Same asymmetric leaf-radius language as the callout/author-box
+     * cards, scaled down to a roster-tile size. */
+    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+  }
+
+  .employee__photo {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+  }
+
+  .employee__photo--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-green) 18%, var(--bg-raised));
+    color: var(--color-green-dark);
+    font-family: var(--font-serif);
+    font-size: var(--text-3xl);
+  }
+
+  .employee__name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semi);
+    color: var(--color-text-primary);
+  }
+
+  .employee__role {
+    margin-top: calc(-1 * var(--space-2));
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .employee__contact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+  }
+
+  .employee__link {
+    font-size: var(--text-sm);
+    color: var(--color-green-dark);
+    word-break: break-word;
+  }
+
+  .employee__link:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -229,11 +229,18 @@ export const EPISODE_CARD_FRAGMENT = /* groq */ `{
   "coverImage": coverImage ${IMAGE_FRAGMENT}
 }`
 
-export const REP_FRAGMENT = /* groq */ `{
+// Full shape of a "Team Member" (sanity/schemas/documents/author.ts) —
+// one document doubles as both a blog byline and, when `region` is
+// set, a regional agronomist/contact card. Used by blog queries
+// (blog.ts) and the region team roster (regions.ts) alike so both
+// stay in sync with the schema automatically.
+export const AUTHOR_FRAGMENT = /* groq */ `{
   _id,
   name,
-  title,
+  "slug": slug.current,
+  role,
   "photo": photo ${IMAGE_FRAGMENT},
+  bio,
   email,
   phone,
   zipPrefixes,
