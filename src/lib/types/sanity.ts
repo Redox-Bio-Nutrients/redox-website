@@ -184,41 +184,42 @@ export interface Technology extends TechnologyCard {
   seo?: Seo
 }
 
-// ── Regions & reps ─────────────────────────────────────────────────
+// ── Regions ────────────────────────────────────────────────────────
 
 export interface RegionCard {
   _id: string
   title: string
   slug: string
   image?: SanityImage
-  states?: string[]
 }
 
 export interface Region extends RegionCard {
   description?: PortableTextBlock[]
-  reps?: Rep[]
+  /** agronomists/contacts assigned to this region — any Author whose
+   * own `region` field references this document, see regions.ts */
+  team?: Author[]
   seo?: Seo
-}
-
-export interface Rep {
-  _id: string
-  name: string
-  title?: string
-  photo?: SanityImage
-  email?: string
-  phone?: string
-  zipPrefixes?: string[]
-  region?: { title: string; slug: string }
 }
 
 // ── Editorial ──────────────────────────────────────────────────────
 
+/** One shared "person" document — a blog byline, a region's
+ * agronomist/contact card, or both (see author.ts's WHY comment for
+ * the 2026-09 consolidation from a separate Rep type). */
 export interface Author {
+  _id: string
   name: string
   slug: string
   role?: string
   photo?: SanityImage
   bio?: string
+  email?: string
+  phone?: string
+  /** states/counties this person personally covers — region-page-only,
+   * see author.ts's coverageAreas */
+  coverageAreas?: string[]
+  zipPrefixes?: string[]
+  region?: { title: string; slug: string }
 }
 
 export interface BlogPostCard {

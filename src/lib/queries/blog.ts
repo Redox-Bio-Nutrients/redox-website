@@ -3,6 +3,7 @@
 import { previewFetch, sanityFetch } from '../sanity'
 import type { BlogPost, BlogPostCard } from '../types/sanity'
 import {
+  AUTHOR_FRAGMENT,
   BLOG_CARD_FRAGMENT,
   BLOG_FALLBACK_POOL_FRAGMENT,
   IMAGE_FRAGMENT,
@@ -24,13 +25,7 @@ const BLOG_POST_QUERY = /* groq */ `*[_type == "blogPost" && slug.current == $sl
   "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
   markets,
   "categories": categories[]->{ title, "slug": slug.current, color },
-  "author": author->{
-    name,
-    "slug": slug.current,
-    role,
-    "photo": photo ${IMAGE_FRAGMENT},
-    bio
-  },
+  "author": author-> ${AUTHOR_FRAGMENT},
   ${blockContentField('body')},
   "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
   // Chronological neighbors for the prev/next nav on the detail page

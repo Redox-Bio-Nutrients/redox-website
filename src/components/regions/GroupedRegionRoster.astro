@@ -1,0 +1,145 @@
+---
+// src/components/regions/GroupedRegionRoster.astro
+//
+// WHY: Same pattern as GroupedProductCatalog.astro (/agriculture,
+// /turf) — every region renders on the same page, in Sort Order
+// (region.orderRank), with a same-page anchor "quick jump" row up top
+// so the page stays navigable without hiding any region's roster
+// behind a click. A region with no team yet still gets its own
+// section (empty-state message) so it's not silently missing.
+
+import type { Region } from '../../lib/types/sanity'
+import { urlFor } from '../../lib/sanity'
+import EmployeeGrid from './EmployeeGrid.astro'
+
+interface Props {
+  regions: Region[]
+  emptyMessage?: string
+}
+
+const { regions, emptyMessage = 'Regions coming soon.' } = Astro.props
+---
+
+{regions.length > 0 ? (
+  <div class="roster">
+    {regions.length > 1 && (
+      <nav class="roster__jump" aria-label="Jump to region">
+        {regions.map((region) => (
+          <a href={`#${region.slug}`}>{region.title}</a>
+        ))}
+      </nav>
+    )}
+    {regions.map((region) => {
+      const imageUrl = region.image
+        ? urlFor(region.image).width(96).height(96).fit('crop').url()
+        : null
+      return (
+        <section class="roster__group" id={region.slug}>
+          <div class="roster__group-head">
+            <div class="roster__group-head-row">
+              {imageUrl && (
+                <img
+                  class="roster__icon"
+                  src={imageUrl}
+                  alt={region.image?.alt ?? ''}
+                  width="56"
+                  height="56"
+                />
+              )}
+              <div class="roster__group-head-text">
+                <h2>{region.title}</h2>
+              </div>
+            </div>
+            <hr class="roster__rule" />
+          </div>
+          <EmployeeGrid team={region.team ?? []} />
+        </section>
+      )
+    })}
+  </div>
+) : (
+  <p class="roster__empty">{emptyMessage}</p>
+)}
+
+<style>
+  .roster__jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-16);
+    padding: var(--space-3);
+    background: var(--bg-surface);
+    border-radius: var(--radius-full);
+    /* Sticks just under the fixed header — see GroupedProductCatalog's
+     * identical rule for the full explanation. */
+    position: sticky;
+    top: calc(var(--header-space) + var(--space-4));
+    z-index: var(--z-raised);
+  }
+
+  .roster__jump a {
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-raised);
+    transition: var(--transition-fast);
+  }
+
+  .roster__jump a:hover {
+    border-color: var(--color-green);
+    color: var(--color-green-dark);
+  }
+
+  .roster__group {
+    margin-bottom: var(--space-16);
+    scroll-margin-top: var(--header-space);
+  }
+
+  .roster__group:last-child {
+    margin-bottom: 0;
+  }
+
+  .roster__group-head {
+    margin-bottom: var(--space-8);
+  }
+
+  .roster__group-head-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .roster__icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: var(--radius-full);
+  }
+
+  .roster__group-head-text {
+    min-width: 0;
+  }
+
+  .roster__group-head-text h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+  }
+
+  .roster__rule {
+    margin-top: var(--space-4);
+    border: none;
+    border-top: 2px solid var(--color-green);
+  }
+
+  .roster__empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-16) 0;
+  }
+</style>
