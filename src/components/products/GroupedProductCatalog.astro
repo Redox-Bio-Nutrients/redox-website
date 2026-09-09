@@ -159,8 +159,15 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
 
   .catalog__group {
     margin-bottom: var(--space-16);
-    /* keeps the jumped-to section clear of the fixed header */
-    scroll-margin-top: var(--header-space);
+    /* Keeps the jumped-to section clear of both the fixed header AND
+     * the sticky jump nav sitting just below it — --subnav-space is
+     * that nav's own live-measured height (see script below), same
+     * pattern as --header-space itself (Header.astro). Without it, a
+     * clicked jump-nav link scrolled the heading directly behind the
+     * jump nav, not just the header. Falls back to 0px so pages with
+     * only one category (no jump nav rendered at all) aren't left
+     * with a stale/unset value. */
+    scroll-margin-top: calc(var(--header-space) + var(--space-4) + var(--subnav-space, 0px) + var(--space-4));
   }
 
   .catalog__group:last-child {
@@ -239,3 +246,19 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     }
   }
 </style>
+
+<script>
+  // Measures the sticky jump nav's own rendered height into
+  // --subnav-space so .catalog__group's scroll-margin-top (above) can
+  // reserve room for it, same live-measurement pattern --header-space
+  // uses in Header.astro. Re-measured on resize since the pill row can
+  // wrap to more lines on narrow viewports, changing its height.
+  const jumpNav = document.querySelector<HTMLElement>('.catalog__jump')
+  if (jumpNav) {
+    const setSubnavSpace = () => {
+      document.documentElement.style.setProperty('--subnav-space', `${jumpNav.offsetHeight}px`)
+    }
+    setSubnavSpace()
+    window.addEventListener('resize', setSubnavSpace)
+  }
+</script>

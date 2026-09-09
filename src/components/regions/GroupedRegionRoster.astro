@@ -95,7 +95,10 @@ const { regions, emptyMessage = 'Regions coming soon.' } = Astro.props
 
   .roster__group {
     margin-bottom: var(--space-16);
-    scroll-margin-top: var(--header-space);
+    /* Keeps the jumped-to section clear of both the fixed header AND
+     * the sticky jump nav sitting just below it — see the matching
+     * comment + script in GroupedProductCatalog.astro, same pattern. */
+    scroll-margin-top: calc(var(--header-space) + var(--space-4) + var(--subnav-space, 0px) + var(--space-4));
   }
 
   .roster__group:last-child {
@@ -143,3 +146,17 @@ const { regions, emptyMessage = 'Regions coming soon.' } = Astro.props
     padding: var(--space-16) 0;
   }
 </style>
+
+<script>
+  // Same pattern as GroupedProductCatalog.astro's identical script —
+  // measures the sticky jump nav's own height into --subnav-space so
+  // .roster__group's scroll-margin-top can reserve room for it.
+  const jumpNav = document.querySelector<HTMLElement>('.roster__jump')
+  if (jumpNav) {
+    const setSubnavSpace = () => {
+      document.documentElement.style.setProperty('--subnav-space', `${jumpNav.offsetHeight}px`)
+    }
+    setSubnavSpace()
+    window.addEventListener('resize', setSubnavSpace)
+  }
+</script>
