@@ -243,6 +243,7 @@ export const AUTHOR_FRAGMENT = /* groq */ `{
   bio,
   email,
   phone,
+  coverageAreas,
   zipPrefixes,
   "region": region->{ title, "slug": slug.current }
 }`

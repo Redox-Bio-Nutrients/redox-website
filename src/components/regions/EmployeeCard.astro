@@ -39,6 +39,12 @@ const initial = author.name.trim().charAt(0).toUpperCase()
   <div class="employee__body">
     <p class="employee__name">{author.name}</p>
     {author.role && <p class="employee__role">{author.role}</p>}
+    {author.coverageAreas && author.coverageAreas.length > 0 && (
+      <div class="employee__coverage">
+        <p class="employee__coverage-label">Covers</p>
+        <p class="employee__coverage-list">{author.coverageAreas.join(' · ')}</p>
+      </div>
+    )}
     <div class="employee__contact">
       {author.email && (
         <a class="employee__link" href={`mailto:${author.email}`}>{author.email}</a>
@@ -95,11 +101,29 @@ const initial = author.name.trim().charAt(0).toUpperCase()
     color: var(--color-text-muted);
   }
 
+  .employee__coverage {
+    margin-top: var(--space-2);
+  }
+
+  .employee__coverage-label {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .employee__coverage-list {
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
   .employee__contact {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    margin-top: var(--space-1);
+    margin-top: var(--space-3);
   }
 
   .employee__link {

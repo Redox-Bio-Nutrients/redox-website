@@ -80,6 +80,15 @@ export const author = defineType({
         'Set this to list the person as an agronomist/contact on that region’s page. Leave empty for a blog-only author.',
     }),
     defineField({
+      name: 'coverageAreas',
+      title: 'States / Counties Covered',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description:
+        'e.g. "Iowa", "Story County, IA" — shown on their region team card. Two agronomists in the same region typically split it between them.',
+      hidden: ({ document }) => !document?.region,
+    }),
+    defineField({
       name: 'zipPrefixes',
       title: 'Zip Code Prefixes',
       type: 'array',

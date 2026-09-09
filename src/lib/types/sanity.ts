@@ -191,7 +191,6 @@ export interface RegionCard {
   title: string
   slug: string
   image?: SanityImage
-  states?: string[]
 }
 
 export interface Region extends RegionCard {
@@ -216,6 +215,9 @@ export interface Author {
   bio?: string
   email?: string
   phone?: string
+  /** states/counties this person personally covers — region-page-only,
+   * see author.ts's coverageAreas */
+  coverageAreas?: string[]
   zipPrefixes?: string[]
   region?: { title: string; slug: string }
 }

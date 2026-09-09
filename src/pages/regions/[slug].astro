@@ -2,13 +2,15 @@
 // src/pages/regions/[slug].astro
 //
 // Fixed template (not the Homepage/Technology page-builder) — a
-// region's content shape is simple and consistent (description +
-// states covered + team roster), so a bespoke layout reads cleaner
-// than composing it from generic sections. Team roster is fully
-// data-driven (any Author document referencing this region via its
-// own `region` field, see getRegion() in src/lib/queries/regions.ts)
-// — reassigning someone to a different region is a one-field edit on
-// their own document, nothing to touch here.
+// region's content shape is simple and consistent (description + team
+// roster), so a bespoke layout reads cleaner than composing it from
+// generic sections. Team roster is fully data-driven (any Author
+// document referencing this region via its own `region` field, see
+// getRegion() in src/lib/queries/regions.ts) — reassigning someone to
+// a different region is a one-field edit on their own document,
+// nothing to touch here. States/counties covered are shown per
+// agronomist on their own EmployeeCard, not at the region level — see
+// author.ts's coverageAreas.
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
@@ -34,24 +36,18 @@ const imageUrl = region.image
   : null
 ---
 
-<BaseLayout title={region.title} description={region.states?.join(', ')} seo={region.seo}>
+<BaseLayout title={region.title} seo={region.seo}>
   {imageUrl ? (
     <header class="hero">
       <img class="hero__bg" src={imageUrl} alt={region.image?.alt ?? ''} loading="eager" />
       <div class="hero__overlay" aria-hidden="true"></div>
       <div class="hero__content">
         <h1>{region.title}</h1>
-        {region.states && region.states.length > 0 && (
-          <p class="hero__states">{region.states.join(' · ')}</p>
-        )}
       </div>
     </header>
   ) : (
     <header class="page-header">
       <h1>{region.title}</h1>
-      {region.states && region.states.length > 0 && (
-        <p class="page-header__states">{region.states.join(' · ')}</p>
-      )}
     </header>
   )}
 
@@ -118,12 +114,6 @@ const imageUrl = region.image
     color: var(--color-white);
   }
 
-  .hero__states {
-    margin-top: var(--space-3);
-    font-size: var(--text-lg);
-    color: rgb(255 255 255 / 0.9);
-  }
-
   /* ── Plain header variant (no image) ─────────────────────────── */
   .page-header {
     max-width: var(--content-width);
@@ -138,12 +128,6 @@ const imageUrl = region.image
     line-height: var(--leading-tight);
     letter-spacing: -0.01em;
     color: var(--color-text-primary);
-  }
-
-  .page-header__states {
-    margin-top: var(--space-3);
-    font-size: var(--text-lg);
-    color: var(--color-text-secondary);
   }
 
   /* ── Shared ───────────────────────────────────────────────────── */

@@ -11,8 +11,7 @@ export async function getAllRegions(): Promise<RegionCard[]> {
       _id,
       title,
       "slug": slug.current,
-      "image": image ${IMAGE_FRAGMENT},
-      states
+      "image": image ${IMAGE_FRAGMENT}
     }`,
   )
 }
@@ -29,7 +28,6 @@ export async function getAllRegionsWithTeams(): Promise<Region[]> {
       title,
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
-      states,
       ${blockContentField('description')},
       "team": *[_type == "author" && region._ref == ^._id] | order(name asc) ${AUTHOR_FRAGMENT}
     }`,
@@ -43,7 +41,6 @@ export async function getRegion(slug: string): Promise<Region | null> {
       title,
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
-      states,
       ${blockContentField('description')},
       "team": *[_type == "author" && region._ref == ^._id] | order(name asc) ${AUTHOR_FRAGMENT},
       ${SEO_FRAGMENT}

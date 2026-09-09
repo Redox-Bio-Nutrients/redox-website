@@ -5,7 +5,10 @@
 // doubles as a blog byline and/or a regional contact) is assigned to
 // a region via a reference on their own document, not an array here —
 // see getRegion() in src/lib/queries/regions.ts for the team roster
-// query.
+// query. The specific states/counties someone actually covers live on
+// that person (author.ts's coverageAreas), not here — two agronomists
+// in the same region typically split it, so a states list at the
+// region level was the wrong granularity.
 
 import { defineField, defineType } from 'sanity'
 
@@ -38,13 +41,6 @@ export const region = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
-    }),
-    defineField({
-      name: 'states',
-      title: 'States / Areas Covered',
-      type: 'array',
-      of: [{ type: 'string' }],
-      description: 'e.g. "Idaho", "Eastern Washington". Shown on the region page.',
     }),
     defineField({
       name: 'orderRank',

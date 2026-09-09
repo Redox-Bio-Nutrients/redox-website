@@ -48,9 +48,6 @@ const { regions, emptyMessage = 'Regions coming soon.' } = Astro.props
               )}
               <div class="roster__group-head-text">
                 <h2>{region.title}</h2>
-                {region.states && region.states.length > 0 && (
-                  <p class="roster__states">{region.states.join(' · ')}</p>
-                )}
               </div>
             </div>
             <hr class="roster__rule" />
@@ -132,12 +129,6 @@ const { regions, emptyMessage = 'Regions coming soon.' } = Astro.props
     font-weight: var(--font-normal);
     font-size: var(--text-2xl);
     color: var(--color-text-primary);
-  }
-
-  .roster__states {
-    margin-top: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
   }
 
   .roster__rule {
