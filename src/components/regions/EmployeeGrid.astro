@@ -1,0 +1,47 @@
+---
+// src/components/regions/EmployeeGrid.astro
+
+import type { Author } from '../../lib/types/sanity'
+import EmployeeCard from './EmployeeCard.astro'
+
+interface Props {
+  team: Author[]
+  emptyMessage?: string
+}
+
+const { team, emptyMessage = 'No team members assigned to this region yet.' } = Astro.props
+---
+
+{team.length > 0 ? (
+  <div class="grid">
+    {team.map((author) => <EmployeeCard author={author} />)}
+  </div>
+) : (
+  <p class="empty">{emptyMessage}</p>
+)}
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-12) 0;
+  }
+
+  @media (max-width: 1023px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
