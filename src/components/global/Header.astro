@@ -5,14 +5,23 @@
 // Mobile menu is a no-JS-fallback-friendly checkbox toggle; swap for
 // a scripted disclosure if the design calls for animation.
 //
-// DESIGN TEST (not final — expect iteration): floating pillbox nav.
-// The header is `position: fixed` — out of flow, floating over
-// whatever's beneath it — with no visible background at rest, just
-// the logo/links sitting directly over the page. A scroll listener
-// below toggles `.header--scrolled` once the page scrolls past a
-// small threshold, which "solidifies" it into a frosted rounded pill
-// (matching the --glass-* tokens already used on the hero CTA) so it
-// reads clearly once content is passing underneath it.
+// Full-viewport-width sticky bar (was a floating inset pill — dropped
+// 2026-09 once pages started growing their own sticky same-page nav,
+// e.g. GroupedProductCatalog's category jump row and
+// GroupedRegionRoster's region jump row: two floating rounded pills
+// stacked near the top read as visually competing shapes/clutter, not
+// two different levels of navigation). The header is still
+// `position: fixed` — out of flow, floating over whatever's beneath
+// it — with no visible background at rest, just the logo/links
+// sitting directly over the page. A scroll listener below toggles
+// `.header--scrolled` once the page scrolls past a small threshold,
+// which "solidifies" it into a frosted full-width bar (matching the
+// --glass-* tokens already used on the hero CTA) so it reads clearly
+// once content is passing underneath it. Only the bottom-right corner
+// keeps a radius — ties it back to the site's asymmetric "leaf" motif
+// (see CalloutSection etc.) without the top/left/right corners, which
+// sit flush against the viewport edges anyway and would look wrong
+// rounded.
 //
 // Two supporting scripts:
 // - Since the header no longer reserves space in flow, `--header-
@@ -139,52 +148,43 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     left: 0;
     right: 0;
     z-index: var(--z-nav);
-    /* Gap around the pill so it never touches the viewport edges.
-     * The header itself stays transparent — only .header__inner is
-     * visible, and only once scrolled — so at rest it reads as bare
-     * floating text/links, not a bar or a shape. */
-    padding: var(--space-4) var(--space-6) 0;
+    /* Full-bleed bar now, not an inset floating pill — the header
+     * itself carries the visible shape/background (only once
+     * scrolled; see .header--scrolled below), spanning the entire
+     * viewport width. Only the bottom-right corner is rounded — see
+     * the file-top comment for why not all four. */
+    border-radius: 0 0 var(--radius-xl) 0;
     background: transparent;
-    pointer-events: none;
+    border-bottom: 1px solid transparent;
+    box-shadow: none;
+    transition:
+      background 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease,
+      color 0.2s ease;
   }
 
   .header__inner {
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-3) var(--space-6);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-6);
-    pointer-events: auto;
-    /* Same asymmetric "leaf" shape as the product callout boxes
-     * (rounded TL/BR, squared TR/BL) — ties the floating pill back
-     * into that motif instead of a generic full pill. Toned down
-     * from --radius-leaf's 40px (right for a big callout slab, too
-     * dominant on a ~50px-tall pill) to a scale that fits the nav. */
-    border-radius: var(--radius-xl) 0 var(--radius-xl) 0;
-    background: transparent;
-    border: 1px solid transparent;
-    box-shadow: none;
-    transition:
-      background 0.3s ease,
-      box-shadow 0.3s ease,
-      padding 0.3s ease,
-      border-color 0.3s ease,
-      color 0.2s ease;
   }
 
   /* Solidified state — applied once the page scrolls past a small
-   * threshold (see script below). The pill's shape only becomes
-   * visible here: frosted glass background, border, shadow all
+   * threshold (see script below). The bar's shape only becomes
+   * visible here: frosted glass background, bottom border, shadow all
    * appear together so it reads clearly over whatever is scrolling
    * underneath it. */
-  .header--scrolled .header__inner {
+  .header--scrolled {
     /* Solid white behind the logo, easing into the shared frosted-
      * glass look toward the nav side — the logo's green needs a fully
      * opaque surface to stay legible (a flat translucent fill was
      * still letting busy scrolled-past imagery wash it out), while the
-     * rest of the pill keeps the glass feel rather than going flat and
+     * rest of the bar keeps the glass feel rather than going flat and
      * blocky end to end. */
     background: linear-gradient(
       90deg,
@@ -195,10 +195,9 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     -webkit-backdrop-filter: var(--glass-blur);
     border-color: rgb(255 255 255 / 0.6);
     box-shadow: var(--shadow-lg);
-    padding: var(--space-2) var(--space-5);
   }
 
-  :global([data-theme='dark']) .header--scrolled .header__inner {
+  :global([data-theme='dark']) .header--scrolled {
     background: linear-gradient(
       90deg,
       rgb(18 20 17 / 0.96) 0%,
