@@ -32,6 +32,9 @@ export const blogPost = defineType({
       title: 'Author',
       type: 'reference',
       to: [{ type: 'author' }],
+      // Only Team Members flagged "Available as a Blog Author" show up
+      // in the picker — see author.ts's isAuthor field.
+      options: { filter: 'isAuthor == true' },
     }),
     defineField({
       name: 'markets',
