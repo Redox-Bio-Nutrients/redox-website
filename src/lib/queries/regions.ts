@@ -4,6 +4,7 @@ import { sanityFetch } from '../sanity'
 import type { Region, RegionCard } from '../types/sanity'
 import { AUTHOR_FRAGMENT, IMAGE_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
 
+// Lightweight — just enough for getStaticPaths (see [slug].astro).
 export async function getAllRegions(): Promise<RegionCard[]> {
   return sanityFetch(
     /* groq */ `*[_type == "region"] | order(orderRank asc, title asc){
@@ -11,10 +12,26 @@ export async function getAllRegions(): Promise<RegionCard[]> {
       title,
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
+      states
+    }`,
+  )
+}
+
+// Every region with its full team roster — powers /regions, which
+// lists every region and every agronomist on one page (same "grouped
+// catalog, same-page anchors" pattern as GroupedProductCatalog.astro
+// on /agriculture and /turf), rather than linking out to each
+// region's own page for its roster.
+export async function getAllRegionsWithTeams(): Promise<Region[]> {
+  return sanityFetch(
+    /* groq */ `*[_type == "region"] | order(orderRank asc, title asc){
+      _id,
+      title,
+      "slug": slug.current,
+      "image": image ${IMAGE_FRAGMENT},
       states,
-      // team size for the listing card — full roster only fetched on
-      // the region's own detail page (getRegion below)
-      "teamCount": count(*[_type == "author" && region._ref == ^._id])
+      ${blockContentField('description')},
+      "team": *[_type == "author" && region._ref == ^._id] | order(name asc) ${AUTHOR_FRAGMENT}
     }`,
   )
 }

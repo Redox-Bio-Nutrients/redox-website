@@ -192,9 +192,6 @@ export interface RegionCard {
   slug: string
   image?: SanityImage
   states?: string[]
-  /** only populated by getAllRegions — the listing card's team-size
-   * hint; the full roster (Author[]) lives on Region.team below */
-  teamCount?: number
 }
 
 export interface Region extends RegionCard {

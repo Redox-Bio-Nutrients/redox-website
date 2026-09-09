@@ -1,11 +1,15 @@
 ---
 // src/pages/regions/index.astro
+//
+// Every region and every agronomist on one page — see
+// GroupedRegionRoster.astro's WHY comment for the full reasoning
+// (same pattern as the /agriculture and /turf catalog pages).
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import RegionGrid from '../../components/regions/RegionGrid.astro'
-import { getAllRegions } from '../../lib/queries'
+import GroupedRegionRoster from '../../components/regions/GroupedRegionRoster.astro'
+import { getAllRegionsWithTeams } from '../../lib/queries'
 
-const regions = await getAllRegions()
+const regions = await getAllRegionsWithTeams()
 ---
 
 <BaseLayout
@@ -17,7 +21,7 @@ const regions = await getAllRegions()
       <h1>Regions</h1>
       <p>Local agronomists, wherever you grow.</p>
     </header>
-    <RegionGrid regions={regions} />
+    <GroupedRegionRoster regions={regions} />
   </div>
 </BaseLayout>
 
