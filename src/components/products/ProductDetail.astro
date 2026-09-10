@@ -55,10 +55,13 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   lqip: img.lqip ?? null,
 }))
 const heroImage = bgPool[0] ?? null
+// Points at the catalog pages, not the /agriculture and /turf
+// landing pages — this is a product page, so "Agriculture"/"Turf"
+// here means "back to the catalog you came from."
 const marketLinks = product.markets.map((m) =>
   m === 'agriculture'
-    ? { label: 'Agriculture', href: '/agriculture' }
-    : { label: 'Turf', href: '/turf' },
+    ? { label: 'Agriculture', href: '/agriculture/products' }
+    : { label: 'Turf', href: '/turf/products' },
 )
 
 const relatedCards = (product.relatedProducts ?? []).map((p) => ({

@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/xprt-farm",
-      "destination": "/regions/midwest",
+      "destination": "/about-us",
       "permanent": true
     },
     {

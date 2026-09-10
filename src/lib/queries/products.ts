@@ -1,7 +1,7 @@
 // src/lib/queries/products.ts
 
 import { previewFetch, sanityFetch } from '../sanity'
-import type { Market, Product, ProductCard } from '../types/sanity'
+import type { Collection, Market, Product, ProductCard } from '../types/sanity'
 import {
   BG_POOL_FRAGMENT,
   COLLECTION_FRAGMENT,
@@ -24,6 +24,17 @@ export async function getAllProducts(): Promise<ProductCard[]> {
   return sanityFetch(
     /* groq */ `*[_type == "product"] | order(orderRank asc, title asc) ${PRODUCT_CARD_FRAGMENT}`,
   )
+}
+
+// The catalog's benefit-taxonomy Collections (Foundation, Plant
+// Performance, ...) — used by the Agriculture landing page's
+// Performance System showcase (see CollectionShowcase.astro). Ordered
+// alphabetically here; callers that need the catalog's own fixed
+// category order (Foundation → Plant Performance → Yield Development
+// → Crop Resilience → Integrated Solutions) re-sort against that list
+// themselves — see GroupedProductCatalog.astro's CATEGORY_ORDER.
+export async function getAllCollections(): Promise<Collection[]> {
+  return sanityFetch(/* groq */ `*[_type == "collection"] | order(title asc) ${COLLECTION_FRAGMENT}`)
 }
 
 // Shared by getProduct/getProductPreview — one projection, two clients
