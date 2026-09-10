@@ -266,20 +266,11 @@ const documents = (product.documents ?? []).map((doc) => ({
         </div>
       )}
 
-      {product.technologies && product.technologies.length > 0 && (
-        <section class="sidebar__group">
-          <h2>Powered By</h2>
-          <ul>
-            {product.technologies.map((tech) => (
-              <li>
-                <a class="sidebar__link" href={`/technologies/${tech.slug}`}>
-                  {tech.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* "Powered By" (product.technologies) and "Markets" sidebar
+          sections deliberately removed from the front end per Curtis
+          (2026-09) — the underlying Sanity fields/content stay as-is,
+          just not rendered here. See redox-open-items memory before
+          re-adding either. */}
 
       {product.crops && product.crops.length > 0 && (
         <section class="sidebar__group">
@@ -291,17 +282,6 @@ const documents = (product.documents ?? []).map((doc) => ({
           </ul>
         </section>
       )}
-
-      <section class="sidebar__group">
-        <h2>Markets</h2>
-        <ul>
-          {marketLinks.map((m) => (
-            <li>
-              <a class="sidebar__link" href={m.href}>{m.label}</a>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       {relatedCards.length > 0 && (
         <section class="sidebar__group">
