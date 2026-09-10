@@ -693,6 +693,18 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   // colors, which is correct for pages with no hero. Checked once on
   // load: which section (if any) leads the page doesn't change after
   // that, so this doesn't need to re-run on scroll.
+  //
+  // That hero typically sits flush under the header via a negative
+  // margin driven by --header-space (see ProductDetail.astro/
+  // HeroSection.astro) — the same custom property setHeaderSpace()
+  // just wrote, above. Reading .offsetHeight forces a synchronous
+  // layout flush before the position check below, so it sees that
+  // negative margin already applied rather than a stale pre-write
+  // position. Chromium/Firefox flush this reliably on their own even
+  // without the extra read; Safari has a documented history of being
+  // looser about it, which was leaving the header stuck in its
+  // default (dark-on-light) text color over a dark hero photo.
+  void header?.offsetHeight
   const leadHero = document.querySelector('[data-header-theme="light"]')
   if (leadHero && leadHero.getBoundingClientRect().top <= 4) {
     header?.classList.add('header--on-dark')
