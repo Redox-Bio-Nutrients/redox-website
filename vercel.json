@@ -9,6 +9,11 @@
       "source": "/contact",
       "destination": "/about-us",
       "permanent": true
+    },
+    {
+      "source": "/technologies",
+      "destination": "/technologies/ram-technology",
+      "permanent": false
     }
   ]
 }
