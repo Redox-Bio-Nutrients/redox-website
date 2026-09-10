@@ -1,5 +1,9 @@
 ---
-// src/components/regions/EmployeeGrid.astro
+// src/components/people/EmployeeGrid.astro
+//
+// Grid wrapper around EmployeeCard — shared by the region roster and
+// the About Us office staff section (see EmployeeCard.astro's header
+// comment).
 
 import type { Author } from '../../lib/types/sanity'
 import EmployeeCard from './EmployeeCard.astro'
@@ -9,7 +13,7 @@ interface Props {
   emptyMessage?: string
 }
 
-const { team, emptyMessage = 'No team members assigned to this region yet.' } = Astro.props
+const { team, emptyMessage = 'No team members to show yet.' } = Astro.props
 ---
 
 {team.length > 0 ? (

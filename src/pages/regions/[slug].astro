@@ -17,7 +17,7 @@ import { PortableText } from 'astro-portabletext'
 import { getAllRegions, getRegion } from '../../lib/queries'
 import { urlFor } from '../../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../lib/portableTextComponents'
-import EmployeeGrid from '../../components/regions/EmployeeGrid.astro'
+import EmployeeGrid from '../../components/people/EmployeeGrid.astro'
 
 export async function getStaticPaths() {
   const regions = await getAllRegions()
