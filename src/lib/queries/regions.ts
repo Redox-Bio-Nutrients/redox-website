@@ -29,7 +29,7 @@ export async function getAllRegionsWithTeams(): Promise<Region[]> {
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
       ${blockContentField('description')},
-      "team": *[_type == "author" && region._ref == ^._id] | order(name asc) ${AUTHOR_FRAGMENT}
+      "team": *[_type == "author" && region._ref == ^._id] | order(orderRank asc, name asc) ${AUTHOR_FRAGMENT}
     }`,
   )
 }
@@ -42,7 +42,7 @@ export async function getRegion(slug: string): Promise<Region | null> {
       "slug": slug.current,
       "image": image ${IMAGE_FRAGMENT},
       ${blockContentField('description')},
-      "team": *[_type == "author" && region._ref == ^._id] | order(name asc) ${AUTHOR_FRAGMENT},
+      "team": *[_type == "author" && region._ref == ^._id] | order(orderRank asc, name asc) ${AUTHOR_FRAGMENT},
       ${SEO_FRAGMENT}
     }`,
     { slug },
