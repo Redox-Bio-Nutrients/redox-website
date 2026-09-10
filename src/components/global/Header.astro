@@ -693,10 +693,34 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   // colors, which is correct for pages with no hero. Checked once on
   // load: which section (if any) leads the page doesn't change after
   // that, so this doesn't need to re-run on scroll.
-  const leadHero = document.querySelector('[data-header-theme="light"]')
-  if (leadHero && leadHero.getBoundingClientRect().top <= 4) {
-    header?.classList.add('header--on-dark')
-  }
+  //
+  // That hero typically sits flush under the header via a negative
+  // margin driven by --header-space (see ProductDetail.astro/
+  // HeroSection.astro) — the same custom property setHeaderSpace()
+  // just wrote, above. A first attempt at this fix forced a
+  // synchronous reflow (reading header.offsetHeight) right before the
+  // position check, on the theory that Safari just hadn't flushed
+  // layout yet — confirmed WRONG in Safari testing: the class still
+  // never got added, even though the hero measured at its correct,
+  // fully-settled top:0 moments later. So the gap isn't "layout hasn't
+  // run," it's specifically that Safari hadn't finished propagating
+  // the just-written custom property into the hero's computed style
+  // by the time a same-tick reflow forced on a *different* element
+  // (the header) resolved — a narrower, CSS-custom-property-specific
+  // staleness, not a general layout one. Deferring the whole check
+  // two animation frames (not one — a single rAF still occasionally
+  // raced in testing) reliably lands after Safari's own style+layout
+  // pipeline has fully settled, however that engine schedules it
+  // internally; Chromium/Firefox have zero visible delay from this
+  // either way since they're never actually stale.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const leadHero = document.querySelector('[data-header-theme="light"]')
+      if (leadHero && leadHero.getBoundingClientRect().top <= 4) {
+        header?.classList.add('header--on-dark')
+      }
+    })
+  })
 
   // Soft chip — slides to whichever link is active, then hovered/
   // focused, then back. One shared element instead of each link
