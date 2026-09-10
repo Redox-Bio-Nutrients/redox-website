@@ -278,14 +278,35 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
 
   /* ── Body prose ───────────────────────────────────────────────── */
   .body {
+    --prose-width: 54rem;
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-8) var(--space-6) var(--space-32);
     font-size: var(--text-lg);
   }
 
+  /* Readable measure, centered within the wider .body box rather than
+   * pinned to its left edge — same pattern (and same reasoning) as
+   * BlogPostDetail.astro's prose column: without the auto margins
+   * here, a narrower max-width just collapses to the block's start
+   * edge, leaving prose stranded in a narrow left-hand column with a
+   * big empty gap on the right instead of centered like everything
+   * else on the page. A fixed --prose-width rather than `ch` keeps
+   * every block type's left/right edges pixel-identical regardless of
+   * its own font size (h2 renders larger than p; under `ch` — a
+   * font-relative unit — that alone would have given each a different
+   * actual pixel width and a visibly mismatched left edge). Covers
+   * every block type Portable Text can hand back, not just p. */
+  .body :global(p),
+  .body :global(h2),
+  .body :global(ul),
+  .body :global(ol) {
+    max-width: var(--prose-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .body :global(p) {
-    max-width: 70ch;
     margin-bottom: var(--space-5);
     line-height: var(--leading-relaxed);
     color: var(--color-text-secondary);
@@ -296,13 +317,14 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     font-weight: var(--font-normal);
     font-size: var(--text-2xl);
     color: var(--color-text-primary);
-    margin: var(--space-10) 0 var(--space-4);
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-4);
   }
 
   .body :global(ul),
   .body :global(ol) {
-    max-width: 70ch;
-    margin: 0 0 var(--space-5) var(--space-5);
+    margin-bottom: var(--space-5);
+    padding-left: var(--space-5);
   }
 
   .body :global(li) {
