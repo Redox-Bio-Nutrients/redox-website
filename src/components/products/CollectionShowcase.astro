@@ -1,0 +1,104 @@
+---
+// src/components/products/CollectionShowcase.astro
+//
+// "The Redox Performance System" grid on the Agriculture landing page
+// — one card per benefit-Collection (Foundation, Plant Performance,
+// Yield Development, Crop Resilience, Integrated Solutions), each
+// using that Collection's own title/description/color already set in
+// Studio (see collection.ts) rather than hardcoded copy, so this stays
+// correct if a Collection's framing ever changes there. Links into the
+// matching jump-nav anchor on the moved catalog page
+// (GroupedProductCatalog.astro renders `id={collection.slug}`), same
+// CATEGORY_ORDER as the catalog itself so the two never disagree on
+// ordering.
+
+import type { Collection } from '../../lib/types/sanity'
+import { CATEGORY_ORDER } from '../../lib/catalogTaxonomy'
+
+interface Props {
+  collections: Collection[]
+  /** Catalog page this showcase's cards deep-link into, e.g. "/agriculture/products". */
+  catalogHref: string
+}
+
+const { collections, catalogHref } = Astro.props
+
+const ordered = [...collections].sort((a, b) => {
+  const ai = CATEGORY_ORDER.indexOf(a.title)
+  const bi = CATEGORY_ORDER.indexOf(b.title)
+  return (ai === -1 ? CATEGORY_ORDER.length : ai) - (bi === -1 ? CATEGORY_ORDER.length : bi)
+})
+---
+
+{ordered.length > 0 && (
+  <div class="showcase">
+    {ordered.map((collection) => (
+      <a
+        class="showcase__card"
+        href={`${catalogHref}#${collection.slug}`}
+        style={collection.color ? `--card-color: ${collection.color}` : undefined}
+      >
+        <span class="showcase__bar" aria-hidden="true"></span>
+        <span class="showcase__title">{collection.title}</span>
+        {collection.description && <span class="showcase__desc">{collection.description}</span>}
+      </a>
+    ))}
+  </div>
+)}
+
+<style>
+  .showcase {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-5);
+  }
+
+  .showcase__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-5);
+    background: var(--bg-surface);
+    border: var(--border-thin) solid var(--border-subtle);
+    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .showcase__card:hover {
+    border-color: var(--card-color, var(--color-green));
+    transform: translateY(-2px);
+  }
+
+  .showcase__bar {
+    display: block;
+    width: var(--space-8);
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--card-color, var(--color-green));
+  }
+
+  .showcase__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-lg);
+    color: var(--color-text-primary);
+  }
+
+  .showcase__desc {
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  @media (max-width: 1023px) {
+    .showcase {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .showcase {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -4,8 +4,9 @@
 // Generic catch-all for the `page` Sanity document type — About,
 // Contact, and any other marketing page that doesn't need a bespoke
 // template (see sanity/schemas/documents/page.ts). More specific
-// static routes (e.g. /agriculture, /products/*) always win over this
-// dynamic route, so there's no collision risk in adding pages here.
+// static routes (e.g. /agriculture/products, /products/*) always win
+// over this dynamic route, so there's no collision risk in adding
+// pages here.
 //
 // heroImage is optional per the schema: pages with one get a full-bleed
 // photo header (Homepage hero treatment); pages without just get a
@@ -18,14 +19,23 @@
 // by slug rather than a generic "team section" content-builder block:
 // there's exactly one page that needs this today, so a bespoke toggle
 // here is simpler than a new Sanity object type an editor would have
-// to know to add. Revisit if a second page needs the same thing.
+// to know to add.
+//
+// The Agriculture and Turf landing pages (slugs "agriculture"/"turf")
+// get the same special-case treatment for their own reason — a
+// "Performance System" showcase + a CTA button through to their
+// catalog, appended after the body copy — 2026-09, once /agriculture
+// and /turf stopped being the catalogs themselves (see
+// /agriculture/products, /turf/products) and became marketing pages
+// instead.
 
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
-import { getAllPageSlugs, getOfficeStaff, getPage } from '../lib/queries'
+import { getAllCollections, getAllPageSlugs, getOfficeStaff, getPage } from '../lib/queries'
 import { urlFor } from '../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
+import CollectionShowcase from '../components/products/CollectionShowcase.astro'
 
 export async function getStaticPaths() {
   const slugs = await getAllPageSlugs()
@@ -44,6 +54,10 @@ const heroImageUrl = page.heroImage
   : null
 
 const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
+
+const marketCatalog =
+  slug === 'agriculture' ? '/agriculture/products' : slug === 'turf' ? '/turf/products' : null
+const collections = slug === 'agriculture' ? await getAllCollections() : []
 ---
 
 <BaseLayout title={page.title} seo={page.seo}>
@@ -87,7 +101,7 @@ const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
   )}
 
   {page.body && page.body.length > 0 && (
-    <div class:list={['body', { 'body--tight': officeStaff.length > 0 }]}>
+    <div class:list={['body', { 'body--tight': officeStaff.length > 0 || marketCatalog !== null }]}>
       <PortableText
         value={page.body}
         components={portableTextComponents}
@@ -101,6 +115,17 @@ const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
       <div class="team__inner">
         <h2>Meet the Team</h2>
         <EmployeeGrid team={officeStaff} />
+      </div>
+    </section>
+  )}
+
+  {marketCatalog && (
+    <section class="showcase-section">
+      <div class="showcase-section__inner">
+        {collections.length > 0 && <CollectionShowcase collections={collections} catalogHref={marketCatalog} />}
+        <a class="showcase-section__cta" href={marketCatalog}>
+          {slug === 'agriculture' ? 'Find the Right Solution' : 'Products'}
+        </a>
       </div>
     </section>
   )}
@@ -268,6 +293,13 @@ const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
     text-decoration: underline;
   }
 
+  /* A "Meet the Team" or Performance System section follows — its own
+   * top padding already provides the gap, so the body's large closing
+   * padding here would just double it up. */
+  .body--tight {
+    padding-bottom: var(--space-8);
+  }
+
   /* ── Meet the Team (About Us only) ───────────────────────────── */
   .team {
     padding: var(--space-8) 0 var(--space-24);
@@ -287,6 +319,36 @@ const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
     letter-spacing: -0.01em;
     color: var(--color-text-primary);
     margin-bottom: var(--space-10);
+  }
+
+  /* ── Performance System showcase + CTA (Agriculture/Turf only) ── */
+  .showcase-section {
+    padding: var(--space-8) 0 var(--space-24);
+  }
+
+  .showcase-section__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-10);
+  }
+
+  .showcase-section__cta {
+    display: inline-block;
+    padding: var(--space-4) var(--space-8);
+    border-radius: var(--radius-full);
+    background: var(--color-green);
+    color: var(--color-white);
+    font-size: var(--text-base);
+    font-weight: var(--font-semi);
+    transition: filter 0.15s ease;
+  }
+
+  .showcase-section__cta:hover {
+    filter: brightness(0.92);
   }
 
   @media (max-width: 767px) {

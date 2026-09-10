@@ -1,26 +1,22 @@
 // src/lib/queries/regions.ts
+//
+// The standalone /regions listing + /regions/[slug] pages were
+// retired 2026-09 (per Curtis's nav change order) — the region/team
+// roster now lives in the About Us company directory instead. Region
+// documents and the author→region relationship are unchanged (still
+// how West/Midwest/Turf group their agronomists); only the two
+// per-region page queries (getAllRegions for getStaticPaths, getRegion
+// for the individual page) went away with those pages.
+// getAllRegionsWithTeams stays — it's what the About Us directory
+// pulls from.
 
 import { sanityFetch } from '../sanity'
-import type { Region, RegionCard } from '../types/sanity'
-import { AUTHOR_FRAGMENT, IMAGE_FRAGMENT, SEO_FRAGMENT, blockContentField } from './fragments'
+import type { Region } from '../types/sanity'
+import { AUTHOR_FRAGMENT, IMAGE_FRAGMENT, blockContentField } from './fragments'
 
-// Lightweight — just enough for getStaticPaths (see [slug].astro).
-export async function getAllRegions(): Promise<RegionCard[]> {
-  return sanityFetch(
-    /* groq */ `*[_type == "region"] | order(orderRank asc, title asc){
-      _id,
-      title,
-      "slug": slug.current,
-      "image": image ${IMAGE_FRAGMENT}
-    }`,
-  )
-}
-
-// Every region with its full team roster — powers /regions, which
-// lists every region and every agronomist on one page (same "grouped
-// catalog, same-page anchors" pattern as GroupedProductCatalog.astro
-// on /agriculture and /turf), rather than linking out to each
-// region's own page for its roster.
+// Every region with its full team roster — powers the About Us
+// company directory (same "grouped, same-page anchors" pattern as
+// GroupedProductCatalog.astro on the catalog pages).
 export async function getAllRegionsWithTeams(): Promise<Region[]> {
   return sanityFetch(
     /* groq */ `*[_type == "region"] | order(orderRank asc, title asc){
@@ -31,20 +27,5 @@ export async function getAllRegionsWithTeams(): Promise<Region[]> {
       ${blockContentField('description')},
       "team": *[_type == "author" && region._ref == ^._id] | order(orderRank asc, name asc) ${AUTHOR_FRAGMENT}
     }`,
-  )
-}
-
-export async function getRegion(slug: string): Promise<Region | null> {
-  return sanityFetch(
-    /* groq */ `*[_type == "region" && slug.current == $slug][0]{
-      _id,
-      title,
-      "slug": slug.current,
-      "image": image ${IMAGE_FRAGMENT},
-      ${blockContentField('description')},
-      "team": *[_type == "author" && region._ref == ^._id] | order(orderRank asc, name asc) ${AUTHOR_FRAGMENT},
-      ${SEO_FRAGMENT}
-    }`,
-    { slug },
   )
 }
