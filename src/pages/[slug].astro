@@ -179,12 +179,13 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     width: min(var(--max-width-2xl), 100%);
     margin: 0 auto;
     padding: var(--space-16) var(--space-8);
+    text-align: center;
   }
 
   .hero__title {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
-    font-size: var(--text-display-sm);
+    font-size: var(--text-display);
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
     color: var(--color-white);
@@ -192,14 +193,15 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
 
   .hero__meta {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-8);
+    gap: var(--space-6);
     margin-top: var(--space-6);
   }
 
   .hero__subheading {
     max-width: 44ch;
+    margin: 0 auto;
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
     color: rgb(255 255 255 / 0.9);
@@ -430,8 +432,6 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     }
 
     .hero__meta {
-      flex-direction: column;
-      align-items: flex-start;
       gap: var(--space-5);
     }
 
