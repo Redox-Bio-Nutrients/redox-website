@@ -62,20 +62,17 @@ export const structure: StructureResolver = (S) =>
             ]),
         ),
 
-      S.listItem()
-        .title('Regions')
-        .child(
-          S.list()
-            .title('Regions')
-            .items([
-              S.documentTypeListItem('region').title('Regions'),
-              // Team Members again here (same document type as under
-              // Blog below) — convenient shortcut for assigning/
-              // reassigning a region's agronomists without hunting
-              // through the Blog section. See author.ts.
-              S.documentTypeListItem('author').title('Team Members'),
-            ]),
-        ),
+      // One canonical screen for every person at Redox — a Team
+      // Member (author.ts) can be flagged as a blog author, a
+      // regional agronomist, office staff on /about-us, any
+      // combination, or none yet. Previously duplicated as a "Team
+      // Members" shortcut under both Regions and Blog below; 2026-09
+      // consolidated to just this one place once office staff made it
+      // a third audience for the same list — editors manage everyone
+      // here regardless of which page(s) they end up on.
+      S.documentTypeListItem('author').title('People'),
+
+      S.documentTypeListItem('region').title('Regions'),
 
       S.listItem()
         .title('Blog')
@@ -85,7 +82,6 @@ export const structure: StructureResolver = (S) =>
             .items([
               S.documentTypeListItem('blogPost').title('Posts'),
               S.documentTypeListItem('category').title('Categories'),
-              S.documentTypeListItem('author').title('Team Members'),
             ]),
         ),
 

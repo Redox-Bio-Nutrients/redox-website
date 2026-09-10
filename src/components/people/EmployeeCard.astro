@@ -1,16 +1,21 @@
 ---
-// src/components/regions/EmployeeCard.astro
+// src/components/people/EmployeeCard.astro
 //
-// A region's team roster tile — the agronomist's photo fills the
-// entire card (same leaf-corner surface as AuthorBoxFooter.astro's
-// blog byline card), with name/title/coverage/contact floated over it
-// on a bottom scrim, poster-card style rather than a small circular
-// avatar above a text block. No photo yet still gets the full-bleed
-// treatment — a brand-toned fill standing in for the image, with the
-// same big initial the old circular fallback used, just scaled up to
-// fill the frame — so a placeholder tile reads as "photo coming
-// soon," not a broken layout. `author` here is the same Team Member
-// document a blog byline draws from — see author.ts.
+// A single person tile — used for both a region's agronomist roster
+// and the About Us page's office staff grid (moved out of
+// components/regions/ 2026-09 once it needed to serve both — same
+// underlying Team Member document either way, see author.ts). The
+// photo fills the entire card (same leaf-corner surface as
+// AuthorBoxFooter.astro's blog byline card), with name/title/coverage/
+// contact floated over it on a bottom scrim, poster-card style rather
+// than a small circular avatar above a text block. No photo yet still
+// gets the full-bleed treatment — a brand-toned fill standing in for
+// the image, with the same big initial the old circular fallback
+// used, just scaled up to fill the frame — so a placeholder tile
+// reads as "photo coming soon," not a broken layout. Coverage areas
+// and email/phone are region-only fields on the underlying document
+// (see author.ts) — they simply don't render for an office-staff-only
+// person, no separate "mode" needed here.
 
 import { urlFor } from '../../lib/sanity'
 import type { Author } from '../../lib/types/sanity'

@@ -5,6 +5,7 @@
 export * from './products'
 export * from './technologies'
 export * from './regions'
+export * from './people'
 export * from './blog'
 export * from './podcast'
 export * from './university'
