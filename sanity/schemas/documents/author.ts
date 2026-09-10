@@ -87,6 +87,16 @@ export const author = defineType({
       fieldset: 'region',
     }),
     defineField({
+      name: 'orderRank',
+      title: 'Team Sort Order',
+      type: 'number',
+      initialValue: 100,
+      description:
+        'Lower numbers show first on the region roster (e.g. put the regional manager at 100, then space teammates out — 200, 300…). Ties fall back to alphabetical by name.',
+      fieldset: 'region',
+      hidden: ({ document }) => !document?.region,
+    }),
+    defineField({
       name: 'email',
       title: 'Email',
       type: 'string',
