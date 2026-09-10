@@ -92,7 +92,7 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
             // hover/focus via the same CSS rule the plain-toggle items
             // use, since this still carries the base .header__nav-item
             // class.
-            <li class="header__nav-item header__nav-item--split">
+            <li class="header__nav-item header__nav-item--split header__nav-item--has-subnav">
               <input
                 type="checkbox"
                 id={`nav-split-${i}`}
@@ -126,7 +126,7 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
               </ul>
             </li>
           ) : item.children ? (
-            <li class="header__nav-item">
+            <li class="header__nav-item header__nav-item--has-subnav">
               <details class="header__subnav-details">
                 <summary
                   class:list={['header__nav-link', { 'header__nav-link--active': isItemActive(item) }]}
@@ -724,6 +724,25 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     .header__nav-item:focus-within .header__subnav {
       display: block;
     }
+
+    /* Invisible bridge over the gap between the pill and the dropdown
+     * (the dropdown's own margin-top above) — without this, moving
+     * the mouse straight down from the pill crosses a strip that
+     * belongs to neither element, :hover drops for a frame, and the
+     * dropdown closes (display:none) before the pointer ever reaches
+     * it. This sits exactly in that gap and is still a descendant of
+     * .header__nav-item, so hovering it keeps the item (and therefore
+     * the dropdown) "open" the whole way down. Same fix shape as the
+     * Product Support popover's hit-area bridge — see
+     * ProductDetail.astro. */
+    .header__nav-item--has-subnav::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      height: var(--space-2);
+    }
   }
 </style>
 
@@ -795,8 +814,15 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
 
   const positionChip = (link: HTMLElement) => {
     if (!navChip || !navList) return
+    // The split item's <a> only spans the label text ("Products"),
+    // not the separate caret toggle next to it — measuring just the
+    // link left the chip looking cramped, not covering the whole
+    // "Products ▾" unit the way it does for a plain link or the
+    // News-style summary (which has the caret inside itself already).
+    // Measure the wrapping row instead when there is one.
+    const measureEl = link.closest<HTMLElement>('.header__split-row') ?? link
     const listRect = navList.getBoundingClientRect()
-    const linkRect = link.getBoundingClientRect()
+    const linkRect = measureEl.getBoundingClientRect()
     navChip.style.width = `${linkRect.width + CHIP_INSET * 2}px`
     navChip.style.height = `${linkRect.height}px`
     navChip.style.transform = `translateY(-50%) translateX(${linkRect.left - listRect.left - CHIP_INSET}px)`
