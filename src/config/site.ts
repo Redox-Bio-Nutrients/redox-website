@@ -35,7 +35,13 @@ export interface PrimaryNavItem {
 export const primaryNav: PrimaryNavItem[] = [
   { label: 'Agriculture',      href: '/agriculture'  },
   { label: 'Turf',             href: '/turf'         },
-  { label: 'RAM Technology',   href: '/technologies' },
+  // Points straight at the one real technology page rather than the
+  // /technologies index — that index shows a card grid, which today
+  // is just a single RAM Technology card to click through. Skip the
+  // detour until there's a second technology to actually list (see
+  // vercel.json's matching redirect for anyone who still lands on
+  // /technologies directly).
+  { label: 'RAM Technology',   href: '/technologies/ram-technology' },
   { label: 'Regions',          href: '/regions'      },
   {
     label: 'News',
