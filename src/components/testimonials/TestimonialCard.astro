@@ -1,0 +1,119 @@
+---
+// src/components/testimonials/TestimonialCard.astro
+//
+// One customer quote tile for a testimonials grid — a compact sibling
+// of TestimonialSection.astro (the single large pull-quote used on a
+// product page's own page-builder). Same visual language (serif
+// italic quote, oversized quotation-mark glyph, avatar-or-initial
+// meta row) scaled down since a grid shows several at once, plus the
+// same asymmetric leaf-radius corner EmployeeCard.astro/
+// CollectionShowcase.astro use for their own card grids.
+
+import { urlFor } from '../../lib/sanity'
+import type { Testimonial } from '../../lib/types/sanity'
+
+interface Props {
+  testimonial: Testimonial
+}
+
+const { testimonial } = Astro.props
+
+const avatarUrl = testimonial.avatar
+  ? urlFor(testimonial.avatar).width(96).height(96).fit('crop').auto('format').quality(85).url()
+  : null
+const initial = testimonial.name.trim().charAt(0).toUpperCase()
+---
+
+<figure class="card">
+  <span class="card__mark" aria-hidden="true">&ldquo;</span>
+  <blockquote class="card__quote">{testimonial.quote}</blockquote>
+  <figcaption class="card__meta">
+    {avatarUrl ? (
+      <img
+        class="card__avatar"
+        src={avatarUrl}
+        alt={testimonial.avatar?.alt ?? ''}
+        width="48"
+        height="48"
+        loading="lazy"
+      />
+    ) : (
+      <span class="card__avatar card__avatar--fallback" aria-hidden="true">{initial}</span>
+    )}
+    <div>
+      <p class="card__name">{testimonial.name}</p>
+      {(testimonial.role || testimonial.company) && (
+        <p class="card__role">{[testimonial.role, testimonial.company].filter(Boolean).join(', ')}</p>
+      )}
+    </div>
+  </figcaption>
+</figure>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border: var(--border-thin) solid var(--border-subtle);
+    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+    padding: var(--space-8);
+    margin: 0;
+  }
+
+  .card__mark {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    line-height: 1;
+    color: var(--color-green);
+    opacity: 0.25;
+    margin-bottom: -0.75rem;
+  }
+
+  .card__quote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: var(--font-normal);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    flex-grow: 1;
+  }
+
+  .card__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .card__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .card__avatar--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-green) 18%, var(--bg-raised));
+    color: var(--color-green-dark);
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+  }
+
+  .card__name {
+    font-weight: var(--font-semi);
+    color: var(--color-text-primary);
+  }
+
+  .card__role {
+    margin-top: 2px;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+</style>

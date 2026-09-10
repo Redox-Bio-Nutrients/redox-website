@@ -1,0 +1,41 @@
+---
+// src/components/testimonials/TestimonialGrid.astro
+//
+// Same 3/2/1-column responsive breakpoints as EmployeeGrid.astro, for
+// consistency with the other card grids on the site.
+
+import type { Testimonial } from '../../lib/types/sanity'
+import TestimonialCard from './TestimonialCard.astro'
+
+interface Props {
+  testimonials: Testimonial[]
+}
+
+const { testimonials } = Astro.props
+---
+
+{testimonials.length > 0 && (
+  <div class="grid">
+    {testimonials.map((testimonial) => <TestimonialCard testimonial={testimonial} />)}
+  </div>
+)}
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 1023px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

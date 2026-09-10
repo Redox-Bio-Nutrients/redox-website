@@ -33,11 +33,19 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
-import { getAllCollections, getAllPageSlugs, getAllRegionsWithTeams, getOfficeStaff, getPage } from '../lib/queries'
+import {
+  getAllCollections,
+  getAllPageSlugs,
+  getAllRegionsWithTeams,
+  getOfficeStaff,
+  getPage,
+  getTestimonialsByMarket,
+} from '../lib/queries'
 import { urlFor } from '../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 import CollectionShowcase from '../components/products/CollectionShowcase.astro'
+import TestimonialGrid from '../components/testimonials/TestimonialGrid.astro'
 
 export async function getStaticPaths() {
   const slugs = await getAllPageSlugs()
@@ -61,6 +69,8 @@ const regionTeams = slug === 'about-us' ? await getAllRegionsWithTeams() : []
 const marketCatalog =
   slug === 'agriculture' ? '/agriculture/products' : slug === 'turf' ? '/turf/products' : null
 const collections = slug === 'agriculture' ? await getAllCollections() : []
+const testimonials =
+  slug === 'agriculture' || slug === 'turf' ? await getTestimonialsByMarket(slug) : []
 ---
 
 <BaseLayout title={page.title} seo={page.seo}>
@@ -104,13 +114,22 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
   )}
 
   {page.body && page.body.length > 0 && (
-    <div class:list={['body', { 'body--tight': officeStaff.length > 0 || regionTeams.length > 0 || marketCatalog !== null }]}>
+    <div class:list={['body', { 'body--tight': officeStaff.length > 0 || regionTeams.length > 0 || marketCatalog !== null || testimonials.length > 0 }]}>
       <PortableText
         value={page.body}
         components={portableTextComponents}
         onMissingComponent={onMissingPortableTextComponent}
       />
     </div>
+  )}
+
+  {testimonials.length > 0 && (
+    <section class="testimonials-section">
+      <div class="testimonials-section__inner">
+        <h2>{slug === 'turf' ? 'What Turf Professionals Are Saying' : 'What Growers Are Saying'}</h2>
+        <TestimonialGrid testimonials={testimonials} />
+      </div>
+    </section>
   )}
 
   {(officeStaff.length > 0 || regionTeams.length > 0) && (
@@ -349,6 +368,28 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
    * padding here would just double it up. */
   .body--tight {
     padding-bottom: var(--space-8);
+  }
+
+  /* ── Testimonials (Agriculture/Turf only) ────────────────────── */
+  .testimonials-section {
+    padding: var(--space-8) 0 var(--space-24);
+  }
+
+  .testimonials-section__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .testimonials-section h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+    text-align: center;
   }
 
   /* ── Meet the Team (About Us only) ───────────────────────────── */
