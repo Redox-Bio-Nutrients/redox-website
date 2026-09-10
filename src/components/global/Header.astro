@@ -79,8 +79,53 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     <nav class="header__nav" aria-label="Primary">
       <ul class="header__nav-list">
         <li class="header__nav-chip" aria-hidden="true"></li>
-        {primaryNav.map((item) =>
-          item.children ? (
+        {primaryNav.map((item, i) =>
+          item.href && item.children ? (
+            // "Split" item — a real link (navigates on click/tap) that
+            // *also* carries a dropdown, unlike the plain-toggle
+            // pattern below. No <details> here: nesting a real <a>
+            // inside a <summary> is invalid HTML (two interactive
+            // controls, one swallowing the other's clicks). Instead a
+            // hidden checkbox + <label> (same pattern as the mobile
+            // hamburger toggle above) drives the dropdown on tap;
+            // desktop ignores the checkbox entirely and reveals it on
+            // hover/focus via the same CSS rule the plain-toggle items
+            // use, since this still carries the base .header__nav-item
+            // class.
+            <li class="header__nav-item header__nav-item--split">
+              <input
+                type="checkbox"
+                id={`nav-split-${i}`}
+                class="header__split-toggle-input"
+                aria-hidden="true"
+              />
+              <div class="header__split-row">
+                <a
+                  href={item.href}
+                  class:list={['header__nav-link', { 'header__nav-link--active': isItemActive(item) }]}
+                  aria-current={isItemActive(item) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+                <label for={`nav-split-${i}`} class="header__caret-toggle" aria-label={`Show ${item.label} menu`}>
+                  <span class="header__caret" aria-hidden="true"></span>
+                </label>
+              </div>
+              <ul class="header__subnav">
+                {item.children.map((child) => (
+                  <li>
+                    <a
+                      href={child.href}
+                      aria-current={isActive(child.href) ? 'page' : undefined}
+                      class:list={{ 'header__subnav-link--active': isActive(child.href) }}
+                    >
+                      {child.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ) : item.children ? (
             <li class="header__nav-item">
               <details class="header__subnav-details">
                 <summary
@@ -443,6 +488,41 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     color: var(--color-green-dark);
   }
 
+  /* ── Split item ("Products": a real link + a dropdown) ───────────
+   * See the markup comment above for why this isn't a <details> —
+   * the hidden checkbox + <label> pair below is the same toggle
+   * pattern the mobile hamburger (.header__toggle-input) already
+   * uses. .header__subnav's own display:none/block + positioning
+   * rules are all inherited unchanged from the plain-toggle pattern
+   * above; only the *trigger* differs. */
+  .header__split-toggle-input {
+    display: none;
+  }
+
+  .header__split-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .header__caret-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    margin: calc(-1 * var(--space-2));
+    cursor: pointer;
+    color: var(--color-text-secondary);
+  }
+
+  .header__split-toggle-input:checked ~ .header__split-row .header__caret {
+    transform: rotate(180deg);
+  }
+
+  .header__split-toggle-input:checked ~ .header__subnav {
+    display: block;
+  }
+
   .header__utility {
     display: flex;
     align-items: center;
@@ -585,6 +665,13 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
      * since the whole mobile nav is already its own stacked card. */
     .header__subnav-details summary.header__nav-link {
       display: flex;
+      justify-content: space-between;
+    }
+
+    /* Split item's row is a separate <div> (see markup comment), not
+     * the summary itself, but wants the same "label left, caret
+     * pushed to the trailing edge" full-width treatment. */
+    .header__split-row {
       justify-content: space-between;
     }
 
