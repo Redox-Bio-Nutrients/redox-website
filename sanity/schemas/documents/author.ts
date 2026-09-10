@@ -21,9 +21,20 @@
 //   a single-field edit on their own doc, not hunting for their name
 //   in a region's list. See region.ts / getRegion() in
 //   src/lib/queries/regions.ts.
+// - Office Staff: the `isOfficeStaff` checkbox (2026-09, added
+//   alongside the About Us page team section) — lists this person on
+//   /about-us via getOfficeStaff() in src/lib/queries/people.ts. Its
+//   own `officeOrderRank` mirrors the region roster's `orderRank`
+//   (same reasoning: name-sort scatters a CEO/leadership order that's
+//   supposed to read top-down, not alphabetically).
 // Add someone to the pool once with neither flag set, then check
 // either or both as needed — same person either way, never a
 // duplicate record.
+//
+// Office staff are added with name + title only, deliberately no
+// email/phone — those fields live in the 'region' fieldset and stay
+// hidden unless `region` is set, so there's no schema work needed to
+// keep them off an office-only person; just don't fill them in.
 
 import { defineField, defineType } from 'sanity'
 
@@ -34,6 +45,7 @@ export const author = defineType({
   fieldsets: [
     { name: 'blog', title: 'Blog Author', options: { collapsible: true } },
     { name: 'region', title: 'Regional Agronomist', options: { collapsible: true } },
+    { name: 'office', title: 'Office Staff', options: { collapsible: true } },
   ],
   fields: [
     defineField({
@@ -61,6 +73,24 @@ export const author = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
+    defineField({
+      name: 'isOfficeStaff',
+      title: 'Show on About Us Page',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Check to list this person in the team section on /about-us.',
+      fieldset: 'office',
+    }),
+    defineField({
+      name: 'officeOrderRank',
+      title: 'About Us Sort Order',
+      type: 'number',
+      initialValue: 100,
+      description:
+        'Lower numbers show first (e.g. leadership at 100, spacing everyone else out — 200, 300…). Ties fall back to alphabetical by name.',
+      fieldset: 'office',
+      hidden: ({ document }) => !document?.isOfficeStaff,
     }),
     defineField({
       name: 'isAuthor',
@@ -133,9 +163,20 @@ export const author = defineType({
     }),
   ],
   preview: {
-    select: { title: 'name', role: 'role', isAuthor: 'isAuthor', regionTitle: 'region.title', media: 'photo' },
-    prepare({ title, role, isAuthor, regionTitle }) {
-      const flags = [isAuthor && 'Author', regionTitle && `${regionTitle} Agronomist`].filter(Boolean)
+    select: {
+      title: 'name',
+      role: 'role',
+      isAuthor: 'isAuthor',
+      regionTitle: 'region.title',
+      isOfficeStaff: 'isOfficeStaff',
+      media: 'photo',
+    },
+    prepare({ title, role, isAuthor, regionTitle, isOfficeStaff }) {
+      const flags = [
+        isAuthor && 'Author',
+        regionTitle && `${regionTitle} Agronomist`,
+        isOfficeStaff && 'Office Staff',
+      ].filter(Boolean)
       return {
         title,
         subtitle: [role, flags.join(' · ') || null].filter(Boolean).join(' — ') || 'Not flagged for anything yet',

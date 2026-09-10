@@ -10,12 +10,22 @@
 // heroImage is optional per the schema: pages with one get a full-bleed
 // photo header (Homepage hero treatment); pages without just get a
 // plain title/subheading block.
+//
+// The About Us page (slug "about-us") additionally gets a "Meet the
+// Team" section appended after the body copy — office staff
+// (author.ts's isOfficeStaff flag) rendered with the same
+// EmployeeCard/EmployeeGrid used for a region's roster. Special-cased
+// by slug rather than a generic "team section" content-builder block:
+// there's exactly one page that needs this today, so a bespoke toggle
+// here is simpler than a new Sanity object type an editor would have
+// to know to add. Revisit if a second page needs the same thing.
 
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
-import { getAllPageSlugs, getPage } from '../lib/queries'
+import { getAllPageSlugs, getOfficeStaff, getPage } from '../lib/queries'
 import { urlFor } from '../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
+import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 
 export async function getStaticPaths() {
   const slugs = await getAllPageSlugs()
@@ -32,6 +42,8 @@ if (!page) {
 const heroImageUrl = page.heroImage
   ? urlFor(page.heroImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
+
+const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
 ---
 
 <BaseLayout title={page.title} seo={page.seo}>
@@ -75,13 +87,22 @@ const heroImageUrl = page.heroImage
   )}
 
   {page.body && page.body.length > 0 && (
-    <div class="body">
+    <div class:list={['body', { 'body--tight': officeStaff.length > 0 }]}>
       <PortableText
         value={page.body}
         components={portableTextComponents}
         onMissingComponent={onMissingPortableTextComponent}
       />
     </div>
+  )}
+
+  {officeStaff.length > 0 && (
+    <section class="team">
+      <div class="team__inner">
+        <h2>Meet the Team</h2>
+        <EmployeeGrid team={officeStaff} />
+      </div>
+    </section>
   )}
 </BaseLayout>
 
@@ -220,6 +241,13 @@ const heroImageUrl = page.heroImage
     font-size: var(--text-lg);
   }
 
+  /* A "Meet the Team" section follows — its own top padding already
+   * provides the gap, so the body's large closing padding here would
+   * just double it up. */
+  .body--tight {
+    padding-bottom: var(--space-8);
+  }
+
   .body :global(p) {
     max-width: 70ch;
     margin-bottom: var(--space-5);
@@ -238,6 +266,27 @@ const heroImageUrl = page.heroImage
   .body :global(a) {
     color: var(--color-green-dark);
     text-decoration: underline;
+  }
+
+  /* ── Meet the Team (About Us only) ───────────────────────────── */
+  .team {
+    padding: var(--space-8) 0 var(--space-24);
+  }
+
+  .team__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .team h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
   }
 
   @media (max-width: 767px) {
