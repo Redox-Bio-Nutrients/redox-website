@@ -1,0 +1,68 @@
+---
+// src/components/portableText/PortableTextCalloutBox.astro
+//
+// A highlighted aside embeddable anywhere blockContent is used (see
+// blockContent.ts's "calloutBox" object) — a lighter-weight cousin of
+// CalloutSection.astro (the product-page callout, which needs a
+// product color/background-pool/ag-turf-livery context this doesn't
+// have). Same leaf-radius corner language as EmployeeCard.astro/
+// CollectionShowcase.astro for consistency with the rest of the site.
+
+import type { Props as PortableTextProps } from 'astro-portabletext/types'
+
+interface CalloutBoxNode {
+  _type: 'calloutBox'
+  heading?: string
+  body: string
+  color?: string
+}
+
+type Props = PortableTextProps<CalloutBoxNode>
+
+const { node } = Astro.props
+---
+
+<div
+  class="pt-callout"
+  style={node.color ? `--callout-color: ${node.color}` : undefined}
+>
+  <span class="pt-callout__bar" aria-hidden="true"></span>
+  <div>
+    {node.heading && <p class="pt-callout__heading">{node.heading}</p>}
+    <p class="pt-callout__body">{node.body}</p>
+  </div>
+</div>
+
+<style>
+  .pt-callout {
+    max-width: var(--prose-width, 100%);
+    margin: var(--space-8) auto;
+    display: flex;
+    gap: var(--space-5);
+    background: var(--bg-surface);
+    border: var(--border-thin) solid var(--border-subtle);
+    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+    padding: var(--space-6) var(--space-8);
+  }
+
+  .pt-callout__bar {
+    flex-shrink: 0;
+    width: 3px;
+    border-radius: var(--radius-full);
+    background: var(--callout-color, var(--color-green));
+  }
+
+  .pt-callout__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-lg);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .pt-callout__body {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+</style>
