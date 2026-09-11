@@ -22,18 +22,49 @@ import type { Author } from '../../lib/types/sanity'
 
 interface Props {
   author: Author
+  /** Position within the grid (EmployeeGrid.astro's own map index) —
+   * drives the leaf-sprig's corner/size below. Not optional: every
+   * caller renders through EmployeeGrid, which always has an index to
+   * give. */
+  index: number
 }
 
-const { author } = Astro.props
+const { author, index } = Astro.props
 
 const photoUrl = author.photo
   ? urlFor(author.photo).width(480).height(600).fit('crop').auto('format').quality(85).url()
   : null
 
 const initial = author.name.trim().charAt(0).toUpperCase()
+
+// Leaf-sprig motif (same two-petal gradient bloom CalloutSection.astro/
+// AuthorBoxFooter.astro use, permanently visible at one fixed corner
+// each) — here every card gets one, but hidden at rest and revealed
+// only on hover (see the CSS below), so it reads as a small discovery
+// rather than permanent decoration. Only the card's own two *sharp*
+// corners (top-left/bottom-right, matching its border-radius) are in
+// play, so the sprig's point always sits flush in an actual corner.
+//
+// Driven by grid position, not a per-person random roll (an earlier
+// pass seeded this on author._id — replaced per Curtis's follow-up:
+// he wants neighbors in the same row to always visibly differ, which
+// independent per-card randomness can't promise, just makes likely).
+// Corner alternates tl/br by index parity — since that guarantees any
+// two *consecutive* indices differ, and any two cards "next to each
+// other" in the same row are always consecutive indices regardless of
+// the grid's column count (3/2/1 across breakpoints), this alone is
+// enough to guarantee no same-row neighbors share a corner at any
+// screen size, with no need to know the column count here. Size
+// cycles through 4 fixed steps the same way (period 4, so any two
+// consecutive indices always land on different sizes too) — offset
+// from the corner's own period-2 cycle so the two don't just repeat
+// the same combined pattern every 2 cards.
+const LEAF_SIZES = [0.6, 0.9, 1.2, 1.6]
+const leafCorner = index % 2 === 0 ? 'tl' : 'br'
+const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
 ---
 
-<div class="employee">
+<div class="employee" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
   <div class="employee__media">
     {photoUrl ? (
       <img
@@ -76,7 +107,9 @@ const initial = author.name.trim().charAt(0).toUpperCase()
      * a photo, not a banner. */
     aspect-ratio: 4 / 5;
     display: flex;
-    overflow: hidden;
+    /* No overflow:hidden here (moved to .employee__media below) — the
+     * occasional leaf sprig is allowed to spill past the card's own
+     * edge, same as CalloutSection's/AuthorBoxFooter's permanent ones. */
     /* Same asymmetric leaf-radius language as the callout/author-box
      * cards, scaled down to a roster-tile size. */
     border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
@@ -87,6 +120,11 @@ const initial = author.name.trim().charAt(0).toUpperCase()
   .employee__media {
     position: absolute;
     inset: 0;
+    overflow: hidden;
+    /* Clips the photo/fallback to the card's own rounded corners —
+     * carried here (not just on .employee) now that .employee itself
+     * doesn't clip, so the photo still reads as a rounded poster tile. */
+    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
   }
 
   .employee__photo {
@@ -184,5 +222,77 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 
   .employee__link:hover {
     text-decoration: underline;
+  }
+
+  /* ── Leaf sprig — hidden until hover ──────────────────────────────
+   * Same two-petal gradient bloom as CalloutSection.astro's (always
+   * top-right) and AuthorBoxFooter.astro's (always bottom-right), just
+   * parameterized here via data-leaf-corner (top-left or bottom-right
+   * — the card's own two *sharp* corners, matching its border-radius,
+   * so the sprig's point always sits flush in an actual corner rather
+   * than floating over a rounded one) + scaled by --leaf-scale (one of
+   * 4 discrete sizes, not a smooth range — deliberately chunkier,
+   * more noticeable variety card-to-card). Sits at opacity:0 at rest;
+   * revealed only on :hover, so it reads as a small discovery rather
+   * than permanent decoration — a light scale-in on top of the fade
+   * so it feels like it's growing in, not just appearing. */
+  .employee[data-leaf-corner]::before,
+  .employee[data-leaf-corner]::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    aspect-ratio: 1 / 2.1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .employee[data-leaf-corner]:hover::before {
+    opacity: 0.92;
+  }
+
+  .employee[data-leaf-corner]:hover::after {
+    opacity: 0.68;
+  }
+
+  .employee[data-leaf-corner]::before {
+    width: calc(clamp(28px, 24%, 64px) * var(--leaf-scale, 1));
+    background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
+  }
+
+  .employee[data-leaf-corner]::after {
+    width: calc(clamp(18px, 16%, 44px) * var(--leaf-scale, 1));
+    background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
+  }
+
+  .employee[data-leaf-corner='tl']::before,
+  .employee[data-leaf-corner='tl']::after {
+    top: 0;
+    left: 0;
+    border-radius: 0 100% 0 100%;
+    transform-origin: 0% 0%;
+  }
+  .employee[data-leaf-corner='tl']::before { transform: rotate(8deg) scale(0.6); }
+  .employee[data-leaf-corner='tl']::after { transform: rotate(-30deg) scale(0.6); }
+  .employee[data-leaf-corner='tl']:hover::before { transform: rotate(8deg) scale(1); }
+  .employee[data-leaf-corner='tl']:hover::after { transform: rotate(-30deg) scale(1); }
+
+  .employee[data-leaf-corner='br']::before,
+  .employee[data-leaf-corner='br']::after {
+    bottom: 0;
+    right: 0;
+    border-radius: 0 100% 0 100%;
+    transform-origin: 100% 100%;
+  }
+  .employee[data-leaf-corner='br']::before { transform: rotate(-8deg) scale(0.6); }
+  .employee[data-leaf-corner='br']::after { transform: rotate(30deg) scale(0.6); }
+  .employee[data-leaf-corner='br']:hover::before { transform: rotate(-8deg) scale(1); }
+  .employee[data-leaf-corner='br']:hover::after { transform: rotate(30deg) scale(1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .employee[data-leaf-corner]::before,
+    .employee[data-leaf-corner]::after {
+      transition: opacity 0.25s ease;
+    }
   }
 </style>

@@ -75,7 +75,7 @@ const testimonials =
 
 <BaseLayout title={page.title} seo={page.seo}>
   {heroImageUrl ? (
-    <header class="hero">
+    <header class="hero" data-header-theme="light">
       <img class="hero__bg" src={heroImageUrl} alt={page.heroImage?.alt ?? ''} loading="eager" />
       <div class="hero__overlay" aria-hidden="true"></div>
       <div class="hero__content">
@@ -172,7 +172,20 @@ const testimonials =
   /* ── Full-bleed hero variant (heroImage set) ─────────────────── */
   .hero {
     position: relative;
-    min-height: min(60vh, 560px);
+    /* Cancels <main>'s own padding-top (var(--header-space), set in
+     * BaseLayout.astro to clear the fixed header on every other page)
+     * so the photo extends up behind the nav instead of stopping
+     * below it — same trick ProductDetail.astro's hero and the
+     * Homepage hero already use. min-height grows by the same amount
+     * so the *visible* hero (below the nav) doesn't end up shorter
+     * than intended now that its box starts higher. */
+    margin-top: calc(-1 * var(--header-space));
+    /* Matches HeroSection.astro's height exactly (used by the
+     * Homepage/Technology page-builder, e.g. RAM Technology) — these
+     * two hero implementations are separate components (see
+     * redox-market-landing-pages memory for why) but should still
+     * read as the same hero treatment across the site. */
+    min-height: calc(min(85vh, 880px) + var(--header-space));
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -469,7 +482,7 @@ const testimonials =
 
   @media (max-width: 767px) {
     .hero {
-      min-height: 50vh;
+      min-height: calc(70vh + var(--header-space));
     }
 
     .hero__meta {
