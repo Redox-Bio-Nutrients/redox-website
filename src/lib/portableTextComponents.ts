@@ -34,6 +34,8 @@ import PortableTextImage from '../components/portableText/PortableTextImage.astr
 import PortableTextGallery from '../components/portableText/PortableTextGallery.astro'
 import PortableTextProductEmbed from '../components/portableText/PortableTextProductEmbed.astro'
 import PortableTextChart from '../components/portableText/PortableTextChart.astro'
+import PortableTextPullQuote from '../components/portableText/PortableTextPullQuote.astro'
+import PortableTextCalloutBox from '../components/portableText/PortableTextCalloutBox.astro'
 import PortableTextUnknownMark from '../components/portableText/PortableTextUnknownMark.astro'
 
 export const portableTextComponents = {
@@ -43,6 +45,8 @@ export const portableTextComponents = {
     imageGallery: PortableTextGallery,
     productEmbed: PortableTextProductEmbed,
     chartSection: PortableTextChart,
+    pullQuote: PortableTextPullQuote,
+    calloutBox: PortableTextCalloutBox,
   },
   // A handful of migrated blog posts have a span whose `marks` array
   // references a markDef _key missing from that block (confirmed via a

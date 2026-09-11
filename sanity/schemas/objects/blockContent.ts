@@ -95,6 +95,70 @@ export const blockContent = defineType({
     defineArrayMember({ type: 'chartSection' }),
     defineArrayMember({
       type: 'object',
+      name: 'pullQuote',
+      title: 'Pull Quote',
+      description: 'A large standalone quote pulled out for emphasis — not a customer testimonial (see the separate Testimonials pool for those), just a statement worth calling out.',
+      fields: [
+        {
+          name: 'quote',
+          title: 'Quote',
+          type: 'text',
+          rows: 3,
+          validation: (rule: any) => rule.required(),
+        },
+        {
+          name: 'attribution',
+          title: 'Attribution',
+          type: 'string',
+          description: 'Optional — e.g. a name, or leave blank for an unattributed statement.',
+        },
+      ],
+      preview: {
+        select: { quote: 'quote' },
+        prepare({ quote }: { quote?: string }) {
+          return { title: quote ? `“${quote.slice(0, 60)}${quote.length > 60 ? '…' : ''}”` : 'Pull Quote' }
+        },
+      },
+    }),
+    defineArrayMember({
+      type: 'object',
+      name: 'calloutBox',
+      title: 'Callout Box',
+      description: 'A highlighted box for a key point, stat, or aside — breaks up long-form copy.',
+      fields: [
+        {
+          name: 'heading',
+          title: 'Heading',
+          type: 'string',
+        },
+        {
+          name: 'body',
+          title: 'Body',
+          type: 'text',
+          rows: 3,
+          validation: (rule: any) => rule.required(),
+        },
+        {
+          name: 'color',
+          title: 'Accent Color',
+          type: 'string',
+          description: 'Optional hex color, e.g. #2E6B3E. Defaults to the brand green.',
+          validation: (rule: any) =>
+            rule
+              .regex(/^#([0-9a-fA-F]{6})$/, { name: 'hex color', invert: false })
+              .error('Must be a 6-digit hex color like #2E6B3E')
+              .optional(),
+        },
+      ],
+      preview: {
+        select: { heading: 'heading', body: 'body' },
+        prepare({ heading, body }: { heading?: string; body?: string }) {
+          return { title: heading || 'Callout Box', subtitle: body }
+        },
+      },
+    }),
+    defineArrayMember({
+      type: 'object',
       name: 'productEmbed',
       title: 'Product Card(s)',
       description: 'Feature one or more products inline, e.g. right where the post is talking about them.',
