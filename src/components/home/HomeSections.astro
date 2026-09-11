@@ -9,6 +9,8 @@ import type { HomeSection } from '../../lib/types/sanity'
 import HeroSection from './sections/HeroSection.astro'
 import HeroCarouselSection from './sections/HeroCarouselSection.astro'
 import ColumnSection from './sections/ColumnSection.astro'
+import StatsSection from './sections/StatsSection.astro'
+import CtaSection from './sections/CtaSection.astro'
 // Reused as-is from the product page-builder — their highlight colors
 // already fall back to brand green (var(--product-color, ...) / the
 // component's own default) when no product context sets
@@ -34,6 +36,10 @@ const { sections } = Astro.props
         return <HeroCarouselSection section={section} />
       case 'homeColumnSection':
         return <ColumnSection section={section} />
+      case 'homeStatsSection':
+        return <StatsSection section={section} />
+      case 'homeCtaSection':
+        return <CtaSection section={section} />
       case 'chartSection':
         // ChartSection has no built-in width constraint (product pages
         // supply one via .layout) — wrap it here since page-builder

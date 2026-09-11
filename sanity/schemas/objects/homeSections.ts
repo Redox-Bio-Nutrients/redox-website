@@ -156,6 +156,12 @@ export const homeColumnSection = defineType({
   type: 'object',
   fields: [
     defineField({
+      name: 'eyebrow',
+      title: 'Eyebrow',
+      type: 'string',
+      description: 'Optional small label shown above the heading, e.g. "THE TECHNOLOGY BEHIND EVERY REDOX SOLUTION".',
+    }),
+    defineField({
       name: 'heading',
       title: 'Section Heading',
       type: 'string',
@@ -270,6 +276,115 @@ export const homeColumnSection = defineType({
         title: title || 'Columns Section',
         subtitle: `${columns ?? 1} col — ${count} item${count === 1 ? '' : 's'}`,
       }
+    },
+  },
+})
+
+// ── Stats/features grid — a heading+body pair per item, no image or
+// link needed (unlike homeColumnSection's items) ──────────────────
+//
+// WHY its own type rather than reusing homeColumnSection: that type
+// caps at 3 columns (validation min(1).max(3)) and its items carry an
+// image/cta most stat-grid uses don't need. bulletSection was the
+// other candidate — its items are a flat array of plain strings, no
+// room for a bold heading + separate description per item, which is
+// exactly the shape a "More Than 30 Years of Innovation / Developing
+// plant-performance solutions since 1994." pairing needs.
+
+export const homeStatsSection = defineType({
+  name: 'homeStatsSection',
+  title: 'Stats / Features Grid',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Section Heading',
+      type: 'string',
+    }),
+    defineField({
+      name: 'body',
+      title: 'Intro Text',
+      type: 'text',
+      rows: 3,
+      description: 'Optional short paragraph shown under the heading, above the grid.',
+    }),
+    defineField({
+      name: 'items',
+      title: 'Stats',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'statItem',
+          title: 'Stat',
+          fields: [
+            defineField({
+              name: 'heading',
+              title: 'Heading',
+              type: 'string',
+              validation: (rule: any) => rule.required(),
+            }),
+            defineField({
+              name: 'body',
+              title: 'Body',
+              type: 'text',
+              rows: 2,
+            }),
+          ],
+          preview: {
+            select: { title: 'heading', subtitle: 'body' },
+          },
+        },
+      ],
+      validation: (rule) => rule.required().min(2).max(4),
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', items: 'items' },
+    prepare({ title, items }) {
+      const count = items?.length ?? 0
+      return { title: title || 'Stats / Features Grid', subtitle: `${count} stat${count === 1 ? '' : 's'}` }
+    },
+  },
+})
+
+// ── Final CTA banner — heading + body + up to 4 buttons ───────────
+//
+// WHY its own type: every other section caps at one cta. A closing
+// "here are the 3 ways to take the next step" banner (Find a Rep /
+// Contact Redox / About Us, say) needs several buttons side by side,
+// not one.
+
+export const homeCtaSection = defineType({
+  name: 'homeCtaSection',
+  title: 'CTA Banner',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+      validation: (rule: any) => rule.required(),
+    }),
+    defineField({
+      name: 'body',
+      title: 'Body',
+      type: 'text',
+      rows: 3,
+    }),
+    defineField({
+      name: 'buttons',
+      title: 'Buttons',
+      type: 'array',
+      of: [{ type: 'cta' }],
+      validation: (rule) => rule.required().min(1).max(4),
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', buttons: 'buttons' },
+    prepare({ title, buttons }) {
+      const count = buttons?.length ?? 0
+      return { title: title || 'CTA Banner', subtitle: `${count} button${count === 1 ? '' : 's'}` }
     },
   },
 })

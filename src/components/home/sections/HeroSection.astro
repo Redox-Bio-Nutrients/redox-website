@@ -9,14 +9,25 @@
 // fallback has its own built-in contrast and skips it.
 
 import { urlFor } from '../../../lib/sanity'
+import { buildTextureVars } from '../../../lib/texture'
 import type { HomeHeroSection } from '../../../lib/types/sanity'
 import PoolBackground from '../../ui/PoolBackground.astro'
+import ScrollIndicator from '../../ui/ScrollIndicator.astro'
+import '../../../styles/texture-surface.css'
 
 interface Props {
   section: HomeHeroSection
 }
 
 const { section } = Astro.props
+// Same grain + hue-shifted-bloom + diagonal-sweep treatment the
+// product callout boxes use (src/lib/texture.ts, extracted from
+// CalloutSection.astro) — seeded per-section so it varies page to
+// page but stays put on rebuild. No per-page product color here, so
+// it's anchored to the fixed brand green hex (light-theme
+// --color-green — texture stays put across the theme toggle, same as
+// callouts' own --product-color never theme-swaps).
+const textureVars = buildTextureVars(section._key, '#3A7D50')
 // Same {url, lqip} shape PoolBackground/CalloutSection already use —
 // see HOME_SECTIONS_FRAGMENT's "pool" projection in fragments.ts.
 const pool = section.useBackgroundPool
@@ -50,9 +61,10 @@ const centered = section.textAlign === 'center'
   ) : imageUrl ? (
     <img class="hero__bg" src={imageUrl} alt={section.backgroundImage?.alt ?? ''} loading="eager" />
   ) : (
-    <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
+    <div class="hero__bg texture-fill" style={textureVars} aria-hidden="true"></div>
   )}
   {hasMedia && <div class="hero__overlay" aria-hidden="true"></div>}
+  {hasMedia && <div class="hero__texture texture-wash" style={textureVars} aria-hidden="true"></div>}
 
   <div class="hero__content">
     <h1 class="hero__title">{section.heading}</h1>
@@ -71,6 +83,8 @@ const centered = section.textAlign === 'center'
       )}
     </div>
   </div>
+
+  <ScrollIndicator />
 </header>
 
 <style>
@@ -96,20 +110,33 @@ const centered = section.textAlign === 'center'
     object-fit: cover;
   }
 
-  .hero__bg--gradient {
-    background:
-      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.16), transparent 60%),
-      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.35), transparent 55%),
-      var(--color-green-dark);
-  }
+  /* No-media fallback now uses the shared .texture-fill class
+   * (src/styles/texture-surface.css) for the same grain + bloom +
+   * sweep treatment the product callout boxes use, instead of a flat
+   * two-radial gradient — see the frontmatter's buildTextureVars()
+   * call. This div still needs .hero__bg's own inset/cover rules
+   * above; .texture-fill only supplies the `background` itself. */
 
   /* Flat dark wash over any uploaded image/video so centered text
    * stays legible regardless of what's underneath. The gradient
-   * fallback already has its own built-in contrast and skips this. */
+   * fallback (.texture-fill above) already has its own built-in
+   * contrast and skips this. */
   .hero__overlay {
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 0.42);
+  }
+
+  /* Brand-colored grain/bloom texture, layered *above* the dark wash
+   * so a real photo still gets some of the same "flair" the gradient
+   * fallback and the product callouts have, without losing the
+   * legibility the flat dark wash provides underneath it. Lower
+   * opacity than .callout's own use of this class — here it's a
+   * subtle finish over a photo, not the entire visible surface. */
+  .hero__texture {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
   }
 
   .hero__content {

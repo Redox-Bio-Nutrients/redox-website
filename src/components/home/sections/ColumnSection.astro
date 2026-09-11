@@ -48,6 +48,7 @@ const pool =
   )}
 
   <div class="columns__inner">
+    {section.eyebrow && <p class="columns__eyebrow">{section.eyebrow}</p>}
     {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
     <div class="columns__grid" style={`--column-count: ${section.columns}`}>
       {section.items.map((item) => (
@@ -122,6 +123,15 @@ const pool =
     padding: var(--space-24) var(--space-6);
   }
 
+  .columns__eyebrow {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-green);
+    margin-bottom: var(--space-3);
+  }
+
   .columns__heading {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
@@ -130,6 +140,13 @@ const pool =
     letter-spacing: -0.01em;
     color: var(--color-text-primary);
     margin-bottom: var(--space-10);
+  }
+
+  .columns--bg-color .columns__eyebrow,
+  .columns--bg-image .columns__eyebrow,
+  .columns--bg-pool .columns__eyebrow {
+    color: var(--color-white);
+    opacity: 0.85;
   }
 
   .columns--bg-color .columns__heading,

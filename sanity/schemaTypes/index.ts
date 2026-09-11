@@ -22,6 +22,8 @@ import {
   homeHeroSection,
   homeHeroCarouselSection,
   homeColumnSection,
+  homeStatsSection,
+  homeCtaSection,
 } from '../schemas/objects/homeSections'
 
 // Documents
@@ -58,6 +60,8 @@ export const schemaTypes = [
   homeHeroSection,
   homeHeroCarouselSection,
   homeColumnSection,
+  homeStatsSection,
+  homeCtaSection,
   // catalog
   product,
   technology,

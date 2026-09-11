@@ -1,0 +1,117 @@
+---
+// src/components/ui/ScrollIndicator.astro
+//
+// Small bouncing chevron pinned to the bottom-center of a full-bleed
+// hero (HeroSection/HeroCarouselSection/[slug].astro's `.hero` — every
+// one of them caps at min(85vh, 880px), so on shorter/laptop-height
+// windows they read as filling the whole screen with nothing hinting
+// there's more below. A real, focusable button rather than a purely
+// decorative arrow — click (or Enter/Space) smooth-scrolls to
+// whatever section follows the hero, no id wiring needed per page.
+//
+// Usage: drop `<ScrollIndicator />` as the last child inside the hero
+// element (it's absolutely positioned, so placement in the DOM only
+// matters for stacking/focus order). The parent needs
+// `position: relative` — every hero that uses this already has it.
+//
+// `bottomOffset` overrides the default resting spot — the Hero
+// Carousel already has its own dot pagination sitting at the default
+// offset (bottom: var(--space-8)), so it passes a larger one to sit
+// above the dots instead of stacking on top of them.
+
+interface Props {
+  bottomOffset?: string
+  mobileBottomOffset?: string
+}
+
+const { bottomOffset = 'var(--space-8)', mobileBottomOffset = 'var(--space-5)' } = Astro.props
+---
+
+<button
+  type="button"
+  class="scroll-indicator"
+  aria-label="Scroll to content"
+  style={`--scroll-indicator-bottom: ${bottomOffset}; --scroll-indicator-bottom-mobile: ${mobileBottomOffset}`}
+>
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 9L12 16L20 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+</button>
+
+<style>
+  .scroll-indicator {
+    position: absolute;
+    left: 50%;
+    bottom: var(--scroll-indicator-bottom, var(--space-8));
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-10);
+    height: var(--space-10);
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 0.5);
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.08);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--color-white);
+    cursor: pointer;
+    z-index: 1;
+    animation: scroll-indicator-bounce 2.2s ease-in-out infinite;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .scroll-indicator:hover,
+  .scroll-indicator:focus-visible {
+    background: rgb(255 255 255 / 0.2);
+    border-color: rgb(255 255 255 / 0.8);
+  }
+
+  .scroll-indicator svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @keyframes scroll-indicator-bounce {
+    0%, 100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(5px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-indicator {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .scroll-indicator {
+      bottom: var(--scroll-indicator-bottom-mobile, var(--space-5));
+    }
+  }
+</style>
+
+<script>
+  // Scrolls to whatever section immediately follows this indicator's
+  // own hero — works for every page that uses it with no per-page id
+  // wiring. Delegated + guarded with a data flag so multiple
+  // ScrollIndicator instances on one page (shouldn't normally happen,
+  // but the Hero Carousel and a Hero can in principle both render one
+  // if composed oddly) don't each attach duplicate listeners.
+  document.querySelectorAll<HTMLButtonElement>('.scroll-indicator:not([data-wired])').forEach((button) => {
+    button.dataset.wired = 'true'
+    button.addEventListener('click', () => {
+      // Every hero variant this renders inside (Hero/Hero Carousel/
+      // [slug].astro's page hero) sets data-header-theme="light" on
+      // its own root element regardless of tag name (header/div) —
+      // reuse that existing marker instead of a tag-name selector.
+      const hero = button.closest('[data-header-theme]')
+      const next = hero?.nextElementSibling
+      next?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  })
+</script>

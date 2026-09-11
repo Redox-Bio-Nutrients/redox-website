@@ -125,6 +125,8 @@ export function blockContentField(fieldName: string): string {
 export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   _type,
   _key,
+  // homeColumnSection only — a small uppercase label over the heading.
+  eyebrow,
   heading,
   subheading,
   "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
@@ -145,13 +147,16 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   interval,
   columns,
   // homeColumnSection's items are objects (image/heading/body/cta);
-  // bulletSection's items are a flat array of plain strings — same
-  // field name, incompatible shapes, so branch on the section's own
-  // _type rather than projecting both the same way (which silently
+  // bulletSection's items are a flat array of plain strings;
+  // homeStatsSection's items are a plainer object (heading/body only,
+  // body a plain string not blockContent) — three incompatible
+  // shapes under the same field name, so branch on the section's own
+  // _type rather than projecting all the same way (which silently
   // nulls out bulletSection's strings, since a string has no
   // sub-fields to select).
   "items": select(
     _type == "bulletSection" => items,
+    _type == "homeStatsSection" => items[]{ _key, heading, body },
     items[]{
       _key,
       "image": image ${IMAGE_FRAGMENT},
@@ -160,6 +165,9 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
       cta
     }
   ),
+  // homeCtaSection only — a flat array of cta objects (label/href/
+  // external), no dereferencing needed, so a bare passthrough is fine.
+  buttons,
   backgroundType,
   backgroundColor,
   // Shared "pool" background — same shared background-imagery library
@@ -180,8 +188,25 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   unit,
   rows,
   footnote,
-  // calloutSection fields
-  ${blockContentField('body')},
+  // calloutSection/homeStatsSection/homeCtaSection's top-level "body" —
+  // homeStatsSection's and homeCtaSection's are plain strings (a
+  // text field in both schemas), every other section's is
+  // blockContent (an array of blocks); same incompatible-shapes-
+  // under-one-key situation as "items" above, same fix. The default
+  // branch inlines blockContentField()'s own expansion (can't reuse
+  // the helper directly here — it returns a complete "body": ...
+  // key/value pair, not a bare value usable inside select()'s
+  // branches).
+  "body": select(
+    _type == "homeStatsSection" => body,
+    _type == "homeCtaSection" => body,
+    body[]{
+      ...,
+      _type == "productEmbed" => {
+        "products": products[]-> ${PRODUCT_CARD_FRAGMENT}
+      }
+    }
+  ),
   tone,
   color,
   accentColor
