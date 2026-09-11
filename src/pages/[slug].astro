@@ -172,7 +172,15 @@ const testimonials =
   /* ── Full-bleed hero variant (heroImage set) ─────────────────── */
   .hero {
     position: relative;
-    min-height: min(60vh, 560px);
+    /* Cancels <main>'s own padding-top (var(--header-space), set in
+     * BaseLayout.astro to clear the fixed header on every other page)
+     * so the photo extends up behind the nav instead of stopping
+     * below it — same trick ProductDetail.astro's hero and the
+     * Homepage hero already use. min-height grows by the same amount
+     * so the *visible* hero (below the nav) doesn't end up shorter
+     * than intended now that its box starts higher. */
+    margin-top: calc(-1 * var(--header-space));
+    min-height: calc(min(60vh, 560px) + var(--header-space));
     display: flex;
     align-items: center;
     overflow: hidden;
