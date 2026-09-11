@@ -222,6 +222,18 @@ export interface Author {
   region?: { title: string; slug: string }
 }
 
+/** A customer/partner quote — a shared pool reused across whichever
+ * pages want a testimonials section (see testimonial.ts's WHY). */
+export interface Testimonial {
+  _id: string
+  quote: string
+  name: string
+  role?: string
+  company?: string
+  avatar?: SanityImage
+  markets: Market[]
+}
+
 export interface BlogPostCard {
   _id: string
   title: string
