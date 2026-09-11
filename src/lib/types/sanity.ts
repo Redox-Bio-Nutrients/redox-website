@@ -380,6 +380,7 @@ export type SectionBackgroundType = 'none' | 'color' | 'image' | 'pool'
 export interface HomeColumnSection {
   _type: 'homeColumnSection'
   _key: string
+  eyebrow?: string
   heading?: string
   columns: 1 | 2 | 3
   items: ColumnItem[]
@@ -390,10 +391,34 @@ export interface HomeColumnSection {
   pool?: SanityImage[]
 }
 
+export interface StatItem {
+  _key: string
+  heading: string
+  body?: string
+}
+
+export interface HomeStatsSection {
+  _type: 'homeStatsSection'
+  _key: string
+  heading?: string
+  body?: string
+  items: StatItem[]
+}
+
+export interface HomeCtaSection {
+  _type: 'homeCtaSection'
+  _key: string
+  heading: string
+  body?: string
+  buttons: Cta[]
+}
+
 export type HomeSection =
   | HomeHeroSection
   | HomeHeroCarouselSection
   | HomeColumnSection
+  | HomeStatsSection
+  | HomeCtaSection
   | ChartSection
   | CalloutSection
   | BulletSection

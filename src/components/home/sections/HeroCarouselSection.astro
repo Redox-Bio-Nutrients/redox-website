@@ -11,7 +11,10 @@
 // single hero's heading is.
 
 import { urlFor } from '../../../lib/sanity'
+import { buildTextureVars } from '../../../lib/texture'
 import type { HomeHeroCarouselSection } from '../../../lib/types/sanity'
+import ScrollIndicator from '../../ui/ScrollIndicator.astro'
+import '../../../styles/texture-surface.css'
 
 interface Props {
   section: HomeHeroCarouselSection
@@ -31,6 +34,11 @@ const interval = section.interval ?? 6
         : null
       const videoUrl = slide.backgroundVideoUrl ?? null
       const hasMedia = Boolean(videoUrl || imageUrl)
+      // Seeded per-slide (not per-section) — same reasoning as
+      // HeroSection.astro's own use of this, but each slide is
+      // visually its own hero, so each gets its own bloom layout
+      // rather than all slides repeating one.
+      const textureVars = buildTextureVars(slide._key, '#3A7D50')
       return (
         <div class:list={['hero-carousel__slide', { 'is-active': i === 0 }]} data-index={i}>
           {videoUrl ? (
@@ -51,9 +59,10 @@ const interval = section.interval ?? 6
               loading={i === 0 ? 'eager' : 'lazy'}
             />
           ) : (
-            <div class="hero-carousel__bg hero-carousel__bg--gradient" aria-hidden="true"></div>
+            <div class="hero-carousel__bg texture-fill" style={textureVars} aria-hidden="true"></div>
           )}
           {hasMedia && <div class="hero-carousel__overlay" aria-hidden="true"></div>}
+          {hasMedia && <div class="hero-carousel__texture texture-wash" style={textureVars} aria-hidden="true"></div>}
 
           <div class="hero-carousel__content">
             <h2 class="hero-carousel__title">{slide.heading}</h2>
@@ -95,6 +104,8 @@ const interval = section.interval ?? 6
       </div>
     </>
   )}
+
+  <ScrollIndicator bottomOffset="var(--space-16)" mobileBottomOffset="var(--space-12)" />
 </div>
 
 <script>
@@ -220,17 +231,22 @@ const interval = section.interval ?? 6
     object-fit: cover;
   }
 
-  .hero-carousel__bg--gradient {
-    background:
-      radial-gradient(120% 90% at 85% 10%, rgb(255 255 255 / 0.16), transparent 60%),
-      radial-gradient(100% 120% at 10% 100%, rgb(0 0 0 / 0.35), transparent 55%),
-      var(--color-green-dark);
-  }
+  /* No-media fallback uses the shared .texture-fill class
+   * (src/styles/texture-surface.css) — see HeroSection.astro's own
+   * use of this for the fuller reasoning. */
 
   .hero-carousel__overlay {
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 0.42);
+  }
+
+  /* Brand-colored grain/bloom texture over the dark wash — same
+   * .texture-wash class HeroSection.astro's photo case uses. */
+  .hero-carousel__texture {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
   }
 
   .hero-carousel__content {
