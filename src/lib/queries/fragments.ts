@@ -247,3 +247,13 @@ export const AUTHOR_FRAGMENT = /* groq */ `{
   zipPrefixes,
   "region": region->{ title, "slug": slug.current }
 }`
+
+export const TESTIMONIAL_FRAGMENT = /* groq */ `{
+  _id,
+  quote,
+  name,
+  role,
+  company,
+  "avatar": avatar ${IMAGE_FRAGMENT},
+  markets
+}`

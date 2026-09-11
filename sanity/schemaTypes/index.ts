@@ -32,6 +32,7 @@ import { blogPost } from '../schemas/documents/blogPost'
 import { category } from '../schemas/documents/category'
 import { collection } from '../schemas/documents/collection'
 import { author } from '../schemas/documents/author'
+import { testimonial } from '../schemas/documents/testimonial'
 import { podcastEpisode } from '../schemas/documents/podcastEpisode'
 import { universityResource } from '../schemas/documents/universityResource'
 import { page } from '../schemas/documents/page'
@@ -67,6 +68,7 @@ export const schemaTypes = [
   blogPost,
   category,
   author,
+  testimonial,
   podcastEpisode,
   // university
   universityResource,

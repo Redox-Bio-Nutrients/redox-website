@@ -13,10 +13,12 @@
 // plain title/subheading block.
 //
 // The About Us page (slug "about-us") additionally gets a "Meet the
-// Team" section appended after the body copy — office staff
-// (author.ts's isOfficeStaff flag) rendered with the same
-// EmployeeCard/EmployeeGrid used for a region's roster. Special-cased
-// by slug rather than a generic "team section" content-builder block:
+// Team" section appended after the body copy — the office staff pool
+// (author.ts's isOfficeStaff flag) as an "HQ" group, followed by each
+// Region's own agronomist roster (getAllRegionsWithTeams() — the same
+// query the old standalone /regions page used) as its own labeled
+// group. Same EmployeeCard/EmployeeGrid throughout. Special-cased by
+// slug rather than a generic "team section" content-builder block:
 // there's exactly one page that needs this today, so a bespoke toggle
 // here is simpler than a new Sanity object type an editor would have
 // to know to add.
@@ -31,11 +33,19 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
-import { getAllCollections, getAllPageSlugs, getOfficeStaff, getPage } from '../lib/queries'
+import {
+  getAllCollections,
+  getAllPageSlugs,
+  getAllRegionsWithTeams,
+  getOfficeStaff,
+  getPage,
+  getTestimonialsByMarket,
+} from '../lib/queries'
 import { urlFor } from '../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 import CollectionShowcase from '../components/products/CollectionShowcase.astro'
+import TestimonialGrid from '../components/testimonials/TestimonialGrid.astro'
 
 export async function getStaticPaths() {
   const slugs = await getAllPageSlugs()
@@ -54,10 +64,13 @@ const heroImageUrl = page.heroImage
   : null
 
 const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
+const regionTeams = slug === 'about-us' ? await getAllRegionsWithTeams() : []
 
 const marketCatalog =
   slug === 'agriculture' ? '/agriculture/products' : slug === 'turf' ? '/turf/products' : null
 const collections = slug === 'agriculture' ? await getAllCollections() : []
+const testimonials =
+  slug === 'agriculture' || slug === 'turf' ? await getTestimonialsByMarket(slug) : []
 ---
 
 <BaseLayout title={page.title} seo={page.seo}>
@@ -101,7 +114,7 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
   )}
 
   {page.body && page.body.length > 0 && (
-    <div class:list={['body', { 'body--tight': officeStaff.length > 0 || marketCatalog !== null }]}>
+    <div class:list={['body', { 'body--tight': officeStaff.length > 0 || regionTeams.length > 0 || marketCatalog !== null || testimonials.length > 0 }]}>
       <PortableText
         value={page.body}
         components={portableTextComponents}
@@ -110,11 +123,35 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     </div>
   )}
 
-  {officeStaff.length > 0 && (
+  {testimonials.length > 0 && (
+    <section class="testimonials-section">
+      <div class="testimonials-section__inner">
+        <h2>{slug === 'turf' ? 'What Turf Professionals Are Saying' : 'What Growers Are Saying'}</h2>
+        <TestimonialGrid testimonials={testimonials} />
+      </div>
+    </section>
+  )}
+
+  {(officeStaff.length > 0 || regionTeams.length > 0) && (
     <section class="team">
       <div class="team__inner">
         <h2>Meet the Team</h2>
-        <EmployeeGrid team={officeStaff} />
+
+        {officeStaff.length > 0 && (
+          <div class="team__group">
+            <h3 class="team__group-heading">HQ</h3>
+            <hr class="team__group-rule" />
+            <EmployeeGrid team={officeStaff} />
+          </div>
+        )}
+
+        {regionTeams.map((region) => (
+          <div class="team__group">
+            <h3 class="team__group-heading">{region.title} Agronomists</h3>
+            <hr class="team__group-rule" />
+            <EmployeeGrid team={region.team ?? []} emptyMessage={`No ${region.title} agronomists assigned yet.`} />
+          </div>
+        ))}
       </div>
     </section>
   )}
@@ -161,12 +198,13 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     width: min(var(--max-width-2xl), 100%);
     margin: 0 auto;
     padding: var(--space-16) var(--space-8);
+    text-align: center;
   }
 
   .hero__title {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
-    font-size: var(--text-display-sm);
+    font-size: var(--text-display);
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
     color: var(--color-white);
@@ -174,14 +212,15 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
 
   .hero__meta {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-8);
+    gap: var(--space-6);
     margin-top: var(--space-6);
   }
 
   .hero__subheading {
     max-width: 44ch;
+    margin: 0 auto;
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
     color: rgb(255 255 255 / 0.9);
@@ -260,21 +299,35 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
 
   /* ── Body prose ───────────────────────────────────────────────── */
   .body {
+    --prose-width: 54rem;
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-8) var(--space-6) var(--space-32);
     font-size: var(--text-lg);
   }
 
-  /* A "Meet the Team" section follows — its own top padding already
-   * provides the gap, so the body's large closing padding here would
-   * just double it up. */
-  .body--tight {
-    padding-bottom: var(--space-8);
+  /* Readable measure, centered within the wider .body box rather than
+   * pinned to its left edge — same pattern (and same reasoning) as
+   * BlogPostDetail.astro's prose column: without the auto margins
+   * here, a narrower max-width just collapses to the block's start
+   * edge, leaving prose stranded in a narrow left-hand column with a
+   * big empty gap on the right instead of centered like everything
+   * else on the page. A fixed --prose-width rather than `ch` keeps
+   * every block type's left/right edges pixel-identical regardless of
+   * its own font size (h2 renders larger than p; under `ch` — a
+   * font-relative unit — that alone would have given each a different
+   * actual pixel width and a visibly mismatched left edge). Covers
+   * every block type Portable Text can hand back, not just p. */
+  .body :global(p),
+  .body :global(h2),
+  .body :global(ul),
+  .body :global(ol) {
+    max-width: var(--prose-width);
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .body :global(p) {
-    max-width: 70ch;
     margin-bottom: var(--space-5);
     line-height: var(--leading-relaxed);
     color: var(--color-text-secondary);
@@ -285,7 +338,24 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     font-weight: var(--font-normal);
     font-size: var(--text-2xl);
     color: var(--color-text-primary);
-    margin: var(--space-10) 0 var(--space-4);
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-4);
+  }
+
+  .body :global(ul),
+  .body :global(ol) {
+    margin-bottom: var(--space-5);
+    padding-left: var(--space-5);
+  }
+
+  .body :global(li) {
+    margin-bottom: var(--space-2);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .body :global(li)::marker {
+    color: var(--color-green);
   }
 
   .body :global(a) {
@@ -298,6 +368,28 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
    * padding here would just double it up. */
   .body--tight {
     padding-bottom: var(--space-8);
+  }
+
+  /* ── Testimonials (Agriculture/Turf only) ────────────────────── */
+  .testimonials-section {
+    padding: var(--space-8) 0 var(--space-24);
+  }
+
+  .testimonials-section__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .testimonials-section h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+    text-align: center;
   }
 
   /* ── Meet the Team (About Us only) ───────────────────────────── */
@@ -319,6 +411,30 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     letter-spacing: -0.01em;
     color: var(--color-text-primary);
     margin-bottom: var(--space-10);
+  }
+
+  /* HQ, then one group per Region (e.g. "West Agronomists") — each its
+   * own heading + rule, same divider language GroupedRegionRoster.astro
+   * used on the old standalone /regions page. */
+  .team__group {
+    margin-bottom: var(--space-16);
+  }
+
+  .team__group:last-child {
+    margin-bottom: 0;
+  }
+
+  .team__group-heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+  }
+
+  .team__group-rule {
+    margin: var(--space-4) 0 var(--space-8);
+    border: none;
+    border-top: 2px solid var(--color-green);
   }
 
   /* ── Performance System showcase + CTA (Agriculture/Turf only) ── */
@@ -357,8 +473,6 @@ const collections = slug === 'agriculture' ? await getAllCollections() : []
     }
 
     .hero__meta {
-      flex-direction: column;
-      align-items: flex-start;
       gap: var(--space-5);
     }
 
