@@ -18,7 +18,7 @@
 // person, no separate "mode" needed here.
 
 import { urlFor } from '../../lib/sanity'
-import { randomBetween, randomChoice, seededRandom } from '../../lib/seededRandom'
+import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { Author } from '../../lib/types/sanity'
 
 interface Props {
@@ -34,19 +34,24 @@ const photoUrl = author.photo
 const initial = author.name.trim().charAt(0).toUpperCase()
 
 // Leaf-sprig motif (same two-petal gradient bloom CalloutSection.astro/
-// AuthorBoxFooter.astro use, permanently, at one fixed corner each) —
-// here it's occasional and varied instead: seeded on the person's own
-// _id so a given card's roll (whether it gets one at all, which
-// corner, how big) stays the same across rebuilds rather than
-// reshuffling every redeploy, but no two people land on an identical
-// look. ~40% of cards get one.
+// AuthorBoxFooter.astro use, permanently visible at one fixed corner
+// each) — here every card gets one, but hidden at rest and revealed
+// only on hover (see the CSS below), so it reads as a small discovery
+// rather than permanent decoration. Seeded on the person's own _id so
+// a given card's roll (which of the two sharp corners, which of the 4
+// sizes) stays the same across rebuilds rather than reshuffling every
+// redeploy, but no two people land on an identical look. Only the
+// card's own two *sharp* corners (top-left/bottom-right, matching its
+// border-radius) are in play — unlike the first pass at this, which
+// also allowed the rounded corners for a deliberate spill-over look;
+// dropped per Curtis's follow-up ask, so the tucked-in-a-point look is
+// what hover always reveals now.
 const leafRng = seededRandom(author._id)
-const hasLeaf = leafRng() < 0.4
-const leafCorner = hasLeaf ? randomChoice(leafRng, ['tl', 'tr', 'br', 'bl'] as const) : null
-const leafScale = hasLeaf ? randomBetween(leafRng, 0.7, 1.5) : 1
+const leafCorner = randomChoice(leafRng, ['tl', 'br'] as const)
+const leafScale = randomChoice(leafRng, [0.6, 0.9, 1.2, 1.6])
 ---
 
-<div class="employee" data-leaf-corner={leafCorner} style={hasLeaf ? `--leaf-scale: ${leafScale.toFixed(2)}` : undefined}>
+<div class="employee" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
   <div class="employee__media">
     {photoUrl ? (
       <img
@@ -206,38 +211,47 @@ const leafScale = hasLeaf ? randomBetween(leafRng, 0.7, 1.5) : 1
     text-decoration: underline;
   }
 
-  /* ── Leaf sprig (occasional, see the frontmatter's leafRng) ──────
+  /* ── Leaf sprig — hidden until hover ──────────────────────────────
    * Same two-petal gradient bloom as CalloutSection.astro's (always
    * top-right) and AuthorBoxFooter.astro's (always bottom-right), just
-   * parameterized across all four corners here via data-leaf-corner +
-   * scaled by --leaf-scale instead of being pinned to one. Each corner
-   * pair below only sets what differs (position + transform-origin +
-   * which diagonal is sharp); size/gradient/opacity are shared. */
+   * parameterized here via data-leaf-corner (top-left or bottom-right
+   * — the card's own two *sharp* corners, matching its border-radius,
+   * so the sprig's point always sits flush in an actual corner rather
+   * than floating over a rounded one) + scaled by --leaf-scale (one of
+   * 4 discrete sizes, not a smooth range — deliberately chunkier,
+   * more noticeable variety card-to-card). Sits at opacity:0 at rest;
+   * revealed only on :hover, so it reads as a small discovery rather
+   * than permanent decoration — a light scale-in on top of the fade
+   * so it feels like it's growing in, not just appearing. */
   .employee[data-leaf-corner]::before,
   .employee[data-leaf-corner]::after {
     content: '';
     position: absolute;
     z-index: 2;
     aspect-ratio: 1 / 2.1;
+    opacity: 0;
     pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .employee[data-leaf-corner]:hover::before {
+    opacity: 0.92;
+  }
+
+  .employee[data-leaf-corner]:hover::after {
+    opacity: 0.68;
   }
 
   .employee[data-leaf-corner]::before {
     width: calc(clamp(28px, 24%, 64px) * var(--leaf-scale, 1));
     background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
-    opacity: 0.92;
   }
 
   .employee[data-leaf-corner]::after {
     width: calc(clamp(18px, 16%, 44px) * var(--leaf-scale, 1));
     background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
-    opacity: 0.68;
   }
 
-  /* Sharp corners land on the TL/BR diagonal — matches the card's own
-   * sharp corners (border-radius: 0 ... 0 ...), so a top-left or
-   * bottom-right sprig's point sits flush in an actual sharp corner
-   * instead of floating over a rounded one. */
   .employee[data-leaf-corner='tl']::before,
   .employee[data-leaf-corner='tl']::after {
     top: 0;
@@ -245,8 +259,10 @@ const leafScale = hasLeaf ? randomBetween(leafRng, 0.7, 1.5) : 1
     border-radius: 0 100% 0 100%;
     transform-origin: 0% 0%;
   }
-  .employee[data-leaf-corner='tl']::before { transform: rotate(8deg); }
-  .employee[data-leaf-corner='tl']::after { transform: rotate(-30deg); }
+  .employee[data-leaf-corner='tl']::before { transform: rotate(8deg) scale(0.6); }
+  .employee[data-leaf-corner='tl']::after { transform: rotate(-30deg) scale(0.6); }
+  .employee[data-leaf-corner='tl']:hover::before { transform: rotate(8deg) scale(1); }
+  .employee[data-leaf-corner='tl']:hover::after { transform: rotate(-30deg) scale(1); }
 
   .employee[data-leaf-corner='br']::before,
   .employee[data-leaf-corner='br']::after {
@@ -255,31 +271,15 @@ const leafScale = hasLeaf ? randomBetween(leafRng, 0.7, 1.5) : 1
     border-radius: 0 100% 0 100%;
     transform-origin: 100% 100%;
   }
-  .employee[data-leaf-corner='br']::before { transform: rotate(-8deg); }
-  .employee[data-leaf-corner='br']::after { transform: rotate(30deg); }
+  .employee[data-leaf-corner='br']::before { transform: rotate(-8deg) scale(0.6); }
+  .employee[data-leaf-corner='br']::after { transform: rotate(30deg) scale(0.6); }
+  .employee[data-leaf-corner='br']:hover::before { transform: rotate(-8deg) scale(1); }
+  .employee[data-leaf-corner='br']:hover::after { transform: rotate(30deg) scale(1); }
 
-  /* Sharp corners land on the TR/BL diagonal instead — the card's own
-   * *rounded* corners, so these two spill visibly past the curve
-   * rather than nesting into a point. Deliberate: about half the
-   * possible corners reading as an organic overflow rather than a
-   * perfectly tucked-in accent is more "fun," not a bug. */
-  .employee[data-leaf-corner='tr']::before,
-  .employee[data-leaf-corner='tr']::after {
-    top: 0;
-    right: 0;
-    border-radius: 100% 0 100% 0;
-    transform-origin: 100% 0%;
+  @media (prefers-reduced-motion: reduce) {
+    .employee[data-leaf-corner]::before,
+    .employee[data-leaf-corner]::after {
+      transition: opacity 0.25s ease;
+    }
   }
-  .employee[data-leaf-corner='tr']::before { transform: rotate(-8deg); }
-  .employee[data-leaf-corner='tr']::after { transform: rotate(30deg); }
-
-  .employee[data-leaf-corner='bl']::before,
-  .employee[data-leaf-corner='bl']::after {
-    bottom: 0;
-    left: 0;
-    border-radius: 100% 0 100% 0;
-    transform-origin: 0% 100%;
-  }
-  .employee[data-leaf-corner='bl']::before { transform: rotate(8deg); }
-  .employee[data-leaf-corner='bl']::after { transform: rotate(-30deg); }
 </style>
