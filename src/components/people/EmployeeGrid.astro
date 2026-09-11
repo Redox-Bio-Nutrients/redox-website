@@ -18,7 +18,7 @@ const { team, emptyMessage = 'No team members to show yet.' } = Astro.props
 
 {team.length > 0 ? (
   <div class="grid">
-    {team.map((author) => <EmployeeCard author={author} />)}
+    {team.map((author, index) => <EmployeeCard author={author} index={index} />)}
   </div>
 ) : (
   <p class="empty">{emptyMessage}</p>

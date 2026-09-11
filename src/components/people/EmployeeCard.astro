@@ -18,14 +18,18 @@
 // person, no separate "mode" needed here.
 
 import { urlFor } from '../../lib/sanity'
-import { randomChoice, seededRandom } from '../../lib/seededRandom'
 import type { Author } from '../../lib/types/sanity'
 
 interface Props {
   author: Author
+  /** Position within the grid (EmployeeGrid.astro's own map index) —
+   * drives the leaf-sprig's corner/size below. Not optional: every
+   * caller renders through EmployeeGrid, which always has an index to
+   * give. */
+  index: number
 }
 
-const { author } = Astro.props
+const { author, index } = Astro.props
 
 const photoUrl = author.photo
   ? urlFor(author.photo).width(480).height(600).fit('crop').auto('format').quality(85).url()
@@ -37,18 +41,27 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 // AuthorBoxFooter.astro use, permanently visible at one fixed corner
 // each) — here every card gets one, but hidden at rest and revealed
 // only on hover (see the CSS below), so it reads as a small discovery
-// rather than permanent decoration. Seeded on the person's own _id so
-// a given card's roll (which of the two sharp corners, which of the 4
-// sizes) stays the same across rebuilds rather than reshuffling every
-// redeploy, but no two people land on an identical look. Only the
-// card's own two *sharp* corners (top-left/bottom-right, matching its
-// border-radius) are in play — unlike the first pass at this, which
-// also allowed the rounded corners for a deliberate spill-over look;
-// dropped per Curtis's follow-up ask, so the tucked-in-a-point look is
-// what hover always reveals now.
-const leafRng = seededRandom(author._id)
-const leafCorner = randomChoice(leafRng, ['tl', 'br'] as const)
-const leafScale = randomChoice(leafRng, [0.6, 0.9, 1.2, 1.6])
+// rather than permanent decoration. Only the card's own two *sharp*
+// corners (top-left/bottom-right, matching its border-radius) are in
+// play, so the sprig's point always sits flush in an actual corner.
+//
+// Driven by grid position, not a per-person random roll (an earlier
+// pass seeded this on author._id — replaced per Curtis's follow-up:
+// he wants neighbors in the same row to always visibly differ, which
+// independent per-card randomness can't promise, just makes likely).
+// Corner alternates tl/br by index parity — since that guarantees any
+// two *consecutive* indices differ, and any two cards "next to each
+// other" in the same row are always consecutive indices regardless of
+// the grid's column count (3/2/1 across breakpoints), this alone is
+// enough to guarantee no same-row neighbors share a corner at any
+// screen size, with no need to know the column count here. Size
+// cycles through 4 fixed steps the same way (period 4, so any two
+// consecutive indices always land on different sizes too) — offset
+// from the corner's own period-2 cycle so the two don't just repeat
+// the same combined pattern every 2 cards.
+const LEAF_SIZES = [0.6, 0.9, 1.2, 1.6]
+const leafCorner = index % 2 === 0 ? 'tl' : 'br'
+const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
 ---
 
 <div class="employee" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
