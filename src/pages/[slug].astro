@@ -180,7 +180,12 @@ const testimonials =
      * so the *visible* hero (below the nav) doesn't end up shorter
      * than intended now that its box starts higher. */
     margin-top: calc(-1 * var(--header-space));
-    min-height: calc(min(60vh, 560px) + var(--header-space));
+    /* Matches HeroSection.astro's height exactly (used by the
+     * Homepage/Technology page-builder, e.g. RAM Technology) — these
+     * two hero implementations are separate components (see
+     * redox-market-landing-pages memory for why) but should still
+     * read as the same hero treatment across the site. */
+    min-height: calc(min(85vh, 880px) + var(--header-space));
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -477,7 +482,7 @@ const testimonials =
 
   @media (max-width: 767px) {
     .hero {
-      min-height: 50vh;
+      min-height: calc(70vh + var(--header-space));
     }
 
     .hero__meta {
