@@ -382,6 +382,14 @@ export interface HomeColumnSection {
   _key: string
   eyebrow?: string
   heading?: string
+  /** 'split' ignores `columns` and uses only `items[0]` — its image
+   * full-bleed to one edge (see `imagePosition`), its heading/body/cta
+   * in the other column. See homeSections.ts's homeColumnSection
+   * `layout` field. */
+  layout?: 'grid' | 'split'
+  /** Split layout only. Which edge the full-bleed image sits against;
+   * defaults to 'left' when unset. */
+  imagePosition?: 'left' | 'right'
   columns: 1 | 2 | 3
   items: ColumnItem[]
   backgroundType?: SectionBackgroundType

@@ -168,6 +168,37 @@ export const homeColumnSection = defineType({
       description: 'Optional heading shown above the columns.',
     }),
     defineField({
+      name: 'layout',
+      title: 'Layout',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Grid (centered, equal columns)', value: 'grid' },
+          { title: 'Split (image full-bleed, content beside it)', value: 'split' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'grid',
+      description:
+        'Split ignores Column Count and uses only the first Column entry below: its Image renders full-height/full-bleed to one viewport edge (set which side with Image Position), and its Heading/Body/CTA render in the other column (alongside the Eyebrow/Section Heading above) at the page’s normal margin.',
+    }),
+    defineField({
+      name: 'imagePosition',
+      title: 'Image Position',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Left', value: 'left' },
+          { title: 'Right', value: 'right' },
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'left',
+      hidden: ({ parent }) => parent?.layout !== 'split',
+      description: 'Split layout only. Which viewport edge the full-bleed image sits against; content fills the other side.',
+    }),
+    defineField({
       name: 'columns',
       title: 'Column Count',
       type: 'number',
@@ -181,6 +212,7 @@ export const homeColumnSection = defineType({
         direction: 'horizontal',
       },
       initialValue: 3,
+      hidden: ({ parent }) => parent?.layout === 'split',
       validation: (rule) => rule.required(),
     }),
     defineField({

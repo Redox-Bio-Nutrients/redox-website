@@ -145,6 +145,9 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   },
   autoplay,
   interval,
+  // homeColumnSection only — see its schema field's own comment.
+  layout,
+  imagePosition,
   columns,
   // homeColumnSection's items are objects (image/heading/body/cta);
   // bulletSection's items are a flat array of plain strings;
