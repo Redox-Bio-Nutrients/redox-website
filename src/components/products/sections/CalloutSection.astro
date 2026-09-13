@@ -130,32 +130,41 @@ const textureVars = buildTextureVars(section._key, color, accent)
       !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}
     {hasBg && solid && <div class="callout__overlay texture-wash" aria-hidden="true"></div>}
-    {productImageUrl && (
-      <img class="callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
-    )}
 
-    <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
-      {section.eyebrow && <p class="callout__eyebrow">{section.eyebrow}</p>}
-      {section.heading && <h2>{section.heading}</h2>}
-      {hasBody && (
-        <div class="callout__body">
-          <PortableText
-            value={section.body}
-            components={portableTextComponents}
-            onMissingComponent={onMissingPortableTextComponent}
-          />
-        </div>
+    {/* Inert wrapper by default (no position/width of its own, so the
+       product image's absolute positioning still resolves against
+       .callout as before) — only .callout--full-bleed's own CSS turns
+       it into a --content-width positioning context, so the image and
+       text line up with the page's normal column even though .callout
+       itself spans the true viewport edge. */}
+    <div class="callout__inner">
+      {productImageUrl && (
+        <img class="callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
       )}
-      {section.cta && (
-        <a
-          class="callout__cta"
-          href={section.cta.href}
-          target={section.cta.external ? '_blank' : undefined}
-          rel={section.cta.external ? 'noopener noreferrer' : undefined}
-        >
-          {section.cta.label} →
-        </a>
-      )}
+
+      <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
+        {section.eyebrow && <p class="callout__eyebrow">{section.eyebrow}</p>}
+        {section.heading && <h2>{section.heading}</h2>}
+        {hasBody && (
+          <div class="callout__body">
+            <PortableText
+              value={section.body}
+              components={portableTextComponents}
+              onMissingComponent={onMissingPortableTextComponent}
+            />
+          </div>
+        )}
+        {section.cta && (
+          <a
+            class="callout__cta"
+            href={section.cta.href}
+            target={section.cta.external ? '_blank' : undefined}
+            rel={section.cta.external ? 'noopener noreferrer' : undefined}
+          >
+            {section.cta.label} →
+          </a>
+        )}
+      </div>
     </div>
   </section>
 )}
@@ -392,22 +401,33 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
   /* ── Full bleed (Homepage/Technology only) ─────────────────────
    * HomeSections.astro skips its usual max-width wrapper for this
-   * section, so the box is already the true viewport width — this
-   * just squares off the leaf radius to match every other full-bleed
+   * section, so .callout is already the true viewport width — this
+   * squares off the leaf radius to match every other full-bleed
    * homepage section (Hero, Carousel, CtaSection) instead of the
-   * small-card rounded corner, gives the panel the same left-edge
-   * clearance as those sections' own content (so the heading still
-   * lines up with the page's normal --content-width column instead
-   * of hugging the true viewport edge), and bumps the type up now
-   * that there's a full viewport of room for it. */
+   * small-card rounded corner, bumps the type up now that there's a
+   * full viewport of room for it, and constrains .callout__inner
+   * (text + product image both live inside it) back down to the
+   * page's normal --content-width column — same width/centering
+   * convention as .hero__content — so the *background* spans the true
+   * edge while the *content* still lines up with every other section.
+   * .callout__inner has no width/position of its own outside this
+   * block, so a non-full-bleed callout (product pages) is unaffected:
+   * the product image's `right: ...` (see the base rule above) simply
+   * keeps resolving against .callout itself there, exactly as before. */
   .callout--full-bleed {
     border-radius: 0;
+  }
+
+  .callout--full-bleed .callout__inner {
+    position: relative;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
   }
 
   .callout--full-bleed .callout__panel {
     padding-top: var(--space-24);
     padding-bottom: var(--space-24);
-    padding-left: max(var(--space-6), calc((100vw - var(--content-width)) / 2));
   }
 
   .callout--full-bleed h2 {
@@ -457,7 +477,11 @@ const textureVars = buildTextureVars(section._key, color, accent)
     /* No room to float the image beside the text once the panel's
      * this narrow — stack it above instead, sprig clearance on the
      * panel unchanged since the sprig is unrelated to the image. */
-    .callout--has-image {
+    /* .callout__inner, not .callout itself — the image and panel are
+     * both nested inside that wrapper now (see the component's own
+     * comment on it), so that's what needs to become the flex column
+     * for `order` below to have any effect. */
+    .callout--has-image .callout__inner {
       display: flex;
       flex-direction: column;
     }
