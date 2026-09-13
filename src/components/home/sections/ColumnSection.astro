@@ -69,6 +69,7 @@ const splitImageUrl = splitItem?.image
       {splitImageUrl && (
         <img class="split__image" src={splitImageUrl} alt={splitItem.image?.alt ?? ''} loading="lazy" />
       )}
+      <div class="split__image-fade" aria-hidden="true"></div>
     </div>
     <div class="split__content-col">
       {section.eyebrow && <p class="columns__eyebrow">{section.eyebrow}</p>}
@@ -218,14 +219,49 @@ const splitImageUrl = splitItem?.image
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Rounds the corner nearest the content column, whichever side
-     * that ends up on — mirrored below for image-right. */
-    border-bottom-right-radius: 35%;
+    /* Two corners get rounded, each with its own fixed length (never a
+     * percentage) so neither one distorts into an ellipse as the box's
+     * own aspect ratio shifts across breakpoints — a percentage radius
+     * resolves its horizontal and vertical parts against the box's
+     * width/height independently, which is exactly what made the
+     * bottom corner look stretched on narrower boxes before this.
+     * - OUTER top corner: already touching two free edges (the
+     *   section top and the viewport edge the image bleeds to) — the
+     *   same single plain-radius treatment the site's card motifs use
+     *   elsewhere (TestimonialCard, EmployeeCard, etc. — see
+     *   --radius-leaf/-leaf-mirror in tokens.css), just much larger
+     *   for a full-bleed hero image instead of a small card.
+     * - Diagonally-opposite corner, on the content-column side:
+     *   bigger — its own variable rather than reusing the top corner's
+     *   now that the two are meant to differ in size.
+     * Default here is image-left (outer corner top-left, opposite
+     * corner bottom-right); mirrored below for image-right. */
+    --split-outer-radius: clamp(3rem, 6vw, 6rem);
+    --split-inner-radius: clamp(5rem, 11vw, 11rem);
+    border-top-left-radius: var(--split-outer-radius);
+    border-bottom-right-radius: var(--split-inner-radius);
   }
 
   .columns--split-right .split__image {
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--split-outer-radius);
     border-bottom-right-radius: 0;
-    border-bottom-left-radius: 35%;
+    border-bottom-left-radius: var(--split-inner-radius);
+  }
+
+  /* Fades the top of the image to white so the photo bleeds into a
+   * white page background instead of meeting it with a hard edge. A
+   * separate overlay div, not a gradient on the img itself —
+   * background-image would replace the photo rather than sit over it.
+   * Straight top-to-bottom linear fade (not anchored to either
+   * corner), so it's identical for image-left/-right — no mirrored
+   * override needed. var(--color-white) (not a page/surface token)
+   * because this fade targets literal white regardless of light/dark
+   * theme — see its definition in tokens.css. */
+  .split__image-fade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, var(--color-white) 0%, transparent 60%);
   }
 
   .split__content-col {
