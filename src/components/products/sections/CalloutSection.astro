@@ -54,6 +54,17 @@ const pool = (backgrounds ?? []).map((img) => ({
 }))
 const hasBg = pool.length > 0
 
+// Homepage/Technology only (see the schema field's own comment) — a
+// contained product shot (bottle/label PNG, object-fit: contain, same
+// convention ProductCard.astro's own packaging image uses), NOT
+// another `backgrounds` pool entry: that pool is wide field/farm
+// photography meant to be cropped full-bleed, which mangles a tall
+// product photo. Rendered by every variant below, floating over the
+// panel rather than behind it.
+const productImageUrl = section.backgroundImage
+  ? urlFor(section.backgroundImage).width(700).fit('max').auto('format').quality(85).url()
+  : null
+
 // Seeded on the section's own _key, not Math.random() — every callout
 // gets a genuinely different bloom layout, but the *same* callout
 // looks the same on every rebuild rather than reshuffling on redeploy.
@@ -64,12 +75,16 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
 {variant === 'turf' ? (
   <section
-    class="t-callout turf-cut"
+    class:list={['t-callout', 'turf-cut', { 't-callout--has-image': productImageUrl }]}
     style={`--turf-cut: var(--turf-cut-lg); --t-callout-primary: ${palette.base}; --t-callout-accent: ${palette.complement};`}
   >
     {hasBg && <PoolBackground pool={pool} />}
     <div class="t-callout__wash" aria-hidden="true"></div>
+    {productImageUrl && (
+      <img class="t-callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
+    )}
     <div class="t-callout__panel">
+      {section.eyebrow && <p class="t-callout__eyebrow">{section.eyebrow}</p>}
       {section.heading && <h2>{section.heading}</h2>}
       {hasBody && (
         <div class="t-callout__body">
@@ -80,11 +95,25 @@ const textureVars = buildTextureVars(section._key, color, accent)
           />
         </div>
       )}
+      {section.cta && (
+        <a
+          class="t-callout__cta"
+          href={section.cta.href}
+          target={section.cta.external ? '_blank' : undefined}
+          rel={section.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          {section.cta.label} →
+        </a>
+      )}
     </div>
   </section>
 ) : (
   <section
-    class:list={['callout', solid ? ['callout--solid', 'texture-fill'] : 'callout--tint']}
+    class:list={[
+      'callout',
+      solid ? ['callout--solid', 'texture-fill'] : 'callout--tint',
+      { 'callout--has-image': productImageUrl },
+    ]}
     style={textureVars}
   >
     {hasBg ? (
@@ -93,8 +122,12 @@ const textureVars = buildTextureVars(section._key, color, accent)
       !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}
     {hasBg && solid && <div class="callout__overlay texture-wash" aria-hidden="true"></div>}
+    {productImageUrl && (
+      <img class="callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
+    )}
 
     <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
+      {section.eyebrow && <p class="callout__eyebrow">{section.eyebrow}</p>}
       {section.heading && <h2>{section.heading}</h2>}
       {hasBody && (
         <div class="callout__body">
@@ -104,6 +137,16 @@ const textureVars = buildTextureVars(section._key, color, accent)
             onMissingComponent={onMissingPortableTextComponent}
           />
         </div>
+      )}
+      {section.cta && (
+        <a
+          class="callout__cta"
+          href={section.cta.href}
+          target={section.cta.external ? '_blank' : undefined}
+          rel={section.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          {section.cta.label} →
+        </a>
       )}
     </div>
   </section>
@@ -154,6 +197,30 @@ const textureVars = buildTextureVars(section._key, color, accent)
     background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
     opacity: 0.65;
     transform: rotate(-32deg);
+  }
+
+  /* ── Product image (Homepage/Technology only) ──────────────────
+   * A contained product shot, not another background layer — same
+   * object-fit: contain convention as ProductCard.astro's own
+   * packaging image ("whole product visible, floating on the
+   * field"). Sits above the background/overlay/wash but below the
+   * leaf sprig (z-index 3), so the sprig still reads as the
+   * permanent top-right fixture it is everywhere else. */
+  .callout__product-image {
+    position: absolute;
+    z-index: 2;
+    right: clamp(var(--space-4), 5%, var(--space-10));
+    top: 50%;
+    transform: translateY(-50%);
+    /* Not a percentage height — .callout's own height is auto (its
+     * content sets it), so a percentage here would resolve to auto
+     * too. max-height alone, with width left auto, sizes correctly
+     * regardless (see the turf variant's own copy of this note). */
+    max-height: 280px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 16px 28px rgb(0 0 0 / 0.25));
+    pointer-events: none;
   }
 
 
@@ -232,9 +299,59 @@ const textureVars = buildTextureVars(section._key, color, accent)
     color: var(--color-text-primary);
   }
 
+  /* Extra room for the floating product image — padding-right only
+   * (not the shorthand) so this doesn't clobber the solid/glass
+   * panel rules' own top/bottom/left padding above; placed after both
+   * of those so this override wins (equal specificity, source order
+   * decides). Desktop only — mobile restacks the image above the
+   * panel instead (see the max-width query below), so the panel goes
+   * back to its normal sprig-only clearance there. */
+  @media (min-width: 768px) {
+    .callout--has-image .callout__panel {
+      padding-right: clamp(160px, 26%, 300px);
+    }
+  }
+
   /* ── Shared ─────────────────────────────────────────────────── */
   .callout__panel {
     position: relative; /* above imagery/overlay layers */
+  }
+
+  .callout__eyebrow {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+  }
+
+  .callout--solid .callout__eyebrow {
+    color: var(--color-white);
+    opacity: 0.85;
+  }
+
+  /* --texture-color is always set (both tones — see textureVars in
+   * the frontmatter), so this reads as the callout's own brand color
+   * rather than the fixed green every other eyebrow on the site uses. */
+  .callout--tint .callout__eyebrow {
+    color: var(--texture-color);
+  }
+
+  .callout__cta {
+    display: inline-block;
+    margin-top: var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    border-bottom: 1px solid currentColor;
+  }
+
+  .callout--solid .callout__cta {
+    color: var(--color-white);
+  }
+
+  .callout--tint .callout__cta {
+    color: var(--color-text-primary);
   }
 
   .callout h2 {
@@ -277,6 +394,24 @@ const textureVars = buildTextureVars(section._key, color, accent)
     .callout__panel--glass {
       padding: var(--space-8) 86px var(--space-8) var(--space-6);
     }
+
+    /* No room to float the image beside the text once the panel's
+     * this narrow — stack it above instead, sprig clearance on the
+     * panel unchanged since the sprig is unrelated to the image. */
+    .callout--has-image {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .callout__product-image {
+      position: static;
+      order: -1;
+      height: auto;
+      max-height: 160px;
+      max-width: 60%;
+      margin: var(--space-6) auto 0;
+      transform: none;
+    }
   }
 
   /* ── Turf variant ─────────────────────────────────────────────── */
@@ -285,8 +420,46 @@ const textureVars = buildTextureVars(section._key, color, accent)
     min-height: 220px;
     display: flex;
     align-items: center;
+    gap: var(--space-6);
     overflow: hidden;
     padding: var(--space-8) var(--space-10);
+  }
+
+  /* Homepage/Technology only — same contained-product-shot convention
+   * as the agriculture variant's .callout__product-image above, but a
+   * plain flex item here (not absolutely positioned) since .t-callout
+   * is already a flex row: `order` alone pushes it after the panel
+   * without needing manual positioning math. */
+  .t-callout__product-image {
+    position: relative;
+    z-index: 1;
+    order: 2;
+    flex-shrink: 0;
+    margin-left: auto;
+    /* Not a percentage height (or a min()/clamp() mixing one in) —
+     * .t-callout's own height is auto (min-height only sets a floor),
+     * so a percentage here resolves to auto too and the image renders
+     * at its full intrinsic size instead. max-height alone, with
+     * width left auto, sizes correctly regardless. */
+    max-height: 180px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.3));
+  }
+
+  @media (max-width: 767px) {
+    .t-callout--has-image {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .t-callout__product-image {
+      order: -1;
+      margin-left: 0;
+      height: auto;
+      max-height: 140px;
+      max-width: 55%;
+    }
   }
 
   .t-callout :global(.pool-bg) {
@@ -309,6 +482,17 @@ const textureVars = buildTextureVars(section._key, color, accent)
     max-width: 60ch;
   }
 
+  .t-callout__eyebrow {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-white);
+    opacity: 0.85;
+    margin-bottom: var(--space-2);
+  }
+
   .t-callout h2 {
     font-family: var(--turf-font-display);
     font-style: italic;
@@ -326,6 +510,15 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
   .t-callout__body :global(p:last-child) {
     margin-bottom: 0;
+  }
+
+  .t-callout__cta {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-white);
+    border-bottom: 1px solid currentColor;
   }
 
   @media (max-width: 767px) {

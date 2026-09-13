@@ -50,8 +50,12 @@ export interface TextSection {
 export interface CalloutSection {
   _type: 'calloutSection'
   _key: string
+  eyebrow?: string
   heading?: string
   body: PortableTextBlock[]
+  cta?: Cta
+  /** Homepage/Technology page-builder only — see the schema field's own comment. */
+  backgroundImage?: SanityImage
   tone: 'solid' | 'tint'
   color?: string
   accentColor?: string
