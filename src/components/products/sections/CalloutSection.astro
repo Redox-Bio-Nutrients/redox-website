@@ -31,9 +31,17 @@ interface Props {
   /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
   productAccentColor?: string
   backgrounds?: SanityImage[]
+  /** Homepage/Technology only (HomeSections.astro passes this; a
+   * product page's own callouts never do) — spans the true viewport
+   * edge instead of sitting inside the page-builder's normal
+   * --content-width column, with bigger heading/body type and a
+   * product image that breaks past the box's own top edge. See the
+   * `callout--full-bleed` styles below. */
+  fullBleed?: boolean
 }
 
-const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds, fullBleed = false } =
+  Astro.props
 // A section-level color override (schema field, optional) wins over
 // the inherited product/page color — set on product pages too, not
 // just here, but only ever populated when an editor explicitly wants
@@ -75,7 +83,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
 {variant === 'turf' ? (
   <section
-    class:list={['t-callout', 'turf-cut', { 't-callout--has-image': productImageUrl }]}
+    class:list={['t-callout', 'turf-cut', { 't-callout--has-image': productImageUrl, 't-callout--full-bleed': fullBleed }]}
     style={`--turf-cut: var(--turf-cut-lg); --t-callout-primary: ${palette.base}; --t-callout-accent: ${palette.complement};`}
   >
     {hasBg && <PoolBackground pool={pool} />}
@@ -112,7 +120,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
     class:list={[
       'callout',
       solid ? ['callout--solid', 'texture-fill'] : 'callout--tint',
-      { 'callout--has-image': productImageUrl },
+      { 'callout--has-image': productImageUrl, 'callout--full-bleed': fullBleed },
     ]}
     style={textureVars}
   >
@@ -380,6 +388,57 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
   .callout__body :global(p:last-child) {
     margin-bottom: 0;
+  }
+
+  /* ── Full bleed (Homepage/Technology only) ─────────────────────
+   * HomeSections.astro skips its usual max-width wrapper for this
+   * section, so the box is already the true viewport width — this
+   * just squares off the leaf radius to match every other full-bleed
+   * homepage section (Hero, Carousel, CtaSection) instead of the
+   * small-card rounded corner, gives the panel the same left-edge
+   * clearance as those sections' own content (so the heading still
+   * lines up with the page's normal --content-width column instead
+   * of hugging the true viewport edge), and bumps the type up now
+   * that there's a full viewport of room for it. */
+  .callout--full-bleed {
+    border-radius: 0;
+  }
+
+  .callout--full-bleed .callout__panel {
+    padding-top: var(--space-24);
+    padding-bottom: var(--space-24);
+    padding-left: max(var(--space-6), calc((100vw - var(--content-width)) / 2));
+  }
+
+  .callout--full-bleed h2 {
+    font-size: clamp(2.75rem, 6vw, 5rem);
+  }
+
+  .callout--full-bleed .callout__body {
+    font-size: var(--text-xl);
+  }
+
+  /* Product image breaks the top edge of the box — sized taller than
+   * the box itself and anchored to the bottom (not vertically
+   * centered like the default .callout__product-image above) so the
+   * extra height overflows upward past the box's own top:0 rather
+   * than downward past its bottom. .callout has no overflow clip of
+   * its own (see its own comment above) so this is free to spill.
+   * A fixed max-height, not a percentage — .callout's own height is
+   * auto (its content sets it), so a percentage would resolve to
+   * auto too (same reasoning as the default .callout__product-image
+   * rule above), and a taller-than-the-box image is the entire point
+   * here. Desktop only — this selector's higher specificity would
+   * otherwise beat the mobile stacking block's own (single-class)
+   * max-height below regardless of source order, blowing the image
+   * back up past the small stacked size that block sets. */
+  @media (min-width: 768px) {
+    .callout--full-bleed .callout__product-image {
+      top: auto;
+      bottom: 0;
+      transform: none;
+      max-height: 420px;
+    }
   }
 
   @media (max-width: 767px) {
