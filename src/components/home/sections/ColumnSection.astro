@@ -54,6 +54,16 @@ const splitImagePosition = section.imagePosition === 'right' ? 'right' : 'left'
 const splitImageUrl = splitItem?.image
   ? urlFor(splitItem.image).width(1400).height(1600).fit('crop').auto('format').quality(75).url()
   : null
+
+// Overlap layout — a text-only white card pulled up (negative
+// margin-top) to sit partly over whatever section renders directly
+// before this one on the page; designed for right after a full-bleed
+// image Hero, so the two read as one composition instead of a hard
+// cut between sections. No image of its own (ignores items[0].image
+// entirely) — the backdrop is whatever image the previous section
+// already provides. Uses only items[0], same reasoning as split.
+const isOverlap = section.layout === 'overlap'
+const overlapItem = section.items?.[0]
 ---
 
 {isSplit && splitItem ? (
@@ -94,6 +104,34 @@ const splitImageUrl = splitItem?.image
           {splitItem.cta.label} →
         </a>
       )}
+    </div>
+  </section>
+) : isOverlap && overlapItem ? (
+  <section class="columns columns--overlap">
+    <div class="overlap__inner">
+      <div class="overlap-card">
+        {section.eyebrow && <p class="overlap-card__eyebrow">{section.eyebrow}</p>}
+        {section.heading && <h2 class="overlap-card__heading">{section.heading}</h2>}
+        {overlapItem.body && (
+          <div class="overlap-card__body">
+            <PortableText
+              value={overlapItem.body}
+              components={portableTextComponents}
+              onMissingComponent={onMissingPortableTextComponent}
+            />
+          </div>
+        )}
+        {overlapItem.cta && (
+          <a
+            class="overlap-card__cta"
+            href={overlapItem.cta.href}
+            target={overlapItem.cta.external ? '_blank' : undefined}
+            rel={overlapItem.cta.external ? 'noopener noreferrer' : undefined}
+          >
+            {overlapItem.cta.label} →
+          </a>
+        )}
+      </div>
     </div>
   </section>
 ) : (
@@ -298,6 +336,101 @@ const splitImageUrl = splitItem?.image
     .split__content-col,
     .columns--split-right .split__content-col {
       padding: var(--space-16) var(--space-6);
+    }
+  }
+
+  /* ── Overlap layout ─────────────────────────────────────────────
+   * The negative margin-top is what does the actual overlapping — it
+   * pulls this section up over whatever renders before it (eating
+   * into .home-sections' own flex `gap` first, then further into the
+   * previous section itself). No z-index needed: this section is
+   * simply later in DOM order than the one it overlaps, and with
+   * neither establishing its own stacking context, a later same-
+   * level sibling already paints on top wherever they visually
+   * overlap. padding-bottom restores the vertical rhythm the negative
+   * margin ate into, so the *next* section after this one isn't
+   * pulled up too. */
+  .columns--overlap {
+    position: relative;
+    margin-top: -140px;
+    padding-bottom: var(--space-16);
+  }
+
+  .overlap__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .overlap-card {
+    /* Full --content-width (.overlap__inner's own width, already
+     * capped/centered to it) — a fixed narrower card cramped the
+     * heading into 5-6 lines, which is what actually read as
+     * "broken", not the overlap concept itself. Still overlaps only
+     * the bottom of the previous section (via .columns--overlap's
+     * negative margin-top), not its full height, so it still reads
+     * as a card floating up from below rather than a full second
+     * hero-height panel. */
+    width: 100%;
+    background: var(--color-white);
+    border-radius: var(--radius-3xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--space-12);
+  }
+
+  .overlap-card__eyebrow {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-green);
+    margin-bottom: var(--space-3);
+  }
+
+  /* Literal dark colors, not the --color-text-* tokens — this card is
+   * a committed white surface regardless of site theme (same reason
+   * turf-livery.css's --turf-ink is a fixed hex, not a semantic
+   * token: --color-text-primary/-secondary flip to light colors in
+   * dark theme, which would turn this into invisible light-on-white
+   * text). Values match light theme's own --color-text-primary/
+   * -secondary, just hardcoded so they don't flip. */
+  .overlap-card__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: #1a1a1a;
+    margin-bottom: var(--space-5);
+  }
+
+  .overlap-card__body :global(p) {
+    color: #4a4a4a;
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-3);
+  }
+
+  .overlap-card__body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .overlap-card__cta {
+    display: inline-block;
+    margin-top: var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: #1a1a1a;
+    border-bottom: 1px solid currentColor;
+  }
+
+  @media (max-width: 767px) {
+    .columns--overlap {
+      margin-top: -80px;
+      padding-bottom: var(--space-12);
+    }
+
+    .overlap-card {
+      padding: var(--space-8) var(--space-6);
     }
   }
 

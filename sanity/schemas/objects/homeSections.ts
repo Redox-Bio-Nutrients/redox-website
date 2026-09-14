@@ -175,12 +175,13 @@ export const homeColumnSection = defineType({
         list: [
           { title: 'Grid (centered, equal columns)', value: 'grid' },
           { title: 'Split (image full-bleed, content beside it)', value: 'split' },
+          { title: 'Overlap (floating card over the previous section)', value: 'overlap' },
         ],
         layout: 'radio',
       },
       initialValue: 'grid',
       description:
-        'Split ignores Column Count and uses only the first Column entry below: its Image renders full-height/full-bleed to one viewport edge (set which side with Image Position), and its Heading/Body/CTA render in the other column (alongside the Eyebrow/Section Heading above) at the page’s normal margin.',
+        'Split ignores Column Count and uses only the first Column entry below: its Image renders full-height/full-bleed to one viewport edge (set which side with Image Position), and its Heading/Body/CTA render in the other column (alongside the Eyebrow/Section Heading above) at the page’s normal margin. Overlap ignores Column Count and any Image on the first Column entry — a text-only white card (Heading/Body/CTA) pulled up to overlap the bottom-right of whatever section comes directly before it (designed for right after a full-bleed image Hero).',
     }),
     defineField({
       name: 'imagePosition',
@@ -212,7 +213,7 @@ export const homeColumnSection = defineType({
         direction: 'horizontal',
       },
       initialValue: 3,
-      hidden: ({ parent }) => parent?.layout === 'split',
+      hidden: ({ parent }) => parent?.layout === 'split' || parent?.layout === 'overlap',
       validation: (rule) => rule.required(),
     }),
     defineField({

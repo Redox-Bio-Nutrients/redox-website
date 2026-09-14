@@ -95,7 +95,12 @@ const centered = section.textAlign === 'center'
      * below a reserved nav gap; min-height grows by the same amount
      * so the content area below the nav keeps its original size. */
     margin-top: calc(-1 * var(--header-space));
-    min-height: calc(min(85vh, 880px) + var(--header-space));
+    /* Taller than a typical hero — when the section right after this
+     * one uses the "overlap" layout (a card pulled up over this
+     * image's bottom edge, see ColumnSection.astro), the extra height
+     * gives the hero's own centered content room to breathe above
+     * where that card will sit. */
+    min-height: calc(min(94vh, 980px) + var(--header-space));
     display: flex;
     align-items: center; /* vertical center regardless of content height */
     overflow: hidden;

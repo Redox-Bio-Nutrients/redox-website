@@ -21,6 +21,13 @@ export const IMAGE_FRAGMENT = /* groq */ `{
   asset,
   alt,
   hotspot,
+  // Per-instance crop rect (fractions trimmed from each edge) — lets
+  // the SAME shared asset show a different region in different places
+  // (e.g. the homepage hero vs. a page-builder section reusing the
+  // same background-pool photo) without touching the asset's own
+  // global hotspot. @sanity/image-url's builder.image() picks this up
+  // automatically from the image value object passed to urlFor().
+  crop,
   // tiny blurred placeholder (base64) — painted instantly while the
   // full image loads (blur-up)
   "lqip": asset->metadata.lqip,
