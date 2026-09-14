@@ -99,7 +99,7 @@ const testimonials =
           {page.heroSubheading && <p class="hero__subheading">{page.heroSubheading}</p>}
           {page.heroCta && (
             <a
-              class="hero__cta"
+              class="btn btn--primary hero__cta"
               href={page.heroCta.href}
               target={page.heroCta.external ? '_blank' : undefined}
               rel={page.heroCta.external ? 'noopener noreferrer' : undefined}
@@ -119,7 +119,7 @@ const testimonials =
       {page.heroSubheading && <p>{page.heroSubheading}</p>}
       {page.heroCta && (
         <a
-          class="page-header__cta"
+          class="btn btn--primary page-header__cta"
           href={page.heroCta.href}
           target={page.heroCta.external ? '_blank' : undefined}
           rel={page.heroCta.external ? 'noopener noreferrer' : undefined}
@@ -177,7 +177,7 @@ const testimonials =
     <section class="showcase-section">
       <div class="showcase-section__inner">
         {collections.length > 0 && <CollectionShowcase collections={collections} catalogHref={marketCatalog} />}
-        <a class="showcase-section__cta" href={marketCatalog}>
+        <a class="btn btn--primary showcase-section__cta" href={marketCatalog}>
           {slug === 'agriculture' ? 'Find the Right Solution' : 'Products'}
         </a>
       </div>
@@ -266,28 +266,9 @@ const testimonials =
     color: rgb(255 255 255 / 0.9);
   }
 
-  .hero__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-full);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: var(--glass-border);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    letter-spacing: 0.02em;
-    color: var(--color-white);
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .hero__cta:hover {
-    background: rgb(255 255 255 / 0.28);
-    transform: translateY(-1px);
-  }
-
+  /* Shape/glass/gradient come from .btn/.btn--primary
+   * (src/styles/buttons.css) — this page only adds the arrow's own
+   * slide-on-hover micro-interaction on top of that shared system. */
   .hero__cta-arrow {
     display: inline-block;
     transition: transform 0.2s ease;
@@ -321,20 +302,10 @@ const testimonials =
     color: var(--color-text-secondary);
   }
 
+  /* Color/shape/glass come from .btn/.btn--primary
+   * (src/styles/buttons.css) — just the top margin is page-specific. */
   .page-header__cta {
-    display: inline-block;
     margin-top: var(--space-6);
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-full);
-    background: var(--color-green);
-    color: var(--color-white);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semi);
-    transition: filter 0.15s ease;
-  }
-
-  .page-header__cta:hover {
-    filter: brightness(0.92);
   }
 
   /* ── Body prose ───────────────────────────────────────────────── */
@@ -492,19 +463,12 @@ const testimonials =
     gap: var(--space-10);
   }
 
+  /* Color/shape/glass come from .btn/.btn--primary
+   * (src/styles/buttons.css) — this CTA just runs a touch bigger than
+   * the shared default. */
   .showcase-section__cta {
-    display: inline-block;
     padding: var(--space-4) var(--space-8);
-    border-radius: var(--radius-full);
-    background: var(--color-green);
-    color: var(--color-white);
     font-size: var(--text-base);
-    font-weight: var(--font-semi);
-    transition: filter 0.15s ease;
-  }
-
-  .showcase-section__cta:hover {
-    filter: brightness(0.92);
   }
 
   @media (max-width: 767px) {

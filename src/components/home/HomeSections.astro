@@ -19,6 +19,7 @@ import CtaSection from './sections/CtaSection.astro'
 import ChartSection from '../products/sections/ChartSection.astro'
 import CalloutSection from '../products/sections/CalloutSection.astro'
 import BulletSection from '../products/sections/BulletSection.astro'
+import FeaturedProductSection from './sections/FeaturedProductSection.astro'
 
 interface Props {
   sections: HomeSection[]
@@ -40,6 +41,11 @@ const { sections } = Astro.props
         return <StatsSection section={section} />
       case 'homeCtaSection':
         return <CtaSection section={section} />
+      case 'homeFeaturedProductSection':
+        // Manages its own --content-width constraint internally (same
+        // as ColumnSection/CalloutSection above) — not wrapped in
+        // .home-sections__constrain.
+        return <FeaturedProductSection section={section} />
       case 'chartSection':
         // ChartSection has no built-in width constraint (product pages
         // supply one via .layout) — wrap it here since page-builder

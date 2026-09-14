@@ -21,7 +21,12 @@ const { section } = Astro.props
     <div class="cta-banner__buttons">
       {section.buttons.map((button, i) => (
         <a
-          class:list={['cta-banner__button', { 'cta-banner__button--secondary': i > 0 }]}
+          class:list={[
+            'btn',
+            i > 0 ? ['btn--ghost', 'btn--on-color'] : 'btn--primary',
+            'cta-banner__button',
+            { 'cta-banner__button--secondary': i > 0 },
+          ]}
           href={button.href}
           target={button.external ? '_blank' : undefined}
           rel={button.external ? 'noopener noreferrer' : undefined}
@@ -72,30 +77,13 @@ const { section } = Astro.props
     margin-top: var(--space-10);
   }
 
+  /* Color/shape/glass come from .btn/.btn--primary/.btn--ghost
+   * (src/styles/buttons.css) — closing-banner CTAs just run a touch
+   * bigger than the shared default, the one thing still worth
+   * overriding per section. */
   .cta-banner__button {
-    display: inline-block;
     padding: var(--space-4) var(--space-8);
-    border-radius: var(--radius-full);
-    background: var(--color-white);
-    color: var(--color-green-dark);
     font-size: var(--text-base);
-    font-weight: var(--font-semi);
-    transition: filter 0.15s ease;
-  }
-
-  .cta-banner__button:hover {
-    filter: brightness(0.92);
-  }
-
-  .cta-banner__button--secondary {
-    background: transparent;
-    color: var(--color-white);
-    border: var(--border-thin) solid rgb(255 255 255 / 0.4);
-  }
-
-  .cta-banner__button--secondary:hover {
-    background: rgb(255 255 255 / 0.1);
-    filter: none;
   }
 
   @media (max-width: 639px) {

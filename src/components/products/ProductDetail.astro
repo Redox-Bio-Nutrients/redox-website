@@ -212,7 +212,9 @@ const documents = (product.documents ?? []).map((doc) => ({
 
       <button
         type="button"
-        class:list={['sidebar__doc-request', { 'turf-cut': isTurf }]}
+        class:list={[
+          isTurf ? ['sidebar__doc-request', 'turf-cut'] : ['btn', 'btn--ghost', 'btn--sm', 'sidebar__doc-request'],
+        ]}
         data-dialog-open="resource-request-dialog"
       >
         Product Information Request
@@ -222,7 +224,11 @@ const documents = (product.documents ?? []).map((doc) => ({
         <div class="sidebar__support" data-support>
           <button
             type="button"
-            class:list={['sidebar__support-toggle', { 'turf-cut': isTurf }]}
+            class:list={[
+              isTurf
+                ? ['sidebar__support-toggle', 'turf-cut']
+                : ['btn', 'btn--ghost', 'btn--sm', 'sidebar__support-toggle'],
+            ]}
             aria-expanded="false"
             aria-haspopup="true"
             data-support-toggle
@@ -309,7 +315,10 @@ const documents = (product.documents ?? []).map((doc) => ({
         </section>
       )}
 
-      <a class:list={['sidebar__cta', { 'turf-cut': isTurf }]} href="/about-us">
+      <a
+        class:list={[isTurf ? ['sidebar__cta', 'turf-cut'] : ['btn', 'btn--primary', 'sidebar__cta']]}
+        href="/about-us"
+      >
         Talk to an agronomist
       </a>
     </div>
@@ -686,25 +695,12 @@ const documents = (product.documents ?? []).map((doc) => ({
     position: relative;
   }
 
+  /* Non-turf: color/shape/glass come from .btn/.btn--ghost/.btn--sm
+   * (src/styles/buttons.css) — width is the one thing every variant
+   * still needs set here. Turf's own full color spec lives under
+   * .sidebar--turf below, since turf never gets the .btn classes. */
   .sidebar__support-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
     width: 100%;
-    padding: var(--space-3) var(--space-4);
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--product-color) 40%, transparent);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semi);
-    color: var(--product-color);
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  .sidebar__support-toggle:hover {
-    background: color-mix(in srgb, var(--product-color) 10%, transparent);
   }
 
   .sidebar__support-count {
@@ -825,21 +821,14 @@ const documents = (product.documents ?? []).map((doc) => ({
     }
   }
 
+  /* Non-turf: color/shape/glass come from .btn/.btn--ghost/.btn--sm
+   * (src/styles/buttons.css) — width is the one thing every variant
+   * still needs set here. Turf's own full color spec (including its
+   * own display:block/text-align, since turf-cut's diagonal corner
+   * reads better on a plain block than a centered inline-flex row)
+   * lives under .sidebar--turf below. */
   .sidebar__doc-request {
-    display: block;
-    text-align: center;
-    padding: var(--space-3) var(--space-4);
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--product-color) 40%, transparent);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semi);
-    color: var(--product-color);
-    transition: background 0.15s ease;
-  }
-
-  .sidebar__doc-request:hover {
-    background: color-mix(in srgb, var(--product-color) 10%, transparent);
+    width: 100%;
   }
 
   /* Crop tags */
@@ -906,20 +895,12 @@ const documents = (product.documents ?? []).map((doc) => ({
     overflow: hidden;
   }
 
+  /* Non-turf: color/shape/glass come from .btn/.btn--primary
+   * (src/styles/buttons.css) — width is the one thing every variant
+   * still needs set here. Turf's own full spec lives under
+   * .sidebar--turf below. */
   .sidebar__cta {
-    display: block;
-    text-align: center;
-    padding: var(--space-4) var(--space-5);
-    background: var(--product-color);
-    color: var(--color-white);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semi);
-    transition: filter 0.15s ease;
-  }
-
-  .sidebar__cta:hover {
-    filter: brightness(0.92);
+    width: 100%;
   }
 
   @media (max-width: 1023px) {
@@ -1073,15 +1054,35 @@ const documents = (product.documents ?? []).map((doc) => ({
     color: var(--product-accent-color);
   }
 
+  /* Full spec for both — these two never get the shared .btn classes
+   * (see the isTurf branch in the markup above), so unlike the
+   * agriculture/default variant, nothing about their shape or layout
+   * comes from buttons.css here. */
   .sidebar--turf .sidebar__doc-request,
   .sidebar--turf .sidebar__support-toggle {
+    padding: var(--space-3) var(--space-4);
     background: transparent;
     border: 1.5px solid var(--product-accent-color);
     border-radius: 0;
+    font-size: var(--text-sm);
     color: var(--product-accent-color);
     font-family: var(--turf-font-display);
     font-style: italic;
     font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .sidebar--turf .sidebar__doc-request {
+    display: block;
+    text-align: center;
+  }
+
+  .sidebar--turf .sidebar__support-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
   }
 
   .sidebar--turf .sidebar__doc-request:hover,
@@ -1114,10 +1115,20 @@ const documents = (product.documents ?? []).map((doc) => ({
   }
 
   .sidebar--turf .sidebar__cta {
+    display: block;
+    text-align: center;
+    padding: var(--space-4) var(--space-5);
     background: linear-gradient(100deg, var(--product-color), var(--product-accent-color));
+    color: var(--color-white);
     border-radius: 0;
+    font-size: var(--text-sm);
     font-family: var(--turf-font-display);
     font-style: italic;
     font-weight: 700;
+    transition: filter 0.15s ease;
+  }
+
+  .sidebar--turf .sidebar__cta:hover {
+    filter: brightness(0.92);
   }
 </style>

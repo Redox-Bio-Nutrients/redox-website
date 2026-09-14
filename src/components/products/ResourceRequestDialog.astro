@@ -88,14 +88,14 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
         </div>
       </fieldset>
 
-      <button type="submit" class="resource-dialog__submit">Send Request</button>
+      <button type="submit" class="btn btn--primary resource-dialog__submit">Send Request</button>
     </form>
   </div>
 
   <div id="resource-dialog-success" class="resource-dialog__success" hidden>
     <h2>Request sent</h2>
     <p>Thanks — our team will follow up by email with the materials you requested, usually within 1 business day.</p>
-    <button type="button" class="resource-dialog__submit" data-dialog-close>Close</button>
+    <button type="button" class="btn btn--primary resource-dialog__submit" data-dialog-close>Close</button>
   </div>
 </dialog>
 
@@ -349,23 +349,16 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
     outline-offset: 1px;
   }
 
+  /* This dialog renders as a sibling of ProductDetail's .layout, not a
+   * descendant (see <dialog> vs .layout in ProductDetail.astro) — the
+   * shared .btn's default --btn-from: var(--product-color, ...) can't
+   * inherit the product color from there, so it's set explicitly here
+   * from this component's own --dialog-color prop instead. */
   .resource-dialog__submit {
+    --btn-from: var(--dialog-color, var(--color-green));
     margin-top: var(--space-2);
+    width: 100%;
     padding: var(--space-4) var(--space-5);
-    background: var(--dialog-color, var(--color-green));
-    color: var(--color-white);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semi);
-    transition: filter var(--transition-fast);
-  }
-
-  .resource-dialog__submit:hover {
-    filter: brightness(0.92);
-  }
-
-  .resource-dialog__submit:disabled {
-    opacity: 0.7;
   }
 
   .resource-dialog__success h2 {

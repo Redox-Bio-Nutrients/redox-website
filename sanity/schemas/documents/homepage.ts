@@ -19,9 +19,17 @@ export const homepage = defineType({
         { type: 'homeHeroSection' },
         { type: 'homeHeroCarouselSection' },
         { type: 'homeColumnSection' },
+        { type: 'homeFeaturedProductSection' },
         { type: 'homeStatsSection' },
         { type: 'homeCtaSection' },
         { type: 'chartSection' },
+        // calloutSection/bulletSection are reused as-is from the
+        // product page-builder (see HomeSections.astro) and have been
+        // renderable here for a while — missing from this picker list
+        // until now, which just meant Studio's own "+" menu couldn't
+        // add one even though the frontend already knew how.
+        { type: 'calloutSection' },
+        { type: 'bulletSection' },
       ],
     }),
     defineField({ name: 'seo', title: 'SEO', type: 'seo' }),

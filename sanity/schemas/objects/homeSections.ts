@@ -421,3 +421,45 @@ export const homeCtaSection = defineType({
     },
   },
 })
+
+// ── Featured Product — a single product, by reference ──────────────
+//
+// WHY a reference instead of copied-in fields: the homepage's earlier
+// RDX-Flex spot duplicated the product's name/tagline/CTA as manually-
+// typed fields, which could (and did) drift out of sync with the
+// product's own page. This section has nothing to keep in sync —
+// name, tagline, image, and brand color all come live from whichever
+// product is selected; editing the product itself is the only way to
+// change any of that. The section only decides *which* product to
+// feature and supplies the one thing the product doesn't have an
+// opinion on (the eyebrow label).
+
+export const homeFeaturedProductSection = defineType({
+  name: 'homeFeaturedProductSection',
+  title: 'Featured Product',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'eyebrow',
+      title: 'Eyebrow',
+      type: 'string',
+      initialValue: 'Featured Product',
+      description: 'Small label shown above the product name.',
+    }),
+    defineField({
+      name: 'product',
+      title: 'Product',
+      type: 'reference',
+      to: [{ type: 'product' }],
+      validation: (rule) => rule.required(),
+      description:
+        'Its name, tagline, image, and brand color come from this product automatically. To change any of those, edit the product itself — this just picks which one to feature and links to its page.',
+    }),
+  ],
+  preview: {
+    select: { title: 'product.title', subtitle: 'eyebrow', media: 'product.image' },
+    prepare({ title, subtitle, media }) {
+      return { title: title || 'Featured Product', subtitle: subtitle || 'Featured Product', media }
+    },
+  },
+})

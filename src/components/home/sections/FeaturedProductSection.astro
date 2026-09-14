@@ -1,0 +1,339 @@
+---
+// src/components/home/sections/FeaturedProductSection.astro
+//
+// A single product, by reference — see the schema field's own comment
+// (sanity/schemas/objects/homeSections.ts) for why this pulls its
+// name/tagline/image/color live from the product instead of storing
+// copies of any of it. The whole card is one link to the product's
+// page — no separate nested CTA link.
+//
+// Full-bleed, same convention as CalloutSection's fullBleed variant —
+// the card (background photo + wash) spans the true viewport edge,
+// .featured-product__inner constrains the actual grid content back
+// down to --content-width.
+//
+// Agriculture: a squared-off full-bleed card, a photo (the product's
+// own background pool, same priority chain ProductCard.astro's own
+// catalog tile uses) behind BOTH columns with a color-wash gradient
+// over it — same "photo + product-color texture-wash" recipe as
+// CalloutSection's solid tone. Falls back to the plain texture-fill
+// gradient (no photo) on the rare product with no pool image at all.
+//
+// Turf: diagonal-cut card, same photo-behind-both-columns idea but
+// with the two-tone primaryColor/accentColor wash and italic
+// condensed title — same system as every other product-facing
+// component (src/styles/turf-livery.css).
+
+import { urlFor } from '../../../lib/sanity'
+import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
+import { buildTextureVars } from '../../../lib/texture'
+import { getProductVariant } from '../../../lib/productVariant'
+import type { HomeFeaturedProductSection } from '../../../lib/types/sanity'
+import PoolBackground from '../../ui/PoolBackground.astro'
+import '../../../styles/turf-livery.css'
+import '../../../styles/texture-surface.css'
+
+interface Props {
+  section: HomeFeaturedProductSection
+}
+
+const { section } = Astro.props
+const { product } = section
+const isTurf = product ? getProductVariant(product.markets) === 'turf' : false
+const color = product?.primaryColor ?? '#3A7D50'
+const palette = deriveCalloutPalette(color, product?.accentColor)
+// Turf's two-tone wash uses the accent as a foreground-adjacent
+// gradient stop, not just a background tint — needs the readability
+// floor (see redox-turf-product-system memory: raw accentColor has no
+// lightness floor and can go illegible against the dark wash).
+const turfAccent = ensureReadableOnDark(palette.complement)
+const textureVars = buildTextureVars(section._key, color, product?.accentColor)
+
+// Same {url, lqip} shape PoolBackground/CalloutSection/ProductCard
+// already use. Wide crop (not the portrait one CalloutSection's own
+// product-page pool uses) — this photo spans the full two-column
+// card, not a narrow sidebar.
+const pool = (product?.backgrounds ?? []).map((img) => ({
+  url: urlFor(img).width(1800).height(900).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
+}))
+const hasBg = pool.length > 0
+
+const imageUrl = product?.image
+  ? urlFor(product.image).width(800).fit('max').auto('format').quality(85).url()
+  : null
+const logoUrl = product?.logo
+  ? urlFor(product.logo).width(400).fit('max').auto('format').url()
+  : null
+
+// The query's own pt::text() extraction can return multiple
+// paragraphs joined by blank lines (textSection) or one short
+// sentence (the calloutSection fallback) — flatten to one line and
+// cap it so a long intro paragraph doesn't blow out the card's fixed
+// two-column layout. Cuts at a word boundary rather than mid-word.
+function truncate(text: string, max: number): string {
+  const flat = text.replace(/\s+/g, ' ').trim()
+  if (flat.length <= max) return flat
+  return `${flat.slice(0, max).replace(/\s+\S*$/, '')}…`
+}
+
+const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
+---
+
+{product && (
+  <section class="featured-product">
+    {/* Full-bleed, same convention as CalloutSection's fullBleed
+       variant (HomeSections.astro's other full-width section): .card
+       itself spans the true viewport edge with no wrapper, and only
+       .featured-product__inner (below) constrains back down to
+       --content-width — the background/wash spans the full window,
+       the actual text+image content lines up with every other
+       section. */}
+    <a
+      href={`/products/${product.slug}`}
+      class:list={[
+        'featured-product__card',
+        isTurf ? ['featured-product__card--turf', 'turf-cut'] : { 'texture-fill': !hasBg },
+      ]}
+      style={isTurf ? `--turf-cut: var(--turf-cut-lg); --fp-turf-primary: ${color}; --fp-turf-accent: ${turfAccent};` : textureVars}
+    >
+      {/* Whole-card layers, not nested inside .featured-product__media
+         — the photo/wash have to sit behind BOTH grid columns (image
+         and text share one continuous background), not just the
+         image side. Same photo + product-color texture-wash pairing
+         CalloutSection's solid tone uses; texture-fill above is only
+         the no-photo fallback (agriculture) — turf's wash reads fine
+         directly over a photo, no separate fallback needed. */}
+      {hasBg && <PoolBackground pool={pool} />}
+      {isTurf ? (
+        <div class="featured-product__turf-wash" aria-hidden="true"></div>
+      ) : (
+        hasBg && <div class="featured-product__overlay texture-wash" style={textureVars} aria-hidden="true"></div>
+      )}
+      <div class="featured-product__inner">
+        <div class="featured-product__media">
+          {imageUrl && (
+            <img
+              class="featured-product__image"
+              src={imageUrl}
+              alt={product.image?.alt ?? product.title}
+              loading="lazy"
+            />
+          )}
+        </div>
+        <div class="featured-product__content">
+          {section.eyebrow && <p class="featured-product__eyebrow">{section.eyebrow}</p>}
+          <h2 class:list={['featured-product__title', { 'featured-product__title--logo': logoUrl }]}>
+            {logoUrl ? <img class="featured-product__logo" src={logoUrl} alt={product.title} /> : product.title}
+          </h2>
+          {product.tagline && <p class="featured-product__tagline">{product.tagline}</p>}
+          {excerpt && <p class="featured-product__excerpt">{excerpt}</p>}
+          <span class="featured-product__cta">
+            Explore {product.title} <span aria-hidden="true">→</span>
+          </span>
+        </div>
+      </div>
+    </a>
+  </section>
+)}
+
+<style>
+  /* Full-bleed: no max-width here at all — .featured-product__card
+   * (the background/wash layer) is a direct child of .featured-product
+   * with nothing constraining it, so it spans the true viewport edge.
+   * Same reasoning CalloutSection's own fullBleed comment documents. */
+  .featured-product__card {
+    position: relative;
+    display: block;
+    color: var(--color-white);
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .featured-product__card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-3px);
+  }
+
+  /* The actual grid content, constrained back down to the page's
+   * normal --content-width column and centered — same width/centering
+   * convention as .hero__content / .callout--full-bleed .callout__inner
+   * — while .featured-product__card (above) stays true full-bleed.
+   * position:relative + z-index puts it above the whole-card background
+   * layers (z-index: 0, absolute, siblings of this element). */
+  .featured-product__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: stretch;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .featured-product__media {
+    position: relative;
+    /* No background of its own — deliberately transparent so the
+     * card's own whole-card layer (photo + wash, or the texture-fill
+     * fallback) shows through here too, not just behind the text
+     * column. An opaque fallback here would sit on top of that in
+     * this one grid cell, which is exactly what made the two columns
+     * look like separate, disconnected surfaces before this. */
+    background: none;
+  }
+
+  /* Whole-card layer (see the component's own comment on it) — sits
+   * behind .featured-product__inner (both grid columns) via DOM order
+   * (it's .featured-product__card's first child) plus this explicit
+   * z-index: 0, since .featured-product__card is a plain block, not a
+   * grid — .featured-product__inner's own z-index: 1 is what actually
+   * guarantees it paints above this. */
+  .featured-product__turf-wash {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--fp-turf-primary) 88%, transparent) 0%,
+      color-mix(in srgb, var(--fp-turf-accent) 70%, transparent) 100%
+    );
+  }
+
+  /* Agriculture's equivalent of the turf wash above — the
+   * .texture-wash class (texture-surface.css) draws the actual
+   * gradient from the same --texture-* vars .texture-fill (the
+   * no-photo fallback) uses, so a photo card and a plain-gradient
+   * card read as the same design language either way. */
+  .featured-product__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .featured-product__image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    object-fit: contain;
+    padding: var(--space-8);
+    filter: drop-shadow(0 16px 28px rgb(0 0 0 / 0.3));
+  }
+
+  .featured-product__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-12);
+  }
+
+  .featured-product__eyebrow {
+    /* +50% across every text element in this card, Curtis's ask
+     * 2026-09-14 — calc() off the token rather than a hardcoded value
+     * so it still tracks --text-sm if that scale ever changes. */
+    font-size: calc(var(--text-sm) * 1.5);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: var(--space-3);
+  }
+
+  .featured-product__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    /* A step above --text-display-sm's own max (3.75rem) — this card
+     * has more room to work with now that there's a full photo behind
+     * it instead of a flat color. +50% on top of that per Curtis's ask
+     * (was clamp(2.5rem, 3.2vw, 4.5rem)). */
+    font-size: clamp(3.75rem, 4.8vw, 6.75rem);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+  }
+
+  .featured-product__title--logo {
+    line-height: 0;
+  }
+
+  .featured-product__logo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    /* Stands in for the title text on logo'd products — scaled up the
+     * same +50% as .featured-product__title so it doesn't read small
+     * next to plain-text titles on other cards (was 3rem). */
+    max-height: 4.5rem;
+    filter: drop-shadow(0 2px 10px rgb(0 0 0 / 0.35));
+  }
+
+  .featured-product__tagline {
+    margin-top: var(--space-4);
+    max-width: 44ch;
+    font-size: calc(var(--text-xl) * 1.5);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  /* Quieter than the tagline (smaller, lower opacity) — the tagline is
+   * the product's own one-line pitch, this is supporting detail
+   * pulled from its page, so it reads as secondary to it rather than
+   * competing with it. */
+  .featured-product__excerpt {
+    margin-top: var(--space-3);
+    max-width: 48ch;
+    font-size: calc(var(--text-lg) * 1.5);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.7);
+  }
+
+  .featured-product__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    width: fit-content;
+    font-size: calc(var(--text-sm) * 1.5);
+    font-weight: var(--font-medium);
+    border-bottom: 1px solid currentColor;
+  }
+
+  .featured-product__cta span {
+    transition: transform 0.2s ease;
+  }
+
+  .featured-product__card:hover .featured-product__cta span {
+    transform: translateX(3px);
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  /* .featured-product__card is border-radius: 0 for every variant now
+   * (full-bleed) — nothing turf-specific left to override here, kept
+   * as a marker class for the title font below. */
+
+  .featured-product__card--turf .featured-product__title {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  @media (max-width: 767px) {
+    .featured-product__inner {
+      grid-template-columns: 1fr;
+      padding: var(--space-10) var(--space-6);
+    }
+
+    .featured-product__image {
+      min-height: 220px;
+    }
+
+    .featured-product__content {
+      padding: var(--space-8) var(--space-6);
+    }
+  }
+</style>

@@ -16,6 +16,15 @@
   --color-cream:         #F7F4EF;
   --color-off-white:     #F0F0EC;
 
+  /* Secondary brand accent — used site-wide as the minority color in
+   * the default button gradient (see src/styles/buttons.css), same
+   * hue family RAM Technology's own callout already established as
+   * "Redox purple" (redox-page-builder-extensions memory). Not used
+   * as a background/surface color anywhere, only as a gradient/accent
+   * stop, so one value per theme is enough — no -light/-pale ladder
+   * like green's. */
+  --color-purple:       #6B3FA0;
+
   --color-text-primary:  #1A1A1A;
   --color-text-secondary:#4A4A4A;
   --color-text-muted:    #767676;
@@ -182,6 +191,9 @@
   --color-green-pale:  #2C3A30;
   --color-cream:       #1B1E1A;
   --color-off-white:   #242822;
+
+  /* Same lift-for-contrast treatment as the greens above. */
+  --color-purple:      #A87FD1;
 
   /* Lighter/warmer for contrast on near-black, same treatment as the
    * greens above — not a hue change, just lifted for legibility. */
