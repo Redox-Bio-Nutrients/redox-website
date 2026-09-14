@@ -14,6 +14,8 @@ export interface SanityImage {
   asset: { _ref: string; _type: 'reference' }
   alt?: string
   hotspot?: { x: number; y: number; height: number; width: number }
+  /** per-instance crop (fractions trimmed from each edge, 0-1) — see IMAGE_FRAGMENT's own comment in fragments.ts */
+  crop?: { top: number; bottom: number; left: number; right: number }
   /** base64 blurred placeholder for blur-up loading */
   lqip?: string
   /** native asset pixel size — lets layouts reserve aspect-ratio space before the image loads (e.g. masonry grids) without a CLS jump */
