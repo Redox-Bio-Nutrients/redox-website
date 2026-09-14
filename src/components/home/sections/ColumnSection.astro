@@ -11,8 +11,10 @@
 import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
+import { buildTextureVars } from '../../../lib/texture'
 import type { HomeColumnSection } from '../../../lib/types/sanity'
 import PoolBackground from '../../ui/PoolBackground.astro'
+import '../../../styles/texture-surface.css'
 
 interface Props {
   section: HomeColumnSection
@@ -64,6 +66,30 @@ const splitImageUrl = splitItem?.image
 // already provides. Uses only items[0], same reasoning as split.
 const isOverlap = section.layout === 'overlap'
 const overlapItem = section.items?.[0]
+
+// Duo layout — two photo cards side by side, each within the normal
+// --content-width column (not full-bleed any more — see the layout's
+// own CSS comment for the 2026-09-14 art-direction change away from
+// viewport-edge panels), with its own heading/body/cta overlaid on the
+// photo (whole card is one link, same "whole card is a link" pattern
+// FeaturedProductSection uses — the cta below is just the visual
+// label, not a separately-tabbable nested link). Ignores `columns`;
+// uses only the first two items — see the schema field's own comment.
+// Requires both to have an Image. The section-level eyebrow/heading
+// (if set) renders exactly like every other layout's own eyebrow/
+// heading — inside .columns__inner, in-line with the rest of the
+// page's section headers — rather than overlaid on the photos.
+const isDuo = section.layout === 'duo'
+const duoItems = isDuo ? (section.items ?? []).filter((item) => item.image).slice(0, 2) : []
+// Two brand hues alternated by position (not tied to which market a
+// card happens to hold — this layout is generic, not agriculture/turf-
+// specific) so the pair reads as a deliberate set rather than two
+// identical treatments: brand green, then a warm gold for contrast.
+// Same buildTextureVars()/.texture-wash recipe Hero/Callout already
+// use — see texture.ts's own comment — seeded on each item's own _key
+// so the bloom layout is stable across rebuilds.
+const duoPalette = ['#3A7D50', '#C9962E']
+const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duoPalette[i % duoPalette.length]))
 ---
 
 {isSplit && splitItem ? (
@@ -131,6 +157,50 @@ const overlapItem = section.items?.[0]
             {overlapItem.cta.label} →
           </a>
         )}
+      </div>
+    </div>
+  </section>
+) : isDuo && duoItems.length === 2 ? (
+  <section class="columns columns--duo">
+    <div class="columns__inner">
+      {section.eyebrow && <p class="columns__eyebrow">{section.eyebrow}</p>}
+      {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
+      <div class="duo__panels">
+        {duoItems.map((item, i) => (
+          <a
+            class="duo__panel"
+            href={item.cta?.href ?? '#'}
+            target={item.cta?.external ? '_blank' : undefined}
+            rel={item.cta?.external ? 'noopener noreferrer' : undefined}
+          >
+            <img
+              class="duo__image"
+              src={urlFor(item.image!).width(1200).height(1400).fit('crop').auto('format').quality(78).url()}
+              alt={item.image!.alt ?? ''}
+              loading="lazy"
+            />
+            <div class="duo__scrim" aria-hidden="true"></div>
+            <div class="duo__texture texture-wash" style={duoTextureVars[i]} aria-hidden="true"></div>
+            <div class="duo__content">
+              {item.heading && <h3 class="duo__panel-heading">{item.heading}</h3>}
+              {item.body && (
+                <div class="duo__body">
+                  <PortableText
+                    value={item.body}
+                    components={portableTextComponents}
+                    onMissingComponent={onMissingPortableTextComponent}
+                  />
+                </div>
+              )}
+              {item.cta && (
+                <span class="btn btn--primary duo__cta">
+                  <span>{item.cta.label}</span>
+                  <span aria-hidden="true">→</span>
+                </span>
+              )}
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   </section>
@@ -339,6 +409,150 @@ const overlapItem = section.items?.[0]
     }
   }
 
+  /* ── Duo layout ─────────────────────────────────────────────────
+   * Two photo cards side by side, sitting inside the same
+   * --content-width column every other section's content uses — NOT
+   * full-bleed to the viewport edge any more (that was the first pass,
+   * 2026-09-14; Curtis's follow-up art-direction call the same day:
+   * "get rid of the full viewport-width images and turn it into two
+   * side-by-side card/badges", with the section's own eyebrow/heading
+   * brought back in line with how every other section header renders
+   * — plain .columns__eyebrow/.columns__heading inside .columns__inner,
+   * not overlaid on the photos). Each card keeps its own heading/body/
+   * cta centered over the photo (still a real card, not a full hero
+   * panel), just contained now instead of edge-to-edge. */
+  /* Top trimmed below .columns__inner's shared default (--space-24) —
+   * that full amount was stacking with .home-sections' own inter-
+   * section flex `gap` AND the previous section's (Stats) own bottom
+   * padding, reading as a huge dead patch of white above this
+   * section's heading (Curtis's report, 2026-09-14). Bottom is left at
+   * the shared default — no complaint there, and this section has no
+   * special stacking with whatever comes after it. */
+  .columns--duo .columns__inner {
+    padding-top: var(--space-10);
+  }
+
+  .duo__panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+
+  .duo__panel {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
+    color: var(--color-white);
+  }
+
+  .duo__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .duo__panel:hover .duo__image {
+    transform: scale(1.04);
+  }
+
+  /* Flat, not the old bottom-only gradient — content is centered in
+   * the panel now (Curtis's ask, 2026-09-14), not bottom-anchored, so
+   * legibility has to hold up anywhere the text lands rather than just
+   * at the bottom edge. Same flat-scrim convention Hero's own
+   * .hero__overlay already uses for centered white text over a photo. */
+  .duo__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.4);
+  }
+
+  /* Brand-colored grain/bloom texture layered above the dark scrim —
+   * same .texture-wash recipe (fine grain + hue-shifted light/shadow
+   * blooms + a diagonal sweep) Hero/CalloutSection already use, here
+   * giving each card its own bit of "personality" over an otherwise
+   * plain photo+scrim (Curtis's ask, 2026-09-14: "give it some
+   * personality via gradient overlay and texture"). Same opacity as
+   * Hero's own photo case — a finish over the image, not the whole
+   * visible surface. */
+  .duo__texture {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
+  }
+
+  .duo__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+  }
+
+  .duo__panel-heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-4xl);
+    line-height: var(--leading-tight);
+  }
+
+  .duo__body :global(p) {
+    margin-top: var(--space-3);
+    max-width: 40ch;
+    color: rgb(255 255 255 / 0.85);
+    line-height: var(--leading-relaxed);
+  }
+
+  /* Real .btn/.btn--primary pill now (Curtis's ask, 2026-09-14 — was a
+   * plain underlined text link, the site's other "Explore →" pattern;
+   * see buttons.css's own WHY comment for that being the deliberate
+   * default elsewhere — this card pair is the deliberate exception).
+   * .duo__cta itself only needs to add placement inside the centered
+   * flex column; shape/fill/hover glass mechanics all come from .btn
+   * itself. No --product-color in scope here, so it renders the
+   * default brand green→purple gradient — consistent with every other
+   * non-product-page button on the site, regardless of this card's own
+   * green/gold texture tint. */
+  .duo__cta {
+    margin-top: var(--space-5);
+  }
+
+  .duo__cta span:last-child {
+    transition: transform 0.2s ease;
+  }
+
+  .duo__panel:hover .duo__cta span:last-child {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 767px) {
+    .columns--duo .columns__inner {
+      padding-top: var(--space-8);
+    }
+
+    .duo__panels {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+
+    .duo__panel {
+      aspect-ratio: 4 / 3;
+    }
+
+    .duo__content {
+      padding: var(--space-8) var(--space-6);
+    }
+  }
+
   /* ── Overlap layout ─────────────────────────────────────────────
    * The negative margin-top is what does the actual overlapping — it
    * pulls this section up over whatever renders before it (eating
@@ -352,6 +566,13 @@ const overlapItem = section.items?.[0]
    * pulled up too. */
   .columns--overlap {
     position: relative;
+    /* Explicit stacking context, raised above the section that follows
+     * it (FeaturedProductSection's own background now reaches up
+     * behind this one — see that component's own comment) — without
+     * this, the later-in-DOM section would paint over this card by the
+     * same "later sibling wins" rule this file's own comment above
+     * documents for the hero/overlap relationship. */
+    z-index: 2;
     margin-top: -140px;
     padding-bottom: var(--space-16);
   }
