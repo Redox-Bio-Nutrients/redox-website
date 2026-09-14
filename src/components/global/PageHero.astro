@@ -1,0 +1,143 @@
+---
+// src/components/global/PageHero.astro
+//
+// WHY: A small reusable hero header for standalone pages that aren't
+// driven by the `page` Sanity document (which already has its own
+// inline hero — see [slug].astro's own "Full-bleed hero variant"
+// comment) — the Podcast and Technical Podcast pages are the first
+// two users (Curtis's ask, 2026-09-14: "Both of these pages need a
+// hero header section as well"). Same full-bleed-photo-or-gradient-
+// fallback recipe as HeroSection.astro/[slug].astro: a real photo when
+// `imageUrl` is given, otherwise the same .texture-fill grain+bloom
+// gradient every other no-photo hero on the site falls back to —
+// never a plain flat color. Deliberately plain props (heading/
+// subheading/cta/imageUrl/seedKey/textureColor) rather than a Sanity
+// section shape, since this isn't fed by a page-builder array.
+
+import { buildTextureVars } from '../../lib/texture'
+import ScrollIndicator from '../ui/ScrollIndicator.astro'
+import '../../styles/texture-surface.css'
+
+interface Props {
+  heading: string
+  subheading?: string
+  imageUrl?: string | null
+  imageAlt?: string
+  /** Seeds the texture's randomized bloom placement — pass something
+   * stable per page (e.g. the slug) so it doesn't reshuffle on rebuild. */
+  seedKey: string
+  /** Brand hex driving the texture's palette — defaults to brand green. */
+  textureColor?: string
+  cta?: { label: string; href: string; external?: boolean }
+}
+
+const { heading, subheading, imageUrl, imageAlt = '', seedKey, textureColor = '#3A7D50', cta } = Astro.props
+const hasImage = Boolean(imageUrl)
+const textureVars = buildTextureVars(seedKey, textureColor)
+---
+
+<header class="hero" data-header-theme="light">
+  {hasImage ? (
+    <img class="hero__bg" src={imageUrl} alt={imageAlt} loading="eager" />
+  ) : (
+    <div class="hero__bg texture-fill" style={textureVars} aria-hidden="true"></div>
+  )}
+  {hasImage && <div class="hero__overlay" aria-hidden="true"></div>}
+  {hasImage && <div class="hero__texture texture-wash" style={textureVars} aria-hidden="true"></div>}
+
+  <div class="hero__content">
+    <h1 class="hero__title">{heading}</h1>
+    <div class="hero__meta">
+      {subheading && <p class="hero__subheading">{subheading}</p>}
+      {cta && (
+        <a
+          class="btn btn--primary hero__cta"
+          href={cta.href}
+          target={cta.external ? '_blank' : undefined}
+          rel={cta.external ? 'noopener noreferrer' : undefined}
+        >
+          <span>{cta.label}</span>
+          <span class="hero__cta-arrow" aria-hidden="true">→</span>
+        </a>
+      )}
+    </div>
+  </div>
+
+  <ScrollIndicator />
+</header>
+
+<style>
+  .hero {
+    position: relative;
+    margin-top: calc(-1 * var(--header-space));
+    /* Matches HeroSection.astro/[slug].astro's own hero height exactly
+     * so this reads as the same treatment across the site. */
+    min-height: calc(min(85vh, 880px) + var(--header-space));
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: var(--color-white);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.42);
+  }
+
+  .hero__texture {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
+  }
+
+  .hero__content {
+    position: relative;
+    width: min(var(--max-width-2xl), 100%);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-8);
+    text-align: center;
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .hero__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+    margin-top: var(--space-6);
+  }
+
+  .hero__subheading {
+    max-width: 44ch;
+    margin: 0 auto;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .hero__cta-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .hero__cta:hover .hero__cta-arrow {
+    transform: translateX(3px);
+  }
+</style>

@@ -1,0 +1,447 @@
+---
+// src/pages/podcast/index.astro
+//
+// WHY: Originally just Buzzsprout's own "small player" embed widget
+// (one <script>, zero content modeling) — matched the old site
+// exactly, but its markup is a fixed black box: no way to shrink the
+// cards or group by month. Rebuilt on top of the show's public RSS
+// feed instead (src/lib/podcastFeed.ts) — real structured per-episode
+// data (title/date/duration/cover/summary/audio URL), fetched and
+// parsed at build time same as any Sanity query, still zero manual
+// episode entry and still auto-updates every rebuild. See that file's
+// own WHY for why a regex parser instead of an XML library, and
+// [[redox-podcast-page]] for the "simple embed vs. full CMS catalog"
+// decision this sits between — no Sanity involved, the dormant
+// `podcastEpisode` schema/queries stay untouched.
+//
+// Layout: grouped by month (newest first) as compact list rows — cover
+// thumbnail, title, date, duration — instead of one big card per
+// episode. Clicking a row doesn't embed 188 individual players; it
+// hands the episode to a single shared <audio> element in a sticky
+// bottom bar (client script below), same "one now-playing surface"
+// pattern a real podcast app uses, so the page stays light regardless
+// of how many episodes exist.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import PageHero from '../../components/global/PageHero.astro'
+import { formatDate } from '../../lib/format'
+import { getPodcastEpisodes, monthLabel, formatDuration } from '../../lib/podcastFeed'
+import { groundedAccent } from '../../lib/color'
+import { buildTextureVars } from '../../lib/texture'
+import '../../styles/texture-surface.css'
+
+const episodes = await getPodcastEpisodes()
+// Same "no brand color of its own" situation blog posts are in
+// (groundedAccent/buildTextureVars — see BlogMasonry.astro's own WHY
+// comment) — each card gets a deterministic grain+bloom wash seeded on
+// its own guid, so the grid reads with some personality/variety
+// instead of 188 identical tiles, but is stable across rebuilds.
+const textureVarsById = new Map(episodes.map((ep) => [ep.id, buildTextureVars(ep.id, groundedAccent(ep.id))]))
+
+interface Group {
+  label: string
+  episodes: typeof episodes
+}
+const groups: Group[] = []
+for (const ep of episodes) {
+  const label = monthLabel(ep.publishedAt)
+  if (groups.length === 0 || groups[groups.length - 1].label !== label) {
+    groups.push({ label, episodes: [ep] })
+  } else {
+    groups[groups.length - 1].episodes.push(ep)
+  }
+}
+---
+
+<BaseLayout
+  title="Podcast"
+  description="The Redox Grows Podcast — conversations with growers, agronomists, and industry leaders about what it takes to grow better."
+>
+  <PageHero
+    heading="Redox Grows Podcast"
+    subheading="Conversations with growers, agronomists, and industry leaders about what it takes to grow better."
+    seedKey="podcast"
+    cta={{ label: 'Explore the Technical Podcast', href: '/tech-podcast' }}
+  />
+
+  <div class="page">
+    {groups.length > 0 ? (
+      <div class="episode-list">
+        {groups.map((group) => (
+          <section class="episode-group">
+            <h2 class="episode-group__heading">
+              {group.label} <span class="episode-group__count">{group.episodes.length}</span>
+            </h2>
+            <div class="episode-group__rows">
+              {group.episodes.map((ep) => (
+                <button
+                  type="button"
+                  class="episode-row"
+                  data-audio-src={ep.audioUrl}
+                  data-title={ep.title}
+                  data-image={ep.imageUrl ?? ''}
+                  aria-label={`Play ${ep.title}`}
+                >
+                  <div class="episode-row__media">
+                    <div
+                      class="episode-row__texture texture-fill"
+                      style={textureVarsById.get(ep.id)}
+                      aria-hidden="true"
+                    >
+                    </div>
+                    {ep.imageUrl ? (
+                      <img class="episode-row__art" src={ep.imageUrl} alt="" loading="lazy" />
+                    ) : null}
+                    <span class="episode-row__play" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                    </span>
+                  </div>
+                  <span class="episode-row__body">
+                    <span class="episode-row__title">{ep.title}</span>
+                    <span class="episode-row__meta">
+                      {formatDate(ep.publishedAt.toISOString())} · {formatDuration(ep.durationSeconds)}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">New episodes coming soon.</p>
+    )}
+  </div>
+
+  <div class="now-playing" id="now-playing" hidden>
+    <img class="now-playing__image" id="now-playing-image" alt="" width="44" height="44" />
+    <div class="now-playing__body">
+      <p class="now-playing__title" id="now-playing-title"></p>
+      <audio class="now-playing__audio" id="now-playing-audio" controls></audio>
+    </div>
+    <button type="button" class="now-playing__close" id="now-playing-close" aria-label="Close player">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </div>
+</BaseLayout>
+
+<script>
+  // Plain DOM wiring, no framework — same pattern as BlogMasonry's
+  // filter buttons. One shared <audio> element handles playback for
+  // every row; clicking a row (or the same row again) toggles it.
+  const bar = document.getElementById('now-playing') as HTMLDivElement | null
+  const audio = document.getElementById('now-playing-audio') as HTMLAudioElement | null
+  const titleEl = document.getElementById('now-playing-title')
+  const imageEl = document.getElementById('now-playing-image') as HTMLImageElement | null
+  const closeBtn = document.getElementById('now-playing-close')
+  const rows = document.querySelectorAll<HTMLButtonElement>('.episode-row')
+
+  let activeRow: HTMLButtonElement | null = null
+
+  const setActive = (row: HTMLButtonElement | null) => {
+    activeRow?.classList.remove('episode-row--playing')
+    activeRow = row
+    activeRow?.classList.add('episode-row--playing')
+  }
+
+  rows.forEach((row) => {
+    row.addEventListener('click', () => {
+      if (!audio || !bar) return
+      const src = row.dataset.audioSrc ?? ''
+      if (row === activeRow && !audio.paused) {
+        audio.pause()
+        return
+      }
+      if (row === activeRow) {
+        audio.play()
+        return
+      }
+      audio.src = src
+      if (titleEl) titleEl.textContent = row.dataset.title ?? ''
+      if (imageEl) imageEl.src = row.dataset.image ?? ''
+      bar.hidden = false
+      setActive(row)
+      audio.play()
+    })
+  })
+
+  audio?.addEventListener('pause', () => activeRow?.classList.remove('episode-row--playing'))
+  audio?.addEventListener('play', () => activeRow?.classList.add('episode-row--playing'))
+
+  closeBtn?.addEventListener('click', () => {
+    if (!audio || !bar) return
+    audio.pause()
+    audio.removeAttribute('src')
+    bar.hidden = true
+    setActive(null)
+  })
+</script>
+
+<style>
+  .page {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+
+  .empty-state {
+    color: var(--color-text-muted);
+  }
+
+  .episode-list {
+    max-width: var(--content-width);
+  }
+
+  .episode-group + .episode-group {
+    margin-top: var(--space-10);
+  }
+
+  .episode-group__heading {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-xl);
+    color: var(--color-text-primary);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: var(--space-2);
+  }
+
+  .episode-group__count {
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .episode-group__rows {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6) var(--space-5);
+  }
+
+  /* Real card now (Curtis's ask, 2026-09-14: "give them the card
+   * treatment and bring in our gradient texture" — then "make the
+   * cards tall instead of wide, and keep the entire thumbnail visible
+   * for the imagery"). Same shape as ProductCard.astro's own tall
+   * media-box-plus-caption-below convention: a photo/art box on top
+   * (here backed by the grain/bloom texture-wash Duo/Hero/Blog
+   * Showcase all use, instead of a background photo), a plain text
+   * panel below it. Title/meta live below the art rather than
+   * overlaid on it — the only way to guarantee the whole cover image
+   * stays visible with nothing painted over any part of it. */
+  .episode-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: none;
+    border-radius: var(--radius-xl);
+    background: var(--bg-surface);
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+  }
+
+  .episode-row:hover,
+  .episode-row:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .episode-row--playing {
+    box-shadow: 0 0 0 2px var(--color-purple), var(--shadow-lg);
+  }
+
+  /* Square, matching Buzzsprout's cover-art convention — a container
+   * this shape plus object-fit:contain on the art means no letterboxing
+   * ever shows in practice (this shape IS the source shape) while still
+   * guaranteeing full visibility for the rare non-square exception. */
+  .episode-row__media {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .episode-row__texture {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .episode-row__art {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    /* Whole cover art visible, floating on the textured field — same
+     * "never crop the actual image" rule ProductCard.astro's own
+     * packaging shot follows. */
+    object-fit: contain;
+    transition: transform 0.4s ease;
+  }
+
+  .episode-row:hover .episode-row__art {
+    transform: scale(1.04);
+  }
+
+  /* Floating play affordance over the art's corner — same "circular
+   * play button on the corner of the artwork" pattern real podcast/
+   * music apps use, so it doesn't read as covering the thumbnail even
+   * though it technically sits on top of one corner of it. */
+  .episode-row__play {
+    position: absolute;
+    z-index: 2;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.2);
+    border: 1px solid rgb(255 255 255 / 0.5);
+    backdrop-filter: blur(8px);
+    color: var(--color-white);
+    box-shadow: var(--shadow-md);
+  }
+
+  .episode-row__play svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .episode-row--playing .episode-row__play {
+    background: var(--color-purple);
+    border-color: transparent;
+  }
+
+  .episode-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+
+  .episode-row__title {
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: var(--leading-snug);
+  }
+
+  .episode-row--playing .episode-row__title {
+    color: var(--color-purple);
+  }
+
+  .episode-row__meta {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .now-playing {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-6);
+    background: var(--bg-raised);
+    border-top: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .now-playing__image {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    background: var(--bg-surface);
+  }
+
+  .now-playing__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .now-playing__title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .now-playing__audio {
+    width: 100%;
+    height: 32px;
+  }
+
+  .now-playing__close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .now-playing__close:hover {
+    background: var(--bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  .now-playing__close svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (max-width: 1279px) {
+    .episode-group__rows {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .episode-group__rows {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .page {
+      padding: var(--space-8) var(--space-6) var(--space-24);
+    }
+
+    .episode-group__rows {
+      grid-template-columns: 1fr;
+    }
+
+    .episode-row__meta {
+      font-size: var(--text-xs);
+    }
+
+    .now-playing {
+      padding: var(--space-3) var(--space-4);
+    }
+  }
+</style>
