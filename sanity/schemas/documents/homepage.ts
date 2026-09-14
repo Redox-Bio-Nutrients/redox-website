@@ -20,6 +20,7 @@ export const homepage = defineType({
         { type: 'homeHeroCarouselSection' },
         { type: 'homeColumnSection' },
         { type: 'homeFeaturedProductSection' },
+        { type: 'homeBlogShowcaseSection' },
         { type: 'homeStatsSection' },
         { type: 'homeCtaSection' },
         { type: 'chartSection' },

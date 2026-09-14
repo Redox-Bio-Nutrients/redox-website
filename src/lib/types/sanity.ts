@@ -393,8 +393,11 @@ export interface HomeColumnSection {
    * in the other column. 'overlap' also ignores `columns` and
    * `items[0]`'s image — a text-only white card (heading/body/cta)
    * pulled up to overlap the bottom-right of the previous section.
+   * 'duo' also ignores `columns`, uses `items[0]`/`items[1]` — each
+   * becomes its own full-bleed photo panel (one per viewport edge)
+   * with its own heading/body/cta overlaid on the photo.
    * See homeSections.ts's homeColumnSection `layout` field. */
-  layout?: 'grid' | 'split' | 'overlap'
+  layout?: 'grid' | 'split' | 'overlap' | 'duo'
   /** Split layout only. Which edge the full-bleed image sits against;
    * defaults to 'left' when unset. */
   imagePosition?: 'left' | 'right'
@@ -453,6 +456,22 @@ export interface HomeFeaturedProductSection {
   }
 }
 
+/** Latest N blog posts, live — same "reference/query, not copied-in
+ * content" reasoning as HomeFeaturedProductSection: editors pick a
+ * heading/intro/count, the posts themselves always come from
+ * whatever's actually been published (see homeSections.ts's schema
+ * field comment and HOME_SECTIONS_FRAGMENT's "posts" select branch). */
+export interface HomeBlogShowcaseSection {
+  _type: 'homeBlogShowcaseSection'
+  _key: string
+  eyebrow?: string
+  heading?: string
+  body?: string
+  postCount: number
+  cta?: Cta
+  posts: BlogPostCard[]
+}
+
 export type HomeSection =
   | HomeHeroSection
   | HomeHeroCarouselSection
@@ -460,6 +479,7 @@ export type HomeSection =
   | HomeStatsSection
   | HomeCtaSection
   | HomeFeaturedProductSection
+  | HomeBlogShowcaseSection
   | ChartSection
   | CalloutSection
   | BulletSection
