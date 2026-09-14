@@ -150,6 +150,18 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
     overflow: hidden;
     box-shadow: var(--shadow-lg);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
+    /* Pulled up to reach behind the overlap section above it (the
+     * white "Many Companies Formulate..." card) instead of stopping at
+     * this section's own top edge — same negative-margin technique
+     * that section already uses to reach up into the hero, just
+     * closing the gap from the other direction so the two sections'
+     * imagery reads as one continuous backdrop from the hero all the
+     * way down. Tuned by eye at this content/viewport, same tradeoff
+     * ColumnSection's own -140px accepts — not dynamically measured
+     * against the overlap section's actual (content-dependent)
+     * height. .columns--overlap's z-index: 2 is what keeps that card
+     * painting above this reaching-up background rather than under it. */
+    margin-top: -540px;
   }
 
   .featured-product__card:hover {
@@ -171,7 +183,13 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
     align-items: stretch;
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: var(--space-16) var(--space-6);
+    /* Top padding absorbs almost all of .featured-product__card's own
+     * -540px pull-up above (so the actual content doesn't rise with
+     * the background all the way to the hero) — but not quite all of
+     * it, so the content also sits noticeably closer to the overlap
+     * card above than it used to (Curtis's "tighten the spacing" ask,
+     * 2026-09-14, tightened further same day after the first pass). */
+    padding: calc(var(--space-16) + 460px) var(--space-6) var(--space-16);
   }
 
   .featured-product__media {
@@ -323,17 +341,96 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
   }
 
   @media (max-width: 767px) {
+    /* Same reach-up idea as desktop's -540px (extend the background up
+     * behind the overlap card above instead of a plain gap), but a
+     * fully-compensated pull this time instead of desktop's partial
+     * "tighten" one: .featured-product__inner's padding-top absorbs
+     * the *entire* pull, not just most of it, so content position is
+     * untouched — Curtis's "keep spacing the same on content" ask,
+     * 2026-09-14. This is also what makes it safe regardless of the
+     * overlap card's own (very content-length-dependent) height, unlike
+     * the first attempt at this: since the pull only ever changes where
+     * .featured-product__card's top edge (and its background) sits,
+     * never where its bottom or its content sits, there's no longer any
+     * value of the overlap card's height that can make this swallow the
+     * media/text below — that was a bug in *how* the earlier version
+     * compensated, not something inherent to pulling the card up at
+     * all. Deliberately does NOT reach for the hero's bottom edge the
+     * way desktop does — .featured-product__card has no z-index of its
+     * own (unlike .columns--overlap's explicit one), so reaching that
+     * far here would start painting over the hero's own content instead
+     * of staying safely behind the (much closer, z-index: 2) overlap
+     * card.
+     *
+     * -220px, not the -140px this was first shipped with: the base gap
+     * itself measured as a fixed, viewport-independent 112px in Chrome
+     * (the flex `gap` + previous section's own bottom padding, neither
+     * of which vary with text wrap) at 375/400/600px, so -140px (112 +
+     * a 28px buffer) looked safely past the seam there. Firefox still
+     * showed a real, at-rest (not a resize-drag transient) gap at that
+     * value (Curtis, 2026-09-14) — almost certainly because the overlap
+     * card's own height is font-metric-sensitive (its heading/body text
+     * wrap is what actually drives that card's height) and Firefox
+     * doesn't render the same webfonts pixel-identical to Chrome, so a
+     * buffer tuned only in Chrome's devtools can legitimately be too
+     * thin in a real Firefox window. Since the full-compensation
+     * mechanics above make the pull amount itself free of downside
+     * (content position doesn't depend on it), widened the buffer a lot
+     * rather than hunting for the exact Firefox delta — no direct way
+     * to test real Firefox rendering from this tooling, so leaning on
+     * headroom instead of a precise number here. */
+    .featured-product__card {
+      margin-top: -220px;
+    }
+
     .featured-product__inner {
       grid-template-columns: 1fr;
-      padding: var(--space-10) var(--space-6);
+      padding: calc(var(--space-10) + 220px) var(--space-6) var(--space-10);
     }
 
-    .featured-product__image {
-      min-height: 220px;
-    }
-
+    /* Content above the product shot on mobile (Curtis's ask,
+     * 2026-09-14) — `order` swaps the stacking without touching DOM
+     * order (which the desktop 2-column grid still relies on: media
+     * first/left, content second/right, via plain auto-placement). */
     .featured-product__content {
+      order: 1;
       padding: var(--space-8) var(--space-6);
+    }
+
+    /* Real bug, not viewport-tuning: on the desktop 2-column grid,
+     * .featured-product__image's height:100% resolves against
+     * .featured-product__media's own height, which is legitimately
+     * definite there (align-items: stretch matches it to the content
+     * column's real text-driven height). Stacked to one column here,
+     * media and content become separate rows with nothing to stretch
+     * against — .featured-product__media's height is auto, so the
+     * image's height:100% can't resolve either, and the browser falls
+     * back to rendering the image at ~its natural aspect ratio for a
+     * full-width box instead. For a portrait product photo (most of
+     * them) that's 1000px+ tall — you'd only ever see a random
+     * viewport-height slice of it, looking exactly like a broken,
+     * zoomed-in crop (Curtis's report, 2026-09-14). Giving the row
+     * itself a real height fixes the circularity at the root instead
+     * of the image having to guess. Bumped from an earlier 260px to
+     * 420px per Curtis's "make the image bigger" ask, same day —
+     * object-fit: contain scales the (portrait) photo up proportionally
+     * as this grows, since height is what actually constrains its
+     * rendered size in this wide-short box, not the width. */
+    .featured-product__media {
+      order: 2;
+      height: 420px;
+    }
+
+    /* The base rule's min-height: 320px (tuned for the desktop
+     * column's own, usually-taller, stretched height) would otherwise
+     * force the image past .featured-product__media's real height
+     * above — height: 100% now has something legitimate to resolve
+     * against, so the floor isn't needed here. Padding trimmed from the
+     * base rule's --space-8 too, so more of the taller box actually
+     * goes to the image itself rather than surrounding whitespace. */
+    .featured-product__image {
+      min-height: 0;
+      padding: var(--space-4);
     }
   }
 </style>

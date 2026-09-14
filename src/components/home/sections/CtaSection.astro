@@ -40,7 +40,32 @@ const { section } = Astro.props
 
 <style>
   .cta-banner {
-    background: var(--color-green-dark);
+    /* --footer-bg, not --color-green-dark — the two happen to be the
+     * identical hex in light theme (#2E6B3E), which is what made the
+     * flush margin-bottom trick below read as a genuinely seamless
+     * bleed into the Footer rather than just "no gap" (Curtis's
+     * "unintentional... let's match it in dark mode too" follow-up,
+     * 2026-09-14). They diverge in dark theme, though — --color-green-
+     * dark there is a light mint (#9CC3A6, still meant to work as
+     * *text* everywhere else it's used) while --footer-bg is near-
+     * black (#131A15) — so the same swap that was a no-op in light
+     * theme is the actual fix in dark theme: this banner now always
+     * matches the Footer's own background, in both themes, by
+     * definition. */
+    background: var(--footer-bg);
+    /* Cancels .home-sections' own padding-bottom (the reserved white/
+     * page-bg gap it adds after whatever homepage section happens to
+     * render last, so a section with no background of its own doesn't
+     * butt straight into the Footer). This section already IS a solid
+     * full-bleed color band, so when it's the page's last section that
+     * reserved gap only ever shows as an unwanted seam between two
+     * dark surfaces (this banner and the Footer) — pull it flush
+     * instead (Curtis's ask, 2026-09-14: the dark run at the bottom of
+     * the homepage should reach the Footer's own top border with no
+     * gap). Safe even when this ISN'T the last section on a given
+     * page: margin-bottom on a normal-flow block just reduces the
+     * space before whatever comes next, it doesn't overlap it. */
+    margin-bottom: calc(-1 * var(--space-24));
   }
 
   .cta-banner__inner {

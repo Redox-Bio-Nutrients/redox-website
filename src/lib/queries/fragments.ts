@@ -77,6 +77,34 @@ export const BG_POOL_FRAGMENT = /* groq */ `select(
   ${MARKET_POOL_SELECT}
 )`
 
+// Only fetched when the post has no cover image of its own — a
+// deterministic pick from it (seeded on _id) stands in instead, both
+// on the detail page hero and the masonry grid card. See
+// BlogPostDetail.astro / BlogMasonry.astro. Market-matched via
+// MARKET_POOL_SELECT, same as products — a post's own optional
+// `markets` field (blogPost.ts) drives it; every WordPress-migrated
+// post has it unset, which resolves to the Ag default.
+export const BLOG_FALLBACK_POOL_FRAGMENT = /* groq */ `select(
+  !defined(coverImage) => ${MARKET_POOL_SELECT}
+)`
+
+export const BLOG_CARD_FRAGMENT = /* groq */ `{
+  _id,
+  title,
+  "slug": slug.current,
+  publishedAt,
+  excerpt,
+  "coverImage": coverImage ${IMAGE_FRAGMENT},
+  "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
+  markets,
+  "categories": categories[]->{ title, "slug": slug.current, color },
+  "author": author->{ name, "photo": photo ${IMAGE_FRAGMENT} }
+}`
+
+// Moved above HOME_SECTIONS_FRAGMENT (was declared down by
+// EPISODE_CARD_FRAGMENT) — HOME_SECTIONS_FRAGMENT's own "posts" select
+// branch below needs this already initialized; see this file's own
+// top-of-file WHY note on declaration order / TDZ.
 export const COLLECTION_FRAGMENT = /* groq */ `{
   _id,
   title,
@@ -226,14 +254,29 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
     backgroundType == "pool" => *[_id == "agBackgroundPool"][0].images[] ${IMAGE_FRAGMENT},
     useBackgroundPool == true => *[_id == "agBackgroundPool"][0].images[] ${IMAGE_FRAGMENT}
   ),
+  // homeBlogShowcaseSection only — the most recent published posts,
+  // live (see the schema field's own comment for why this is a query
+  // rather than a hand-picked list). Cross-document lookup, so gated
+  // behind select() like "pool" above rather than always resolved.
+  // Slice bounds in GROQ must be literal integers (a field reference
+  // like postCount errors: "subscript ranges must have integer
+  // endpoints") — confirmed against the live dataset — so this always
+  // fetches the schema's max (4) and BlogShowcaseSection.astro trims
+  // the array down to the editor's actual postCount client-side.
+  postCount,
+  "posts": select(
+    _type == "homeBlogShowcaseSection" =>
+      *[_type == "blogPost"] | order(publishedAt desc) [0...4] ${BLOG_CARD_FRAGMENT}
+  ),
   // chartSection fields
   source,
   unit,
   rows,
   footnote,
-  // calloutSection/homeStatsSection/homeCtaSection's top-level "body" —
-  // homeStatsSection's and homeCtaSection's are plain strings (a
-  // text field in both schemas), every other section's is
+  // calloutSection/homeStatsSection/homeCtaSection/
+  // homeBlogShowcaseSection's top-level "body" — homeStatsSection's,
+  // homeCtaSection's, and homeBlogShowcaseSection's are plain strings
+  // (a text field in each schema), every other section's is
   // blockContent (an array of blocks); same incompatible-shapes-
   // under-one-key situation as "items" above, same fix. The default
   // branch inlines blockContentField()'s own expansion (can't reuse
@@ -243,6 +286,7 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   "body": select(
     _type == "homeStatsSection" => body,
     _type == "homeCtaSection" => body,
+    _type == "homeBlogShowcaseSection" => body,
     body[]{
       ...,
       _type == "productEmbed" => {
@@ -261,30 +305,6 @@ export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{
   "slug": slug.current,
   tagline,
   "icon": icon ${IMAGE_FRAGMENT}
-}`
-
-// Only fetched when the post has no cover image of its own — a
-// deterministic pick from it (seeded on _id) stands in instead, both
-// on the detail page hero and the masonry grid card. See
-// BlogPostDetail.astro / BlogMasonry.astro. Market-matched via
-// MARKET_POOL_SELECT, same as products — a post's own optional
-// `markets` field (blogPost.ts) drives it; every WordPress-migrated
-// post has it unset, which resolves to the Ag default.
-export const BLOG_FALLBACK_POOL_FRAGMENT = /* groq */ `select(
-  !defined(coverImage) => ${MARKET_POOL_SELECT}
-)`
-
-export const BLOG_CARD_FRAGMENT = /* groq */ `{
-  _id,
-  title,
-  "slug": slug.current,
-  publishedAt,
-  excerpt,
-  "coverImage": coverImage ${IMAGE_FRAGMENT},
-  "fallbackPool": ${BLOG_FALLBACK_POOL_FRAGMENT},
-  markets,
-  "categories": categories[]->{ title, "slug": slug.current, color },
-  "author": author->{ name, "photo": photo ${IMAGE_FRAGMENT} }
 }`
 
 export const EPISODE_CARD_FRAGMENT = /* groq */ `{

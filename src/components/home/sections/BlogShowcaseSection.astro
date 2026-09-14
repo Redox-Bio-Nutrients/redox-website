@@ -1,0 +1,193 @@
+---
+// src/components/home/sections/BlogShowcaseSection.astro
+//
+// "See Redox at Work" — the N most recent blog posts, live. Nothing
+// here is hand-picked: HOME_SECTIONS_FRAGMENT's own "posts" select
+// branch (src/lib/queries/fragments.ts) always resolves the 4 most
+// recent published blogPost docs regardless of what an editor set
+// Number of Posts to (GROQ slice bounds must be literal integers, not
+// a field reference — confirmed against the live dataset), so this
+// component is what actually trims down to section.postCount. Same
+// "reference/query, not copied-in content" reasoning as
+// FeaturedProductSection — see homeSections.ts's schema field comment.
+//
+// Card look is the same BlogMasonryTile.astro used on /blog itself —
+// same per-post grounded accent, category/market chips, photo scrim —
+// just laid out as a plain equal-width row instead of the listing
+// page's variable-height masonry, so this reads as a genuine preview
+// of that page rather than a different card design bolted on.
+
+import { urlFor } from '../../../lib/sanity'
+import { deriveCalloutPalette, groundedAccent } from '../../../lib/color'
+import { randomChoice, seededRandom } from '../../../lib/seededRandom'
+import { buildTextureVars } from '../../../lib/texture'
+import BlogMasonryTile from '../../blog/BlogMasonryTile.astro'
+import type { HomeBlogShowcaseSection } from '../../../lib/types/sanity'
+import '../../../styles/texture-surface.css'
+
+interface Props {
+  section: HomeBlogShowcaseSection
+}
+
+const { section } = Astro.props
+const posts = (section.posts ?? []).slice(0, section.postCount ?? 3)
+// Deep near-black green (not the vivid mid-green Hero's own fallback
+// texture-fill uses) — deriveCalloutPalette's "deep" stop floors at
+// 10% lightness and its "complement" stop is always forced into a
+// 45-62% lightness band regardless of the input, so even off this dark
+// a base the texture still gets a genuine lit highlight (a soft
+// green-to-purple glow), it just reads as moody/dark rather than a
+// bright brand-green panel. Seeded on the section's own _key, same as
+// every other buildTextureVars() call site.
+const textureVars = buildTextureVars(section._key, '#0F1D14')
+
+const tiles = posts.map((post) => {
+  const heroImage =
+    post.coverImage ??
+    (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
+
+  return {
+    post,
+    heroImage,
+    imageUrl: heroImage ? urlFor(heroImage).width(900).auto('format').quality(75).url() : null,
+    // One consistent portrait ratio (not BlogMasonry's randomized
+    // height buckets) — this is a tidy equal-width row, not a masonry
+    // grid, so every card should read as the same "weight".
+    aspectRatio: '4 / 5',
+    accent: groundedAccent(post._id),
+    authorPhotoUrl: post.author?.photo
+      ? urlFor(post.author.photo).width(80).height(80).fit('crop').auto('format').url()
+      : null,
+    categoryChips: (post.categories ?? []).map((category) => ({
+      category,
+      palette: deriveCalloutPalette(category.color ?? groundedAccent(category.slug)),
+    })),
+  }
+})
+---
+
+{tiles.length > 0 && (
+  <section class="showcase">
+    <div class="showcase__bg texture-fill" style={textureVars} aria-hidden="true"></div>
+    <div class="showcase__inner">
+      {section.eyebrow && <p class="showcase__eyebrow">{section.eyebrow}</p>}
+      {section.heading && <h2 class="showcase__heading">{section.heading}</h2>}
+      {section.body && <p class="showcase__body">{section.body}</p>}
+      <div class="showcase__grid" style={`--tile-count: ${tiles.length}`}>
+        {tiles.map((tile) => <BlogMasonryTile {...tile} />)}
+      </div>
+      {section.cta && (
+        <a
+          class="btn btn--ghost btn--on-color showcase__cta"
+          href={section.cta.href}
+          target={section.cta.external ? '_blank' : undefined}
+          rel={section.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          {section.cta.label}
+        </a>
+      )}
+    </div>
+  </section>
+)}
+
+<style>
+  /* Full viewport-width dark band (Curtis's ask, 2026-09-14) — same
+   * full-bleed-background/constrained-content split every other
+   * section here uses (.showcase__bg spans the true edge, .showcase__inner
+   * caps back down to --content-width), just with its own dark
+   * textured surface instead of the page's plain white. */
+  .showcase {
+    position: relative;
+    /* Pulls the very next section (CtaSection, already its own solid
+     * dark full-bleed band) up to sit flush against this one — cancels
+     * .home-sections' own inter-section flex `gap`, same "eat into the
+     * gap" technique ColumnSection's overlap layout already uses. Only
+     * safe because the section that actually follows this one on the
+     * homepage today is another solid-color full-bleed band, not a
+     * plain white one — see CtaSection.astro's own matching
+     * margin-bottom for the second half of "reaches the footer with no
+     * seam" (that gap is between CtaSection and the Footer itself). */
+    margin-bottom: calc(-1 * var(--space-24));
+  }
+
+  .showcase__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .showcase__inner {
+    position: relative;
+    z-index: 1;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .showcase__eyebrow {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    /* Literal light green, not --color-green(-pale) — this section's
+     * dark surface is fixed regardless of site theme (same reasoning
+     * as .overlap-card's own hardcoded text colors below in
+     * ColumnSection.astro), so its text can't use tokens that flip
+     * dark in dark theme. */
+    color: #A8CBA0;
+    margin-bottom: var(--space-3);
+  }
+
+  .showcase__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-white);
+    max-width: 44ch;
+  }
+
+  .showcase__body {
+    margin-top: var(--space-5);
+    max-width: 60ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .showcase__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--tile-count), 1fr);
+    gap: var(--space-8);
+    margin-top: var(--space-10);
+  }
+
+  .showcase__cta {
+    margin-top: var(--space-10);
+    width: fit-content;
+    margin-inline: auto;
+  }
+
+  @media (max-width: 1023px) {
+    .showcase__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .showcase {
+      margin-bottom: calc(-1 * var(--space-16));
+    }
+
+    .showcase__inner {
+      padding: var(--space-16) var(--space-6);
+    }
+
+    .showcase__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+      margin-top: var(--space-8);
+    }
+  }
+</style>

@@ -176,12 +176,13 @@ export const homeColumnSection = defineType({
           { title: 'Grid (centered, equal columns)', value: 'grid' },
           { title: 'Split (image full-bleed, content beside it)', value: 'split' },
           { title: 'Overlap (floating card over the previous section)', value: 'overlap' },
+          { title: 'Duo (two full-bleed image panels, side by side)', value: 'duo' },
         ],
         layout: 'radio',
       },
       initialValue: 'grid',
       description:
-        'Split ignores Column Count and uses only the first Column entry below: its Image renders full-height/full-bleed to one viewport edge (set which side with Image Position), and its Heading/Body/CTA render in the other column (alongside the Eyebrow/Section Heading above) at the page’s normal margin. Overlap ignores Column Count and any Image on the first Column entry — a text-only white card (Heading/Body/CTA) pulled up to overlap the bottom-right of whatever section comes directly before it (designed for right after a full-bleed image Hero).',
+        'Split ignores Column Count and uses only the first Column entry below: its Image renders full-height/full-bleed to one viewport edge (set which side with Image Position), and its Heading/Body/CTA render in the other column (alongside the Eyebrow/Section Heading above) at the page’s normal margin. Overlap ignores Column Count and any Image on the first Column entry — a text-only white card (Heading/Body/CTA) pulled up to overlap the bottom-right of whatever section comes directly before it (designed for right after a full-bleed image Hero). Duo ignores Column Count and uses only the first two Column entries: each one becomes its own full-bleed photo panel (one bleeding to the left viewport edge, one to the right, meeting in the middle) with its own Heading/Body/CTA overlaid on the photo — the Eyebrow/Section Heading above still renders as a shared intro over both panels. Needs an Image on both of the first two Column entries.',
     }),
     defineField({
       name: 'imagePosition',
@@ -213,7 +214,7 @@ export const homeColumnSection = defineType({
         direction: 'horizontal',
       },
       initialValue: 3,
-      hidden: ({ parent }) => parent?.layout === 'split' || parent?.layout === 'overlap',
+      hidden: ({ parent }) => ['split', 'overlap', 'duo'].includes(parent?.layout),
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -460,6 +461,71 @@ export const homeFeaturedProductSection = defineType({
     select: { title: 'product.title', subtitle: 'eyebrow', media: 'product.image' },
     prepare({ title, subtitle, media }) {
       return { title: title || 'Featured Product', subtitle: subtitle || 'Featured Product', media }
+    },
+  },
+})
+
+// ── Blog Showcase — the N most recent posts, live ───────────────────
+//
+// WHY a reference/query section rather than manually-picked posts (the
+// way homeColumnSection's items are hand-authored): the whole point of
+// a "See Redox at Work" homepage spot is that it never goes stale —
+// same "nothing to keep in sync" reasoning as homeFeaturedProductSection
+// above. An editor sets the heading/intro copy and how many posts to
+// show; which posts those are is always whatever's most recently
+// published, resolved live by HOME_SECTIONS_FRAGMENT's "posts" select
+// branch (src/lib/queries/fragments.ts) — nothing here stores a post
+// list to drift out of date.
+export const homeBlogShowcaseSection = defineType({
+  name: 'homeBlogShowcaseSection',
+  title: 'Blog Showcase (recent posts)',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'eyebrow',
+      title: 'Eyebrow',
+      type: 'string',
+      description: 'Optional small label shown above the heading.',
+    }),
+    defineField({
+      name: 'heading',
+      title: 'Section Heading',
+      type: 'string',
+    }),
+    defineField({
+      name: 'body',
+      title: 'Intro Text',
+      type: 'text',
+      rows: 3,
+      description: 'Optional short paragraph shown under the heading, above the posts.',
+    }),
+    defineField({
+      name: 'postCount',
+      title: 'Number of Posts',
+      type: 'number',
+      options: {
+        list: [
+          { title: '2 posts', value: 2 },
+          { title: '3 posts', value: 3 },
+          { title: '4 posts', value: 4 },
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 3,
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'cta',
+      title: 'Call to Action',
+      type: 'cta',
+      description: 'Optional — e.g. "View All Posts" linking to /blog.',
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', postCount: 'postCount' },
+    prepare({ title, postCount }) {
+      return { title: title || 'Blog Showcase', subtitle: `${postCount ?? 3} most recent post${postCount === 1 ? '' : 's'}` }
     },
   },
 })
