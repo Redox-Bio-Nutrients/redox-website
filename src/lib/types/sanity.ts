@@ -429,12 +429,33 @@ export interface HomeCtaSection {
   buttons: Cta[]
 }
 
+/** A single product, referenced (not copied in) — see the schema
+ * field's own comment in homeSections.ts for why. Deliberately a
+ * standalone shape, not a reuse of ProductCard — this only needs a
+ * handful of fields and none of ProductCard's own required `_id`. */
+export interface HomeFeaturedProductSection {
+  _type: 'homeFeaturedProductSection'
+  _key: string
+  eyebrow?: string
+  product: {
+    title: string
+    slug: string
+    tagline?: string
+    markets: Market[]
+    image?: SanityImage
+    logo?: SanityImage
+    primaryColor?: string
+    accentColor?: string
+  }
+}
+
 export type HomeSection =
   | HomeHeroSection
   | HomeHeroCarouselSection
   | HomeColumnSection
   | HomeStatsSection
   | HomeCtaSection
+  | HomeFeaturedProductSection
   | ChartSection
   | CalloutSection
   | BulletSection

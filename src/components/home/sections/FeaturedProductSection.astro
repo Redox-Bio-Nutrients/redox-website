@@ -1,0 +1,254 @@
+---
+// src/components/home/sections/FeaturedProductSection.astro
+//
+// A single product, by reference — see the schema field's own comment
+// (sanity/schemas/objects/homeSections.ts) for why this pulls its
+// name/tagline/image/color live from the product instead of storing
+// copies of any of it. The whole card is one link to the product's
+// page — no separate nested CTA link.
+//
+// Agriculture: a leaf-radius card, the product's own brand color as a
+// textured wash behind its contained packaging shot — same visual
+// language as ProductCard.astro's catalog tile and CalloutSection's
+// solid tone, just assembled into a single link card instead of a
+// hero-scale banner.
+//
+// Turf: diagonal-cut card, two-tone wash from the product's own
+// primaryColor/accentColor, italic condensed title — same system as
+// every other product-facing component (src/styles/turf-livery.css).
+
+import { urlFor } from '../../../lib/sanity'
+import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
+import { buildTextureVars } from '../../../lib/texture'
+import { getProductVariant } from '../../../lib/productVariant'
+import type { HomeFeaturedProductSection } from '../../../lib/types/sanity'
+import '../../../styles/turf-livery.css'
+import '../../../styles/texture-surface.css'
+
+interface Props {
+  section: HomeFeaturedProductSection
+}
+
+const { section } = Astro.props
+const { product } = section
+const isTurf = product ? getProductVariant(product.markets) === 'turf' : false
+const color = product?.primaryColor ?? '#3A7D50'
+const palette = deriveCalloutPalette(color, product?.accentColor)
+// Turf's two-tone wash uses the accent as a foreground-adjacent
+// gradient stop, not just a background tint — needs the readability
+// floor (see redox-turf-product-system memory: raw accentColor has no
+// lightness floor and can go illegible against the dark wash).
+const turfAccent = ensureReadableOnDark(palette.complement)
+const textureVars = buildTextureVars(section._key, color, product?.accentColor)
+
+const imageUrl = product?.image
+  ? urlFor(product.image).width(800).fit('max').auto('format').quality(85).url()
+  : null
+const logoUrl = product?.logo
+  ? urlFor(product.logo).width(400).fit('max').auto('format').url()
+  : null
+---
+
+{product && (
+  <section class="featured-product">
+    <div class="featured-product__inner">
+      <a
+        href={`/products/${product.slug}`}
+        class:list={[
+          'featured-product__card',
+          isTurf ? ['featured-product__card--turf', 'turf-cut'] : 'texture-fill',
+        ]}
+        style={isTurf ? `--turf-cut: var(--turf-cut-lg); --fp-turf-primary: ${color}; --fp-turf-accent: ${turfAccent};` : textureVars}
+      >
+        {/* Whole-card layer, not nested inside .featured-product__media
+           — the wash has to sit behind BOTH grid columns (image and
+           text share one continuous background on a turf card, same
+           as CalloutSection's .t-callout), not just the image side. */}
+        {isTurf && <div class="featured-product__turf-wash" aria-hidden="true"></div>}
+        <div class="featured-product__media">
+          {imageUrl && (
+            <img
+              class="featured-product__image"
+              src={imageUrl}
+              alt={product.image?.alt ?? product.title}
+              loading="lazy"
+            />
+          )}
+        </div>
+        <div class="featured-product__content">
+          {section.eyebrow && <p class="featured-product__eyebrow">{section.eyebrow}</p>}
+          <h2 class:list={['featured-product__title', { 'featured-product__title--logo': logoUrl }]}>
+            {logoUrl ? <img class="featured-product__logo" src={logoUrl} alt={product.title} /> : product.title}
+          </h2>
+          {product.tagline && <p class="featured-product__tagline">{product.tagline}</p>}
+          <span class="featured-product__cta">
+            Explore {product.title} <span aria-hidden="true">→</span>
+          </span>
+        </div>
+      </a>
+    </div>
+  </section>
+)}
+
+<style>
+  .featured-product__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .featured-product__card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: stretch;
+    color: var(--color-white);
+    border-radius: var(--radius-leaf);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .featured-product__card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-3px);
+  }
+
+  .featured-product__media {
+    position: relative;
+    z-index: 1;
+    /* Quiet surface behind the packaging shot when the texture-fill
+     * (agriculture) or turf wash doesn't already fill it — mirrors
+     * ProductCard.astro's own .card__media fallback. Turf overrides
+     * this to transparent below, so its whole-card wash (see
+     * .featured-product__turf-wash) shows through on both sides. */
+    background: var(--bg-surface);
+  }
+
+  .featured-product__card--turf .featured-product__media {
+    background: none;
+  }
+
+  /* Whole-card layer (see the component's own comment on it) — sits
+   * behind both grid columns via DOM order (it's the card's first
+   * child) rather than z-index; media/content above it still need
+   * their own z-index so this doesn't paint over them despite coming
+   * first, since .featured-product__card is a grid container and grid
+   * items don't strictly follow DOM paint order the way normal block
+   * children do. */
+  .featured-product__turf-wash {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--fp-turf-primary) 88%, transparent) 0%,
+      color-mix(in srgb, var(--fp-turf-accent) 70%, transparent) 100%
+    );
+  }
+
+  .featured-product__image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    object-fit: contain;
+    padding: var(--space-8);
+    filter: drop-shadow(0 16px 28px rgb(0 0 0 / 0.3));
+  }
+
+  .featured-product__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-12);
+  }
+
+  .featured-product__eyebrow {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: var(--space-3);
+  }
+
+  .featured-product__title {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+  }
+
+  .featured-product__title--logo {
+    line-height: 0;
+  }
+
+  .featured-product__logo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 3rem;
+    filter: drop-shadow(0 2px 10px rgb(0 0 0 / 0.35));
+  }
+
+  .featured-product__tagline {
+    margin-top: var(--space-4);
+    max-width: 44ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  .featured-product__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    width: fit-content;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    border-bottom: 1px solid currentColor;
+  }
+
+  .featured-product__cta span {
+    transition: transform 0.2s ease;
+  }
+
+  .featured-product__card:hover .featured-product__cta span {
+    transform: translateX(3px);
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .featured-product__card--turf {
+    border-radius: 0;
+  }
+
+  .featured-product__card--turf .featured-product__title {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  @media (max-width: 767px) {
+    .featured-product__inner {
+      padding: var(--space-10) var(--space-6);
+    }
+
+    .featured-product__card {
+      grid-template-columns: 1fr;
+    }
+
+    .featured-product__image {
+      min-height: 220px;
+    }
+
+    .featured-product__content {
+      padding: var(--space-8) var(--space-6);
+    }
+  }
+</style>

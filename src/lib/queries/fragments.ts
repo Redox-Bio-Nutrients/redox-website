@@ -132,10 +132,24 @@ export function blockContentField(fieldName: string): string {
 export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   _type,
   _key,
-  // homeColumnSection only — a small uppercase label over the heading.
+  // homeColumnSection/homeFeaturedProductSection only — a small
+  // uppercase label over the heading/product name.
   eyebrow,
   heading,
   subheading,
+  // homeFeaturedProductSection only — everything else (name, slug,
+  // tagline, brand color) comes live from the referenced product
+  // itself; see the schema field's own comment for why.
+  "product": product->{
+    title,
+    "slug": slug.current,
+    tagline,
+    markets,
+    "image": image ${IMAGE_FRAGMENT},
+    "logo": logo ${IMAGE_FRAGMENT},
+    primaryColor,
+    accentColor
+  },
   "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
   "backgroundVideoUrl": backgroundVideo.asset->url,
   cta,
