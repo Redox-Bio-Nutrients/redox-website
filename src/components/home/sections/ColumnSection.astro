@@ -33,58 +33,122 @@ const pool =
         lqip: img.lqip ?? null,
       }))
     : []
+
+// Split layout — a distinct markup branch below (edge-to-edge image,
+// no .columns__inner max-width wrapper), not just another
+// --column-count value: the grid layout keeps both columns centered
+// and equal-width inside --content-width on purpose, while split
+// deliberately breaks that — the image bleeds to the true viewport
+// edge and only the text column respects the page's normal outer
+// margin. Ignores `columns`; uses only items[0] — see the schema
+// field's own comment for why one item is enough (its image is the
+// full-bleed column, its heading/body/cta are the other column,
+// alongside the section-level eyebrow/heading every layout already
+// renders). `imagePosition` (default 'left') picks which viewport
+// edge the image bleeds to; the markup order never changes — only
+// the `columns--split-right` modifier class below reorders the two
+// columns visually, so the image stays first in the DOM either way.
+const isSplit = section.layout === 'split'
+const splitItem = section.items?.[0]
+const splitImagePosition = section.imagePosition === 'right' ? 'right' : 'left'
+const splitImageUrl = splitItem?.image
+  ? urlFor(splitItem.image).width(1400).height(1600).fit('crop').auto('format').quality(75).url()
+  : null
 ---
 
-<section
-  class:list={['columns', `columns--bg-${bgType}`]}
-  style={bgType === 'color' && section.backgroundColor ? `--section-bg: ${section.backgroundColor}` : undefined}
->
-  {bgImageUrl && (
-    <img class="columns__bg" src={bgImageUrl} alt="" aria-hidden="true" loading="lazy" />
-  )}
-  {bgType === 'pool' && pool.length > 0 && <PoolBackground pool={pool} />}
-  {(bgType === 'image' || (bgType === 'pool' && pool.length > 0)) && (
-    <div class="columns__scrim" aria-hidden="true"></div>
-  )}
-
-  <div class="columns__inner">
-    {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
-    <div class="columns__grid" style={`--column-count: ${section.columns}`}>
-      {section.items.map((item) => (
-        <div class="column">
-          {item.image && (
-            <img
-              class="column__image"
-              src={urlFor(item.image).width(600).height(450).fit('crop').auto('format').quality(75).url()}
-              alt={item.image.alt ?? ''}
-              loading="lazy"
-            />
-          )}
-          {item.heading && <h3 class="column__heading">{item.heading}</h3>}
-          {item.body && (
-            <div class="column__body">
-              <PortableText
-                value={item.body}
-                components={portableTextComponents}
-                onMissingComponent={onMissingPortableTextComponent}
-              />
-            </div>
-          )}
-          {item.cta && (
-            <a
-              class="column__cta"
-              href={item.cta.href}
-              target={item.cta.external ? '_blank' : undefined}
-              rel={item.cta.external ? 'noopener noreferrer' : undefined}
-            >
-              {item.cta.label} →
-            </a>
-          )}
-        </div>
-      ))}
+{isSplit && splitItem ? (
+  <section
+    class:list={[
+      'columns',
+      'columns--split',
+      { 'columns--split-right': splitImagePosition === 'right', 'columns--bg-color': bgType === 'color' },
+    ]}
+    style={bgType === 'color' && section.backgroundColor ? `--section-bg: ${section.backgroundColor}` : undefined}
+  >
+    <div class="split__image-col">
+      {splitImageUrl && (
+        <img class="split__image" src={splitImageUrl} alt={splitItem.image?.alt ?? ''} loading="lazy" />
+      )}
+      <div class="split__image-fade" aria-hidden="true"></div>
     </div>
-  </div>
-</section>
+    <div class="split__content-col">
+      {section.eyebrow && <p class="columns__eyebrow">{section.eyebrow}</p>}
+      {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
+      {splitItem.heading && <h3 class="column__heading">{splitItem.heading}</h3>}
+      {splitItem.body && (
+        <div class="column__body">
+          <PortableText
+            value={splitItem.body}
+            components={portableTextComponents}
+            onMissingComponent={onMissingPortableTextComponent}
+          />
+        </div>
+      )}
+      {splitItem.cta && (
+        <a
+          class="column__cta"
+          href={splitItem.cta.href}
+          target={splitItem.cta.external ? '_blank' : undefined}
+          rel={splitItem.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          {splitItem.cta.label} →
+        </a>
+      )}
+    </div>
+  </section>
+) : (
+  <section
+    class:list={['columns', `columns--bg-${bgType}`]}
+    style={bgType === 'color' && section.backgroundColor ? `--section-bg: ${section.backgroundColor}` : undefined}
+  >
+    {bgImageUrl && (
+      <img class="columns__bg" src={bgImageUrl} alt="" aria-hidden="true" loading="lazy" />
+    )}
+    {bgType === 'pool' && pool.length > 0 && <PoolBackground pool={pool} />}
+    {(bgType === 'image' || (bgType === 'pool' && pool.length > 0)) && (
+      <div class="columns__scrim" aria-hidden="true"></div>
+    )}
+
+    <div class="columns__inner">
+      {section.eyebrow && <p class="columns__eyebrow">{section.eyebrow}</p>}
+      {section.heading && <h2 class="columns__heading">{section.heading}</h2>}
+      <div class="columns__grid" style={`--column-count: ${section.columns}`}>
+        {section.items.map((item) => (
+          <div class="column">
+            {item.image && (
+              <img
+                class="column__image"
+                src={urlFor(item.image).width(600).height(450).fit('crop').auto('format').quality(75).url()}
+                alt={item.image.alt ?? ''}
+                loading="lazy"
+              />
+            )}
+            {item.heading && <h3 class="column__heading">{item.heading}</h3>}
+            {item.body && (
+              <div class="column__body">
+                <PortableText
+                  value={item.body}
+                  components={portableTextComponents}
+                  onMissingComponent={onMissingPortableTextComponent}
+                />
+              </div>
+            )}
+            {item.cta && (
+              <a
+                class="column__cta"
+                href={item.cta.href}
+                target={item.cta.external ? '_blank' : undefined}
+                rel={item.cta.external ? 'noopener noreferrer' : undefined}
+              >
+                {item.cta.label} →
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
 
 <style>
   .columns {
@@ -114,12 +178,144 @@ const pool =
     background: var(--img-scrim);
   }
 
+  /* ── Split layout ───────────────────────────────────────────────
+   * Deliberately NOT inside .columns__inner's centered/padded
+   * container — the whole point is that the image ignores
+   * --content-width and bleeds to the true viewport edge. Grid's
+   * default `align-items: stretch` is what makes the image column
+   * match the text column's height: .split__image-col has no
+   * intrinsic height of its own (its only child is absolutely
+   * positioned, contributing zero height to the row's auto sizing),
+   * so the row height comes entirely from .split__content-col's
+   * content, and stretch grows the image column's box to match. */
+  .columns--split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Image-right: DOM order stays image-col-then-content-col (see the
+   * component's comment on `imagePosition`) — flipping which visual
+   * column each one occupies is just `order`. The content column's
+   * padding has to flip with it: its outer edge (the one that must
+   * align to the page's normal margin) is on the right by default
+   * because the image sits on the left, so reversing the image also
+   * reverses which side of the content column is "outer" vs. "near
+   * the image". */
+  .columns--split-right .split__image-col {
+    order: 2;
+  }
+
+  .columns--split-right .split__content-col {
+    order: 1;
+  }
+
+  .split__image-col {
+    position: relative;
+  }
+
+  .split__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Two corners get rounded, each with its own fixed length (never a
+     * percentage) so neither one distorts into an ellipse as the box's
+     * own aspect ratio shifts across breakpoints — a percentage radius
+     * resolves its horizontal and vertical parts against the box's
+     * width/height independently, which is exactly what made the
+     * bottom corner look stretched on narrower boxes before this.
+     * - OUTER top corner: already touching two free edges (the
+     *   section top and the viewport edge the image bleeds to) — the
+     *   same single plain-radius treatment the site's card motifs use
+     *   elsewhere (TestimonialCard, EmployeeCard, etc. — see
+     *   --radius-leaf/-leaf-mirror in tokens.css), just much larger
+     *   for a full-bleed hero image instead of a small card.
+     * - Diagonally-opposite corner, on the content-column side:
+     *   bigger — its own variable rather than reusing the top corner's
+     *   now that the two are meant to differ in size.
+     * Default here is image-left (outer corner top-left, opposite
+     * corner bottom-right); mirrored below for image-right. */
+    --split-outer-radius: clamp(3rem, 6vw, 6rem);
+    --split-inner-radius: clamp(5rem, 11vw, 11rem);
+    border-top-left-radius: var(--split-outer-radius);
+    border-bottom-right-radius: var(--split-inner-radius);
+  }
+
+  .columns--split-right .split__image {
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--split-outer-radius);
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: var(--split-inner-radius);
+  }
+
+  /* Fades the top of the image to white so the photo bleeds into a
+   * white page background instead of meeting it with a hard edge. A
+   * separate overlay div, not a gradient on the img itself —
+   * background-image would replace the photo rather than sit over it.
+   * Straight top-to-bottom linear fade (not anchored to either
+   * corner), so it's identical for image-left/-right — no mirrored
+   * override needed. var(--color-white) (not a page/surface token)
+   * because this fade targets literal white regardless of light/dark
+   * theme — see its definition in tokens.css. */
+  .split__image-fade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, var(--color-white) 0%, transparent 60%);
+  }
+
+  .split__content-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-24) max(var(--space-6), calc((100vw - var(--content-width)) / 2)) var(--space-24)
+      var(--space-12);
+  }
+
+  .columns--split-right .split__content-col {
+    padding-right: var(--space-12);
+    padding-left: max(var(--space-6), calc((100vw - var(--content-width)) / 2));
+  }
+
+  .split__content-col .columns__heading,
+  .split__content-col .column__heading {
+    margin-bottom: var(--space-5);
+  }
+
+  @media (max-width: 767px) {
+    .columns--split {
+      grid-template-columns: 1fr;
+    }
+
+    .split__image-col {
+      /* absolutely-positioned .split__image needs an explicit box to
+       * fill once the grid collapses to a single column (stretch has
+       * nothing left to stretch to match) */
+      aspect-ratio: 4 / 3;
+      min-height: 280px;
+    }
+
+    .split__content-col,
+    .columns--split-right .split__content-col {
+      padding: var(--space-16) var(--space-6);
+    }
+  }
+
   .columns__inner {
     position: relative;
     z-index: 1;
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-24) var(--space-6);
+  }
+
+  .columns__eyebrow {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-green);
+    margin-bottom: var(--space-3);
   }
 
   .columns__heading {
@@ -130,6 +326,13 @@ const pool =
     letter-spacing: -0.01em;
     color: var(--color-text-primary);
     margin-bottom: var(--space-10);
+  }
+
+  .columns--bg-color .columns__eyebrow,
+  .columns--bg-image .columns__eyebrow,
+  .columns--bg-pool .columns__eyebrow {
+    color: var(--color-white);
+    opacity: 0.85;
   }
 
   .columns--bg-color .columns__heading,

@@ -50,8 +50,12 @@ export interface TextSection {
 export interface CalloutSection {
   _type: 'calloutSection'
   _key: string
+  eyebrow?: string
   heading?: string
   body: PortableTextBlock[]
+  cta?: Cta
+  /** Homepage/Technology page-builder only — see the schema field's own comment. */
+  backgroundImage?: SanityImage
   tone: 'solid' | 'tint'
   color?: string
   accentColor?: string
@@ -380,7 +384,16 @@ export type SectionBackgroundType = 'none' | 'color' | 'image' | 'pool'
 export interface HomeColumnSection {
   _type: 'homeColumnSection'
   _key: string
+  eyebrow?: string
   heading?: string
+  /** 'split' ignores `columns` and uses only `items[0]` — its image
+   * full-bleed to one edge (see `imagePosition`), its heading/body/cta
+   * in the other column. See homeSections.ts's homeColumnSection
+   * `layout` field. */
+  layout?: 'grid' | 'split'
+  /** Split layout only. Which edge the full-bleed image sits against;
+   * defaults to 'left' when unset. */
+  imagePosition?: 'left' | 'right'
   columns: 1 | 2 | 3
   items: ColumnItem[]
   backgroundType?: SectionBackgroundType
@@ -390,10 +403,34 @@ export interface HomeColumnSection {
   pool?: SanityImage[]
 }
 
+export interface StatItem {
+  _key: string
+  heading: string
+  body?: string
+}
+
+export interface HomeStatsSection {
+  _type: 'homeStatsSection'
+  _key: string
+  heading?: string
+  body?: string
+  items: StatItem[]
+}
+
+export interface HomeCtaSection {
+  _type: 'homeCtaSection'
+  _key: string
+  heading: string
+  body?: string
+  buttons: Cta[]
+}
+
 export type HomeSection =
   | HomeHeroSection
   | HomeHeroCarouselSection
   | HomeColumnSection
+  | HomeStatsSection
+  | HomeCtaSection
   | ChartSection
   | CalloutSection
   | BulletSection

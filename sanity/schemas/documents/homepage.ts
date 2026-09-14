@@ -19,6 +19,8 @@ export const homepage = defineType({
         { type: 'homeHeroSection' },
         { type: 'homeHeroCarouselSection' },
         { type: 'homeColumnSection' },
+        { type: 'homeStatsSection' },
+        { type: 'homeCtaSection' },
         { type: 'chartSection' },
       ],
     }),

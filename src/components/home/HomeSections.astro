@@ -9,6 +9,8 @@ import type { HomeSection } from '../../lib/types/sanity'
 import HeroSection from './sections/HeroSection.astro'
 import HeroCarouselSection from './sections/HeroCarouselSection.astro'
 import ColumnSection from './sections/ColumnSection.astro'
+import StatsSection from './sections/StatsSection.astro'
+import CtaSection from './sections/CtaSection.astro'
 // Reused as-is from the product page-builder — their highlight colors
 // already fall back to brand green (var(--product-color, ...) / the
 // component's own default) when no product context sets
@@ -34,6 +36,10 @@ const { sections } = Astro.props
         return <HeroCarouselSection section={section} />
       case 'homeColumnSection':
         return <ColumnSection section={section} />
+      case 'homeStatsSection':
+        return <StatsSection section={section} />
+      case 'homeCtaSection':
+        return <CtaSection section={section} />
       case 'chartSection':
         // ChartSection has no built-in width constraint (product pages
         // supply one via .layout) — wrap it here since page-builder
@@ -44,15 +50,19 @@ const { sections } = Astro.props
           </div>
         )
       case 'calloutSection':
-        // Same story as ChartSection above — no built-in width
-        // constraint of its own. Variant defaults to 'agriculture'
-        // inside the component, which is the leaf-radius/leaf-sprig
-        // treatment (not turf's diagonal cut) — the one we want here.
-        return (
-          <div class="home-sections__constrain">
-            <CalloutSection section={section} />
-          </div>
-        )
+        // Unlike ChartSection/BulletSection below, deliberately NOT
+        // wrapped in .home-sections__constrain — this one spans the
+        // true viewport edge (fullBleed), so its own CSS handles
+        // lining the text up with --content-width instead. Variant
+        // defaults to 'agriculture' inside the component, which is
+        // the leaf-radius/leaf-sprig treatment (not turf's diagonal
+        // cut) — the one we want here. No `backgrounds` pool passed —
+        // that prop is for a product's wide field/farm photography
+        // pool (product-page context only); a homepage/technology
+        // callout's own backgroundImage (see the schema field's own
+        // comment) is a contained product shot the component renders
+        // itself, not a pool image.
+        return <CalloutSection section={section} fullBleed />
       case 'bulletSection':
         return (
           <div class="home-sections__constrain">

@@ -16,9 +16,10 @@
 import { PortableText } from 'astro-portabletext'
 import { urlFor } from '../../../lib/sanity'
 import { deriveCalloutPalette } from '../../../lib/color'
-import { randomBetween, randomChoice, seededRandom } from '../../../lib/seededRandom'
+import { buildTextureVars } from '../../../lib/texture'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import '../../../styles/turf-livery.css'
+import '../../../styles/texture-surface.css'
 import type { CalloutSection, SanityImage } from '../../../lib/types/sanity'
 import type { ProductVariant } from '../../../lib/productVariant'
 import PoolBackground from '../../ui/PoolBackground.astro'
@@ -30,9 +31,17 @@ interface Props {
   /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
   productAccentColor?: string
   backgrounds?: SanityImage[]
+  /** Homepage/Technology only (HomeSections.astro passes this; a
+   * product page's own callouts never do) — spans the true viewport
+   * edge instead of sitting inside the page-builder's normal
+   * --content-width column, with bigger heading/body type and a
+   * product image that breaks past the box's own top edge. See the
+   * `callout--full-bleed` styles below. */
+  fullBleed?: boolean
 }
 
-const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds } = Astro.props
+const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds, fullBleed = false } =
+  Astro.props
 // A section-level color override (schema field, optional) wins over
 // the inherited product/page color — set on product pages too, not
 // just here, but only ever populated when an editor explicitly wants
@@ -53,43 +62,37 @@ const pool = (backgrounds ?? []).map((img) => ({
 }))
 const hasBg = pool.length > 0
 
+// Homepage/Technology only (see the schema field's own comment) — a
+// contained product shot (bottle/label PNG, object-fit: contain, same
+// convention ProductCard.astro's own packaging image uses), NOT
+// another `backgrounds` pool entry: that pool is wide field/farm
+// photography meant to be cropped full-bleed, which mangles a tall
+// product photo. Rendered by every variant below, floating over the
+// panel rather than behind it.
+const productImageUrl = section.backgroundImage
+  ? urlFor(section.backgroundImage).width(700).fit('max').auto('format').quality(85).url()
+  : null
+
 // Seeded on the section's own _key, not Math.random() — every callout
 // gets a genuinely different bloom layout, but the *same* callout
 // looks the same on every rebuild rather than reshuffling on redeploy.
-// bright/deep stay in their own "upper" / "lower" position bands (a
-// handful of candidates each) so the light-from-above, shadow-below
-// logic never breaks; only which corner within that band varies.
-const rng = seededRandom(section._key)
-const sweepAngle = Math.round(randomBetween(rng, 100, 160))
-const brightPos = randomChoice(rng, ['92% -10%', '8% -10%', '50% -18%', '75% -15%'])
-const deepPos = randomChoice(rng, ['0% 115%', '100% 115%', '50% 122%', '25% 118%'])
-const complementPos = randomChoice(rng, ['78% 96%', '15% 92%', '85% 12%', '10% 8%', '95% 55%', '4% 55%'])
-const complementSizeX = Math.round(randomBetween(rng, 55, 92))
-const complementSizeY = Math.round(randomBetween(rng, 70, 105))
-const complementMix = Math.round(randomBetween(rng, 34, 52))
-
-const calloutVars = [
-  `--callout-color: ${color}`,
-  `--callout-bright: ${palette.bright}`,
-  `--callout-deep: ${palette.deep}`,
-  `--callout-complement: ${palette.complement}`,
-  `--callout-sweep: ${sweepAngle}deg`,
-  `--callout-bright-pos: ${brightPos}`,
-  `--callout-deep-pos: ${deepPos}`,
-  `--callout-complement-pos: ${complementPos}`,
-  `--callout-complement-size: ${complementSizeX}% ${complementSizeY}%`,
-  `--callout-complement-mix: ${complementMix}%`,
-].join('; ')
+// See src/lib/texture.ts (this recipe's original home, before the
+// hero headers started reusing it too) for the position-band details.
+const textureVars = buildTextureVars(section._key, color, accent)
 ---
 
 {variant === 'turf' ? (
   <section
-    class="t-callout turf-cut"
+    class:list={['t-callout', 'turf-cut', { 't-callout--has-image': productImageUrl, 't-callout--full-bleed': fullBleed }]}
     style={`--turf-cut: var(--turf-cut-lg); --t-callout-primary: ${palette.base}; --t-callout-accent: ${palette.complement};`}
   >
     {hasBg && <PoolBackground pool={pool} />}
     <div class="t-callout__wash" aria-hidden="true"></div>
+    {productImageUrl && (
+      <img class="t-callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
+    )}
     <div class="t-callout__panel">
+      {section.eyebrow && <p class="t-callout__eyebrow">{section.eyebrow}</p>}
       {section.heading && <h2>{section.heading}</h2>}
       {hasBody && (
         <div class="t-callout__body">
@@ -100,31 +103,68 @@ const calloutVars = [
           />
         </div>
       )}
+      {section.cta && (
+        <a
+          class="t-callout__cta"
+          href={section.cta.href}
+          target={section.cta.external ? '_blank' : undefined}
+          rel={section.cta.external ? 'noopener noreferrer' : undefined}
+        >
+          {section.cta.label} →
+        </a>
+      )}
     </div>
   </section>
 ) : (
   <section
-    class:list={['callout', solid ? 'callout--solid' : 'callout--tint']}
-    style={calloutVars}
+    class:list={[
+      'callout',
+      solid ? ['callout--solid', 'texture-fill'] : 'callout--tint',
+      { 'callout--has-image': productImageUrl, 'callout--full-bleed': fullBleed },
+    ]}
+    style={textureVars}
   >
     {hasBg ? (
       <PoolBackground pool={pool} />
     ) : (
       !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}
-    {hasBg && solid && <div class="callout__overlay" aria-hidden="true"></div>}
+    {hasBg && solid && <div class="callout__overlay texture-wash" aria-hidden="true"></div>}
 
-    <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
-      {section.heading && <h2>{section.heading}</h2>}
-      {hasBody && (
-        <div class="callout__body">
-          <PortableText
-            value={section.body}
-            components={portableTextComponents}
-            onMissingComponent={onMissingPortableTextComponent}
-          />
-        </div>
+    {/* Inert wrapper by default (no position/width of its own, so the
+       product image's absolute positioning still resolves against
+       .callout as before) — only .callout--full-bleed's own CSS turns
+       it into a --content-width positioning context, so the image and
+       text line up with the page's normal column even though .callout
+       itself spans the true viewport edge. */}
+    <div class="callout__inner">
+      {productImageUrl && (
+        <img class="callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
       )}
+
+      <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
+        {section.eyebrow && <p class="callout__eyebrow">{section.eyebrow}</p>}
+        {section.heading && <h2>{section.heading}</h2>}
+        {hasBody && (
+          <div class="callout__body">
+            <PortableText
+              value={section.body}
+              components={portableTextComponents}
+              onMissingComponent={onMissingPortableTextComponent}
+            />
+          </div>
+        )}
+        {section.cta && (
+          <a
+            class="callout__cta"
+            href={section.cta.href}
+            target={section.cta.external ? '_blank' : undefined}
+            rel={section.cta.external ? 'noopener noreferrer' : undefined}
+          >
+            {section.cta.label} →
+          </a>
+        )}
+      </div>
     </div>
   </section>
 )}
@@ -176,35 +216,47 @@ const calloutVars = [
     transform: rotate(-32deg);
   }
 
+  /* ── Product image (Homepage/Technology only) ──────────────────
+   * A contained product shot, not another background layer — same
+   * object-fit: contain convention as ProductCard.astro's own
+   * packaging image ("whole product visible, floating on the
+   * field"). Sits above the background/overlay/wash but below the
+   * leaf sprig (z-index 3), so the sprig still reads as the
+   * permanent top-right fixture it is everywhere else. */
+  .callout__product-image {
+    position: absolute;
+    z-index: 2;
+    right: clamp(var(--space-4), 5%, var(--space-10));
+    top: 50%;
+    transform: translateY(-50%);
+    /* Not a percentage height — .callout's own height is auto (its
+     * content sets it), so a percentage here would resolve to auto
+     * too. max-height alone, with width left auto, sizes correctly
+     * regardless (see the turf variant's own copy of this note). */
+    max-height: 280px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 16px 28px rgb(0 0 0 / 0.25));
+    pointer-events: none;
+  }
+
 
   /* ── Solid ──────────────────────────────────────────────────── */
-  /* Design test (see chat): was a single flat --callout-color tinted
-   * with plain white/black lighting radials — reads monochromatic on
-   * a box this large. Now built from --callout-color plus two
-   * hue-shifted variants (deriveCalloutPalette() in src/lib/color.ts,
-   * computed from the same product hex, not a second CMS field) swept
-   * diagonally, with the light/shadow blooms tinted by those same
-   * hues instead of plain white/black, plus a fine grain layer so the
-   * surface doesn't read as a flat vector fill. Bloom positions and
-   * the sweep angle come from --callout-* custom properties seeded
-   * per-section (see the frontmatter) rather than fixed values, so
-   * every callout instance gets a different layout instead of
-   * repeating an identical formula. Shape/spacing/leaf sprig
-   * untouched — this only changes what paints as the background. */
+  /* Background itself (grain + hue-shifted blooms + diagonal sweep,
+   * seeded per-section) comes from the shared .texture-fill class
+   * (src/styles/texture-surface.css) driven by the --texture-* vars
+   * buildTextureVars() computes in the frontmatter — this file just
+   * adds the leaf-sprig-specific color/spacing on top. See
+   * texture-surface.css for the "why a texture, not a flat fill" —
+   * this reasoning used to live here before the hero headers started
+   * reusing the same recipe. */
   .callout--solid {
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
-      radial-gradient(var(--callout-complement-size) at var(--callout-complement-pos), color-mix(in srgb, var(--callout-complement) var(--callout-complement-mix), transparent), transparent 62%),
-      radial-gradient(120% 140% at var(--callout-bright-pos), color-mix(in srgb, var(--callout-bright) 65%, white 35%), transparent 58%),
-      radial-gradient(115% 130% at var(--callout-deep-pos), color-mix(in srgb, var(--callout-deep) 80%, black 20%), transparent 62%),
-      linear-gradient(var(--callout-sweep), var(--callout-bright) 0%, var(--callout-color) 45%, var(--callout-deep) 100%);
-    background-blend-mode: overlay, normal, normal, normal, normal;
     color: var(--color-white);
   }
 
   /* Product-color wash over the imagery — brand color carries, photo
-   * texture shows through. Same multi-hue + grain + per-instance
-   * variation as .callout--solid above (this is the layer actually
+   * texture shows through. Same .texture-wash background as
+   * .callout--solid's .texture-fill above (this is the layer actually
    * visible whenever a product has *any* background imagery — its
    * own, a callout-specific pool, or the site-wide fallback — which
    * in practice is most of the time, so the flat-color
@@ -212,18 +264,6 @@ const calloutVars = [
   .callout__overlay {
     position: absolute;
     inset: 0;
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E"),
-      radial-gradient(var(--callout-complement-size) at var(--callout-complement-pos), color-mix(in srgb, var(--callout-complement) var(--callout-complement-mix), transparent), transparent 62%),
-      radial-gradient(120% 140% at var(--callout-bright-pos), color-mix(in srgb, var(--callout-bright) 40%, transparent) 0%, transparent 58%),
-      radial-gradient(115% 130% at var(--callout-deep-pos), color-mix(in srgb, var(--callout-deep) 48%, transparent) 0%, transparent 62%),
-      linear-gradient(
-        var(--callout-sweep),
-        color-mix(in srgb, var(--callout-bright) 60%, transparent) 0%,
-        color-mix(in srgb, var(--callout-color) 52%, transparent) 50%,
-        color-mix(in srgb, var(--callout-deep) 58%, transparent) 100%
-      );
-    background-blend-mode: overlay, normal, normal, normal, normal;
   }
 
   .callout--solid .callout__panel {
@@ -244,9 +284,9 @@ const calloutVars = [
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(70% 90% at 20% 15%, color-mix(in srgb, var(--callout-color) 45%, transparent), transparent 65%),
-      radial-gradient(60% 80% at 85% 85%, color-mix(in srgb, var(--callout-color) 30%, transparent), transparent 60%),
-      color-mix(in srgb, var(--callout-color) 10%, var(--color-cream));
+      radial-gradient(70% 90% at 20% 15%, color-mix(in srgb, var(--texture-color) 45%, transparent), transparent 65%),
+      radial-gradient(60% 80% at 85% 85%, color-mix(in srgb, var(--texture-color) 30%, transparent), transparent 60%),
+      color-mix(in srgb, var(--texture-color) 10%, var(--color-cream));
   }
 
   .callout__panel--glass {
@@ -276,9 +316,59 @@ const calloutVars = [
     color: var(--color-text-primary);
   }
 
+  /* Extra room for the floating product image — padding-right only
+   * (not the shorthand) so this doesn't clobber the solid/glass
+   * panel rules' own top/bottom/left padding above; placed after both
+   * of those so this override wins (equal specificity, source order
+   * decides). Desktop only — mobile restacks the image above the
+   * panel instead (see the max-width query below), so the panel goes
+   * back to its normal sprig-only clearance there. */
+  @media (min-width: 768px) {
+    .callout--has-image .callout__panel {
+      padding-right: clamp(160px, 26%, 300px);
+    }
+  }
+
   /* ── Shared ─────────────────────────────────────────────────── */
   .callout__panel {
     position: relative; /* above imagery/overlay layers */
+  }
+
+  .callout__eyebrow {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+  }
+
+  .callout--solid .callout__eyebrow {
+    color: var(--color-white);
+    opacity: 0.85;
+  }
+
+  /* --texture-color is always set (both tones — see textureVars in
+   * the frontmatter), so this reads as the callout's own brand color
+   * rather than the fixed green every other eyebrow on the site uses. */
+  .callout--tint .callout__eyebrow {
+    color: var(--texture-color);
+  }
+
+  .callout__cta {
+    display: inline-block;
+    margin-top: var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    border-bottom: 1px solid currentColor;
+  }
+
+  .callout--solid .callout__cta {
+    color: var(--color-white);
+  }
+
+  .callout--tint .callout__cta {
+    color: var(--color-text-primary);
   }
 
   .callout h2 {
@@ -309,6 +399,68 @@ const calloutVars = [
     margin-bottom: 0;
   }
 
+  /* ── Full bleed (Homepage/Technology only) ─────────────────────
+   * HomeSections.astro skips its usual max-width wrapper for this
+   * section, so .callout is already the true viewport width — this
+   * squares off the leaf radius to match every other full-bleed
+   * homepage section (Hero, Carousel, CtaSection) instead of the
+   * small-card rounded corner, bumps the type up now that there's a
+   * full viewport of room for it, and constrains .callout__inner
+   * (text + product image both live inside it) back down to the
+   * page's normal --content-width column — same width/centering
+   * convention as .hero__content — so the *background* spans the true
+   * edge while the *content* still lines up with every other section.
+   * .callout__inner has no width/position of its own outside this
+   * block, so a non-full-bleed callout (product pages) is unaffected:
+   * the product image's `right: ...` (see the base rule above) simply
+   * keeps resolving against .callout itself there, exactly as before. */
+  .callout--full-bleed {
+    border-radius: 0;
+  }
+
+  .callout--full-bleed .callout__inner {
+    position: relative;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  .callout--full-bleed .callout__panel {
+    padding-top: var(--space-24);
+    padding-bottom: var(--space-24);
+  }
+
+  .callout--full-bleed h2 {
+    font-size: clamp(2.75rem, 6vw, 5rem);
+  }
+
+  .callout--full-bleed .callout__body {
+    font-size: var(--text-xl);
+  }
+
+  /* Product image breaks the top edge of the box — sized taller than
+   * the box itself and anchored to the bottom (not vertically
+   * centered like the default .callout__product-image above) so the
+   * extra height overflows upward past the box's own top:0 rather
+   * than downward past its bottom. .callout has no overflow clip of
+   * its own (see its own comment above) so this is free to spill.
+   * A fixed max-height, not a percentage — .callout's own height is
+   * auto (its content sets it), so a percentage would resolve to
+   * auto too (same reasoning as the default .callout__product-image
+   * rule above), and a taller-than-the-box image is the entire point
+   * here. Desktop only — this selector's higher specificity would
+   * otherwise beat the mobile stacking block's own (single-class)
+   * max-height below regardless of source order, blowing the image
+   * back up past the small stacked size that block sets. */
+  @media (min-width: 768px) {
+    .callout--full-bleed .callout__product-image {
+      top: auto;
+      bottom: 0;
+      transform: none;
+      max-height: 420px;
+    }
+  }
+
   @media (max-width: 767px) {
     .callout--solid .callout__panel {
       padding: var(--space-10) 86px var(--space-10) var(--space-6);
@@ -321,6 +473,28 @@ const calloutVars = [
     .callout__panel--glass {
       padding: var(--space-8) 86px var(--space-8) var(--space-6);
     }
+
+    /* No room to float the image beside the text once the panel's
+     * this narrow — stack it above instead, sprig clearance on the
+     * panel unchanged since the sprig is unrelated to the image. */
+    /* .callout__inner, not .callout itself — the image and panel are
+     * both nested inside that wrapper now (see the component's own
+     * comment on it), so that's what needs to become the flex column
+     * for `order` below to have any effect. */
+    .callout--has-image .callout__inner {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .callout__product-image {
+      position: static;
+      order: -1;
+      height: auto;
+      max-height: 160px;
+      max-width: 60%;
+      margin: var(--space-6) auto 0;
+      transform: none;
+    }
   }
 
   /* ── Turf variant ─────────────────────────────────────────────── */
@@ -329,8 +503,46 @@ const calloutVars = [
     min-height: 220px;
     display: flex;
     align-items: center;
+    gap: var(--space-6);
     overflow: hidden;
     padding: var(--space-8) var(--space-10);
+  }
+
+  /* Homepage/Technology only — same contained-product-shot convention
+   * as the agriculture variant's .callout__product-image above, but a
+   * plain flex item here (not absolutely positioned) since .t-callout
+   * is already a flex row: `order` alone pushes it after the panel
+   * without needing manual positioning math. */
+  .t-callout__product-image {
+    position: relative;
+    z-index: 1;
+    order: 2;
+    flex-shrink: 0;
+    margin-left: auto;
+    /* Not a percentage height (or a min()/clamp() mixing one in) —
+     * .t-callout's own height is auto (min-height only sets a floor),
+     * so a percentage here resolves to auto too and the image renders
+     * at its full intrinsic size instead. max-height alone, with
+     * width left auto, sizes correctly regardless. */
+    max-height: 180px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.3));
+  }
+
+  @media (max-width: 767px) {
+    .t-callout--has-image {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .t-callout__product-image {
+      order: -1;
+      margin-left: 0;
+      height: auto;
+      max-height: 140px;
+      max-width: 55%;
+    }
   }
 
   .t-callout :global(.pool-bg) {
@@ -353,6 +565,17 @@ const calloutVars = [
     max-width: 60ch;
   }
 
+  .t-callout__eyebrow {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-white);
+    opacity: 0.85;
+    margin-bottom: var(--space-2);
+  }
+
   .t-callout h2 {
     font-family: var(--turf-font-display);
     font-style: italic;
@@ -370,6 +593,15 @@ const calloutVars = [
 
   .t-callout__body :global(p:last-child) {
     margin-bottom: 0;
+  }
+
+  .t-callout__cta {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-white);
+    border-bottom: 1px solid currentColor;
   }
 
   @media (max-width: 767px) {

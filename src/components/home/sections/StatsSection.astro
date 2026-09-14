@@ -1,0 +1,104 @@
+---
+// src/components/home/sections/StatsSection.astro
+//
+// A 2-4 item heading+body grid — "More Than 30 Years of Innovation /
+// Developing plant-performance solutions since 1994." style pairs.
+// Own section type rather than reusing ColumnSection (caps at 3
+// columns, items carry an image/cta this doesn't need) or
+// bulletSection (flat strings, no room for a bold heading + separate
+// description per item) — see homeSections.ts's homeStatsSection WHY
+// comment.
+
+import type { HomeStatsSection } from '../../../lib/types/sanity'
+
+interface Props {
+  section: HomeStatsSection
+}
+
+const { section } = Astro.props
+---
+
+<section class="stats">
+  <div class="stats__inner">
+    {section.heading && <h2 class="stats__heading">{section.heading}</h2>}
+    {section.body && <p class="stats__body">{section.body}</p>}
+    <div class="stats__grid" style={`--stat-count: ${section.items.length}`}>
+      {section.items.map((item) => (
+        <div class="stat">
+          <h3 class="stat__heading">{item.heading}</h3>
+          {item.body && <p class="stat__body">{item.body}</p>}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .stats__inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .stats__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    max-width: 44ch;
+  }
+
+  .stats__body {
+    margin-top: var(--space-5);
+    max-width: 60ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .stats__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--stat-count), 1fr);
+    gap: var(--space-10);
+    margin-top: var(--space-14);
+  }
+
+  .stat {
+    padding-top: var(--space-6);
+    border-top: 2px solid var(--color-green);
+  }
+
+  .stat__heading {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+    color: var(--color-text-primary);
+  }
+
+  .stat__body {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  @media (max-width: 1023px) {
+    .stats__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .stats__inner {
+      padding: var(--space-16) var(--space-6);
+    }
+
+    .stats__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+  }
+</style>

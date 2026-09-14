@@ -45,6 +45,12 @@ export const calloutSection = defineType({
   type: 'object',
   fields: [
     defineField({
+      name: 'eyebrow',
+      title: 'Eyebrow',
+      type: 'string',
+      description: 'Optional small uppercase label shown above the heading, e.g. "FEATURED PRODUCT".',
+    }),
+    defineField({
       name: 'heading',
       title: 'Heading',
       type: 'string',
@@ -54,6 +60,21 @@ export const calloutSection = defineType({
       title: 'Body',
       type: 'blockContent',
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'cta',
+      title: 'Call to Action',
+      type: 'cta',
+      description: 'Optional link shown below the body, e.g. "Explore RDX-Flex".',
+    }),
+    defineField({
+      name: 'backgroundImage',
+      title: 'Background Image',
+      type: 'image',
+      options: { hotspot: true },
+      fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+      description:
+        'Used on the Homepage/Technology page-builder, which has no product to inherit a background pool from — a product page ignores this and keeps using its own backgrounds/calloutBackgrounds instead.',
     }),
     defineField({
       name: 'tone',

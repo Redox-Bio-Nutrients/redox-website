@@ -42,10 +42,14 @@ import {
   getTestimonialsByMarket,
 } from '../lib/queries'
 import { urlFor } from '../lib/sanity'
+import { marketPalette } from '../lib/color'
+import { buildTextureVars } from '../lib/texture'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 import CollectionShowcase from '../components/products/CollectionShowcase.astro'
 import TestimonialGrid from '../components/testimonials/TestimonialGrid.astro'
+import ScrollIndicator from '../components/ui/ScrollIndicator.astro'
+import '../styles/texture-surface.css'
 
 export async function getStaticPaths() {
   const slugs = await getAllPageSlugs()
@@ -62,6 +66,16 @@ if (!page) {
 const heroImageUrl = page.heroImage
   ? urlFor(page.heroImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
+// Same grain + hue-shifted-bloom + diagonal-sweep treatment the
+// product callout boxes use (src/lib/texture.ts), layered as a subtle
+// tint over the hero photo — see HeroSection.astro's own use of this
+// for the fuller reasoning. Agriculture/Turf get their own market
+// base color (marketPalette(), same source CollectionShowcase/blog
+// cards already use for market identity); every other page (About
+// Us, and anything else this catch-all renders) falls back to plain
+// Agriculture green — there's no "About Us color" to reach for.
+const heroTextureColor = marketPalette(slug === 'turf' ? 'turf' : 'agriculture').base
+const heroTextureVars = buildTextureVars(slug!, heroTextureColor)
 
 const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
 const regionTeams = slug === 'about-us' ? await getAllRegionsWithTeams() : []
@@ -78,6 +92,7 @@ const testimonials =
     <header class="hero" data-header-theme="light">
       <img class="hero__bg" src={heroImageUrl} alt={page.heroImage?.alt ?? ''} loading="eager" />
       <div class="hero__overlay" aria-hidden="true"></div>
+      <div class="hero__texture texture-wash" style={heroTextureVars} aria-hidden="true"></div>
       <div class="hero__content">
         <h1 class="hero__title">{page.heroHeading ?? page.title}</h1>
         <div class="hero__meta">
@@ -95,6 +110,8 @@ const testimonials =
           )}
         </div>
       </div>
+
+      <ScrollIndicator />
     </header>
   ) : (
     <header class="page-header">
@@ -133,7 +150,7 @@ const testimonials =
   )}
 
   {(officeStaff.length > 0 || regionTeams.length > 0) && (
-    <section class="team">
+    <section class="team" id="team">
       <div class="team__inner">
         <h2>Meet the Team</h2>
 
@@ -204,6 +221,16 @@ const testimonials =
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 0.42);
+  }
+
+  /* Brand/market-colored grain + bloom texture over the dark wash —
+   * same .texture-wash class HeroSection.astro's photo case and the
+   * product callout boxes use (src/styles/texture-surface.css); see
+   * HeroSection.astro for the fuller "why a texture here" reasoning. */
+  .hero__texture {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
   }
 
   .hero__content {
