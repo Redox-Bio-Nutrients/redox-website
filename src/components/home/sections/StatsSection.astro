@@ -37,7 +37,15 @@ const { section } = Astro.props
   .stats__inner {
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: var(--space-24) var(--space-6);
+    /* Bottom trimmed well below the top (was a symmetric --space-24
+     * both sides) — this section's own bottom padding was stacking
+     * with .home-sections' own inter-section flex `gap` AND the next
+     * section's own top padding, three --space-24s deep, which read as
+     * a huge dead patch of white before "Built for the Way You Grow"
+     * (Curtis's report, 2026-09-14). The gap and the next section's
+     * own top padding still apply on top of this, so the *rendered*
+     * seam is still comfortably more than one bare `gap` alone. */
+    padding: var(--space-24) var(--space-6) var(--space-10);
   }
 
   .stats__heading {
@@ -52,7 +60,14 @@ const { section } = Astro.props
 
   .stats__body {
     margin-top: var(--space-5);
-    max-width: 60ch;
+    /* No max-width here (was 60ch) — capped at roughly 2/3 the width
+     * of the heading above and the card grid below, both of which
+     * effectively run the section's full column width, so the body
+     * paragraph alone looked squeezed into a narrow sidebar-width
+     * measure next to them (Curtis's "carriage returns that shouldn't
+     * be" report, 2026-09-14). --content-width on .stats__inner is
+     * still the real ceiling, same as everything else in this
+     * section. */
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
     color: var(--color-text-secondary);
@@ -61,16 +76,44 @@ const { section } = Astro.props
   .stats__grid {
     display: grid;
     grid-template-columns: repeat(var(--stat-count), 1fr);
-    gap: var(--space-10);
-    margin-top: var(--space-14);
+    gap: var(--space-6);
+    /* More breathing room off the heading/body above (Curtis's ask,
+     * 2026-09-14) — was --space-14. */
+    margin-top: var(--space-20);
   }
 
+  /* Was just a thin top border + text sitting directly on the page's
+   * own white — read as "tight and floating" (Curtis, 2026-09-14) with
+   * nothing actually grounding it. Promoted to a real card: a soft
+   * step off the page white (--bg-surface, the same "soft slabs,
+   * tiles" token every other card-ish surface on the site uses — see
+   * its own comment in tokens.css) plus a hairline border for edge
+   * definition against a background that's otherwise very close to
+   * white, and the same hover-lift language (translateY + shadow)
+   * ProductCard/CalloutSection/the Featured Product card all already
+   * use, so it reads as part of the same family instead of a one-off
+   * text block. Deliberately still no photo/gradient/texture here —
+   * this section's whole point (Curtis's own words) is to be the calm
+   * white beat between the more saturated sections around it. */
   .stat {
-    padding-top: var(--space-6);
-    border-top: 2px solid var(--color-green);
+    position: relative;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-6);
+    overflow: hidden;
+    transition: transform var(--transition-base), box-shadow var(--transition-base),
+      border-color var(--transition-base);
+  }
+
+  .stat:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
   }
 
   .stat__heading {
+    position: relative;
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
     font-size: var(--text-xl);
@@ -79,6 +122,7 @@ const { section } = Astro.props
   }
 
   .stat__body {
+    position: relative;
     margin-top: var(--space-2);
     font-size: var(--text-sm);
     line-height: var(--leading-relaxed);
@@ -93,7 +137,7 @@ const { section } = Astro.props
 
   @media (max-width: 639px) {
     .stats__inner {
-      padding: var(--space-16) var(--space-6);
+      padding: var(--space-16) var(--space-6) var(--space-8);
     }
 
     .stats__grid {
