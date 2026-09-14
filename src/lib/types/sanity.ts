@@ -446,6 +446,8 @@ export interface HomeFeaturedProductSection {
     logo?: SanityImage
     primaryColor?: string
     accentColor?: string
+    /** priority-chain pool (own gallery -> hero -> shared market pool) — see BG_POOL_FRAGMENT's own comment in fragments.ts */
+    backgrounds?: SanityImage[]
     /** plain-text excerpt from the product's own page content — see the query's own comment in fragments.ts */
     excerpt?: string
   }

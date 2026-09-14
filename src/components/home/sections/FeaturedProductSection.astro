@@ -7,21 +7,26 @@
 // copies of any of it. The whole card is one link to the product's
 // page — no separate nested CTA link.
 //
-// Agriculture: a leaf-radius card, the product's own brand color as a
-// textured wash behind its contained packaging shot — same visual
-// language as ProductCard.astro's catalog tile and CalloutSection's
-// solid tone, just assembled into a single link card instead of a
-// hero-scale banner.
+// Agriculture: a leaf-radius card, a full-bleed photo (the product's
+// own background pool, same priority chain ProductCard.astro's own
+// catalog tile uses) behind BOTH columns with a color-wash gradient
+// over it — same "photo + product-color texture-wash" recipe as
+// CalloutSection's solid tone, just spanning a single link card
+// instead of a hero-scale banner. Falls back to the plain
+// texture-fill gradient (no photo) on the rare product with no pool
+// image at all.
 //
-// Turf: diagonal-cut card, two-tone wash from the product's own
-// primaryColor/accentColor, italic condensed title — same system as
-// every other product-facing component (src/styles/turf-livery.css).
+// Turf: diagonal-cut card, same photo-behind-both-columns idea but
+// with the two-tone primaryColor/accentColor wash and italic
+// condensed title — same system as every other product-facing
+// component (src/styles/turf-livery.css).
 
 import { urlFor } from '../../../lib/sanity'
 import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
 import { buildTextureVars } from '../../../lib/texture'
 import { getProductVariant } from '../../../lib/productVariant'
 import type { HomeFeaturedProductSection } from '../../../lib/types/sanity'
+import PoolBackground from '../../ui/PoolBackground.astro'
 import '../../../styles/turf-livery.css'
 import '../../../styles/texture-surface.css'
 
@@ -40,6 +45,16 @@ const palette = deriveCalloutPalette(color, product?.accentColor)
 // lightness floor and can go illegible against the dark wash).
 const turfAccent = ensureReadableOnDark(palette.complement)
 const textureVars = buildTextureVars(section._key, color, product?.accentColor)
+
+// Same {url, lqip} shape PoolBackground/CalloutSection/ProductCard
+// already use. Wide crop (not the portrait one CalloutSection's own
+// product-page pool uses) — this photo spans the full two-column
+// card, not a narrow sidebar.
+const pool = (product?.backgrounds ?? []).map((img) => ({
+  url: urlFor(img).width(1800).height(900).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
+}))
+const hasBg = pool.length > 0
 
 const imageUrl = product?.image
   ? urlFor(product.image).width(800).fit('max').auto('format').quality(85).url()
@@ -69,15 +84,23 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
         href={`/products/${product.slug}`}
         class:list={[
           'featured-product__card',
-          isTurf ? ['featured-product__card--turf', 'turf-cut'] : 'texture-fill',
+          isTurf ? ['featured-product__card--turf', 'turf-cut'] : { 'texture-fill': !hasBg },
         ]}
         style={isTurf ? `--turf-cut: var(--turf-cut-lg); --fp-turf-primary: ${color}; --fp-turf-accent: ${turfAccent};` : textureVars}
       >
-        {/* Whole-card layer, not nested inside .featured-product__media
-           — the wash has to sit behind BOTH grid columns (image and
-           text share one continuous background on a turf card, same
-           as CalloutSection's .t-callout), not just the image side. */}
-        {isTurf && <div class="featured-product__turf-wash" aria-hidden="true"></div>}
+        {/* Whole-card layers, not nested inside .featured-product__media
+           — the photo/wash have to sit behind BOTH grid columns (image
+           and text share one continuous background), not just the
+           image side. Same photo + product-color texture-wash pairing
+           CalloutSection's solid tone uses; texture-fill above is only
+           the no-photo fallback (agriculture) — turf's wash reads fine
+           directly over a photo, no separate fallback needed. */}
+        {hasBg && <PoolBackground pool={pool} />}
+        {isTurf ? (
+          <div class="featured-product__turf-wash" aria-hidden="true"></div>
+        ) : (
+          hasBg && <div class="featured-product__overlay texture-wash" style={textureVars} aria-hidden="true"></div>
+        )}
         <div class="featured-product__media">
           {imageUrl && (
             <img
@@ -131,15 +154,12 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
   .featured-product__media {
     position: relative;
     z-index: 1;
-    /* Quiet surface behind the packaging shot when the texture-fill
-     * (agriculture) or turf wash doesn't already fill it — mirrors
-     * ProductCard.astro's own .card__media fallback. Turf overrides
-     * this to transparent below, so its whole-card wash (see
-     * .featured-product__turf-wash) shows through on both sides. */
-    background: var(--bg-surface);
-  }
-
-  .featured-product__card--turf .featured-product__media {
+    /* No background of its own — deliberately transparent so the
+     * card's own whole-card layer (photo + wash, or the texture-fill
+     * fallback) shows through here too, not just behind the text
+     * column. An opaque fallback here would sit on top of that in
+     * this one grid cell, which is exactly what made the two columns
+     * look like separate, disconnected surfaces before this. */
     background: none;
   }
 
@@ -159,6 +179,17 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
       color-mix(in srgb, var(--fp-turf-primary) 88%, transparent) 0%,
       color-mix(in srgb, var(--fp-turf-accent) 70%, transparent) 100%
     );
+  }
+
+  /* Agriculture's equivalent of the turf wash above — the
+   * .texture-wash class (texture-surface.css) draws the actual
+   * gradient from the same --texture-* vars .texture-fill (the
+   * no-photo fallback) uses, so a photo card and a plain-gradient
+   * card read as the same design language either way. */
+  .featured-product__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
   }
 
   .featured-product__image {
@@ -192,7 +223,10 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
   .featured-product__title {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
-    font-size: var(--text-display-sm);
+    /* A step above --text-display-sm's own max (3.75rem) — this card
+     * has more room to work with now that there's a full photo behind
+     * it instead of a flat color. */
+    font-size: clamp(2.5rem, 3.2vw, 4.5rem);
     line-height: var(--leading-tight);
     letter-spacing: -0.01em;
   }
@@ -213,7 +247,7 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
   .featured-product__tagline {
     margin-top: var(--space-4);
     max-width: 44ch;
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     line-height: var(--leading-relaxed);
     color: rgb(255 255 255 / 0.88);
   }
@@ -225,7 +259,7 @@ const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
   .featured-product__excerpt {
     margin-top: var(--space-3);
     max-width: 48ch;
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
     color: rgb(255 255 255 / 0.7);
   }

@@ -149,6 +149,13 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
     "logo": logo ${IMAGE_FRAGMENT},
     primaryColor,
     accentColor,
+    // Same priority chain PRODUCT_CARD_FRAGMENT/ProductCard.astro use
+    // for their own randomized background field: the product's own
+    // backgrounds gallery (+ hero) first, then its dedicated hero
+    // image, then the market-matched shared pool — see BG_POOL_
+    // FRAGMENT's own comment. In practice this is almost never empty,
+    // since the shared-pool fallback always has something.
+    "backgrounds": ${BG_POOL_FRAGMENT},
     // A short excerpt pulled from the product's own page content, not
     // typed in here — same "no copy to keep in sync" reasoning as the
     // rest of this section. textSection's intro paragraph first; most
