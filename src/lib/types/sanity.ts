@@ -446,6 +446,8 @@ export interface HomeFeaturedProductSection {
     logo?: SanityImage
     primaryColor?: string
     accentColor?: string
+    /** plain-text excerpt from the product's own page content — see the query's own comment in fragments.ts */
+    excerpt?: string
   }
 }
 

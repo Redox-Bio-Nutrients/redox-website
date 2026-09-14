@@ -47,6 +47,19 @@ const imageUrl = product?.image
 const logoUrl = product?.logo
   ? urlFor(product.logo).width(400).fit('max').auto('format').url()
   : null
+
+// The query's own pt::text() extraction can return multiple
+// paragraphs joined by blank lines (textSection) or one short
+// sentence (the calloutSection fallback) — flatten to one line and
+// cap it so a long intro paragraph doesn't blow out the card's fixed
+// two-column layout. Cuts at a word boundary rather than mid-word.
+function truncate(text: string, max: number): string {
+  const flat = text.replace(/\s+/g, ' ').trim()
+  if (flat.length <= max) return flat
+  return `${flat.slice(0, max).replace(/\s+\S*$/, '')}…`
+}
+
+const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
 ---
 
 {product && (
@@ -81,6 +94,7 @@ const logoUrl = product?.logo
             {logoUrl ? <img class="featured-product__logo" src={logoUrl} alt={product.title} /> : product.title}
           </h2>
           {product.tagline && <p class="featured-product__tagline">{product.tagline}</p>}
+          {excerpt && <p class="featured-product__excerpt">{excerpt}</p>}
           <span class="featured-product__cta">
             Explore {product.title} <span aria-hidden="true">→</span>
           </span>
@@ -202,6 +216,18 @@ const logoUrl = product?.logo
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
     color: rgb(255 255 255 / 0.88);
+  }
+
+  /* Quieter than the tagline (smaller, lower opacity) — the tagline is
+   * the product's own one-line pitch, this is supporting detail
+   * pulled from its page, so it reads as secondary to it rather than
+   * competing with it. */
+  .featured-product__excerpt {
+    margin-top: var(--space-3);
+    max-width: 48ch;
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: rgb(255 255 255 / 0.7);
   }
 
   .featured-product__cta {

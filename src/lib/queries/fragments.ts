@@ -148,7 +148,19 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
     "image": image ${IMAGE_FRAGMENT},
     "logo": logo ${IMAGE_FRAGMENT},
     primaryColor,
-    accentColor
+    accentColor,
+    // A short excerpt pulled from the product's own page content, not
+    // typed in here — same "no copy to keep in sync" reasoning as the
+    // rest of this section. textSection's intro paragraph first; most
+    // Turf products have no textSection at all (their pages open with
+    // a bulletSection instead — checked), so calloutSection's body is
+    // the fallback rather than leaving Turf products with no excerpt.
+    // pt::text() flattens the portable-text blocks to a plain string;
+    // FeaturedProductSection.astro truncates it for display.
+    "excerpt": pt::text(coalesce(
+      sections[_type == "textSection"][0].body,
+      sections[_type == "calloutSection"][0].body
+    ))
   },
   "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
   "backgroundVideoUrl": backgroundVideo.asset->url,
