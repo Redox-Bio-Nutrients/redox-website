@@ -70,7 +70,7 @@ const interval = section.interval ?? 6
               {slide.subheading && <p class="hero-carousel__subheading">{slide.subheading}</p>}
               {slide.cta && (
                 <a
-                  class="hero-carousel__cta"
+                  class="btn btn--primary hero-carousel__cta"
                   href={slide.cta.href}
                   target={slide.cta.external ? '_blank' : undefined}
                   rel={slide.cta.external ? 'noopener noreferrer' : undefined}
@@ -282,28 +282,9 @@ const interval = section.interval ?? 6
     color: rgb(255 255 255 / 0.9);
   }
 
-  .hero-carousel__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-full);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: var(--glass-border);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    letter-spacing: 0.02em;
-    color: var(--color-white);
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .hero-carousel__cta:hover {
-    background: rgb(255 255 255 / 0.28);
-    transform: translateY(-1px);
-  }
-
+  /* Shape/glass/gradient come from .btn/.btn--primary
+   * (src/styles/buttons.css) — this section only adds the arrow's own
+   * slide-on-hover micro-interaction on top of that shared system. */
   .hero-carousel__cta-arrow {
     display: inline-block;
     transition: transform 0.2s ease;

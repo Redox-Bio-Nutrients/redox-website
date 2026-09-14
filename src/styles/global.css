@@ -3,6 +3,7 @@
  * No component styles here — those live in scoped <style> blocks.
  */
 @import './tokens.css';
+@import './buttons.css';
 
 *, *::before, *::after {
   box-sizing: border-box;

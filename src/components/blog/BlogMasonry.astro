@@ -130,9 +130,9 @@ const tabletColumns = intoColumns(tiles, 2)
        same convention the background-pool fallback uses, so
        "Agriculture" isn't a near-empty view relative to "All Posts". */}
     <div class="masonry-filter" role="group" aria-label="Filter by market">
-      <button type="button" class="filter-btn is-active" data-filter="all">All Posts</button>
-      <button type="button" class="filter-btn" data-filter="agriculture">Agriculture</button>
-      <button type="button" class="filter-btn" data-filter="turf">Turf</button>
+      <button type="button" class="btn btn--ghost btn--sm filter-btn is-active" data-filter="all">All Posts</button>
+      <button type="button" class="btn btn--ghost btn--sm filter-btn" data-filter="agriculture">Agriculture</button>
+      <button type="button" class="btn btn--ghost btn--sm filter-btn" data-filter="turf">Turf</button>
     </div>
     <div class="masonry-cols masonry-cols--desktop">
       {desktopColumns.map((column) => (
@@ -209,28 +209,15 @@ const tabletColumns = intoColumns(tiles, 2)
     margin-bottom: var(--space-8);
   }
 
-  .filter-btn {
-    font-family: inherit;
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-full);
-    border: var(--border-thin) solid var(--border-subtle);
-    background: var(--bg-page);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  }
-
-  .filter-btn:hover {
-    border-color: var(--color-green);
-    color: var(--color-text-primary);
-  }
-
+  /* Resting/hover shape+color come from .btn/.btn--ghost/.btn--sm
+   * (src/styles/buttons.css). The active tab swaps to the shared
+   * primary gradient — reusing --btn-gradient (computed on this same
+   * element via its own .btn class) rather than repainting the
+   * green→purple recipe a second time here. */
   .filter-btn.is-active {
-    background: var(--color-green-dark);
-    border-color: var(--color-green-dark);
     color: var(--color-white);
+    background: var(--btn-gradient);
+    border-color: transparent;
   }
 
   /* .masonry__item itself is scoped to BlogMasonryTile.astro, not this

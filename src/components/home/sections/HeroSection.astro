@@ -72,7 +72,7 @@ const centered = section.textAlign === 'center'
       {section.subheading && <p class="hero__subheading">{section.subheading}</p>}
       {section.cta && (
         <a
-          class="hero__cta"
+          class="btn btn--primary hero__cta"
           href={section.cta.href}
           target={section.cta.external ? '_blank' : undefined}
           rel={section.cta.external ? 'noopener noreferrer' : undefined}
@@ -194,31 +194,9 @@ const centered = section.textAlign === 'center'
     margin-right: auto;
   }
 
-  /* CTA treatment under trial: a frosted pill button, rather than the
-   * plain underlined-text link used on product hero — more visually
-   * prominent for a section that isn't anchored by a product name. */
-  .hero__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-full);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: var(--glass-border);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    letter-spacing: 0.02em;
-    color: var(--color-white);
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .hero__cta:hover {
-    background: rgb(255 255 255 / 0.28);
-    transform: translateY(-1px);
-  }
-
+  /* Shape/glass/gradient come from .btn/.btn--primary
+   * (src/styles/buttons.css) — this section only adds the arrow's own
+   * slide-on-hover micro-interaction on top of that shared system. */
   .hero__cta-arrow {
     display: inline-block;
     transition: transform 0.2s ease;

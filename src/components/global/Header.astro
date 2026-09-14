@@ -175,7 +175,7 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
         </button>
         <a
           href={utilityNav.dashboard.href}
-          class="header__utility-link header__utility-link--button"
+          class="btn btn--primary btn--sm header__utility-link header__utility-link--button"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -529,28 +529,19 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     gap: var(--space-4);
   }
 
-  .header__utility-link {
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    color: var(--color-text-secondary);
-  }
-
-  .header__utility-link:hover {
-    color: var(--color-green-dark);
-  }
-
-  .header__utility-link--button {
-    background: var(--color-green);
-    color: var(--color-white);
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-md);
-    transition: background 0.15s ease;
-  }
-
-  .header__utility-link--button:hover {
-    background: var(--color-green-dark);
-    color: var(--color-white);
-  }
+  /* .header__utility-link only ever renders as the Dashboard Login
+   * button today (no plain-text utility link exists) — color/shape/
+   * glass all come from the shared .btn/.btn--primary/.btn--sm classes
+   * (src/styles/buttons.css) applied alongside it in the markup.
+   * Deliberately no base color rule here any more: one used to set
+   * --color-text-secondary unconditionally, which — having no
+   * .btn--primary counterpart to lose to outside the handful of
+   * .header--scrolled/.header--on-dark states below that happen to
+   * override it — wound up as the button's actual text color (dark
+   * gray on a colored gradient pill) in every *other* header state.
+   * If a future utility item ever needs the plain-text treatment back,
+   * scope it to `:not(.header__utility-link--button)` rather than
+   * restoring an unqualified rule. */
 
   /* ── Theme toggle ───────────────────────────────────────────── */
   .header__theme {

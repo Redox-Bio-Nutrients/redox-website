@@ -1,0 +1,311 @@
+/* src/styles/buttons.css
+ *
+ * WHY: Every CTA button on the site used to be hand-rolled per
+ * component — a plain green rectangle (Header), a frosted glass pill
+ * copy-pasted across three different hero components, a solid-white
+ * pill (CtaSection), a solid-green pill ([slug].astro, twice more),
+ * an outline pill (product sidebar) — each with its own padding/
+ * radius/hover logic that happened to drift out of sync. This is the
+ * one shared system every button on the site now pulls from.
+ *
+ * .btn is the shared shape + glass mechanics. Two fills:
+ *   .btn--primary — solid glass, the loud "main CTA" look, gradient
+ *                    tweens on hover (see the 2026-09-14 update below)
+ *   .btn--ghost   — outline glass, the quieter "secondary action" look
+ * Both size their color off --btn-from/--btn-to, which default to
+ * brand green→purple (more green than purple — see the gradient stop
+ * position below) but resolve automatically to a product's own
+ * primaryColor/accentColor on any product page, because ProductDetail.
+ * astro already exposes --product-color/--product-accent-color on its
+ * wrapper and .btn just reads the same two variables. No per-button
+ * color prop needed anywhere.
+ *
+ * Turf product pages are the deliberate exception (Curtis's explicit
+ * call, 2026-09-14): they keep their own diagonal-cut turf-livery
+ * buttons (src/styles/turf-livery.css + each component's own
+ * `.hero--turf .hero__cta` / `.sidebar--turf ...` rules) and simply
+ * never receive the .btn classes — see ProductDetail.astro's isTurf
+ * branch. Nothing in this file needs to know turf exists.
+ *
+ * Scope: only elements that were already real backgrounded/pill
+ * buttons. The site's other CTA pattern — a plain underlined
+ * "Explore →" text link (Callout boxes, Featured Product, the overlap
+ * card, product-hero "Explore ↓") — is a deliberate quieter pattern
+ * and is NOT part of this system (Curtis's call, 2026-09-14).
+ *
+ * Update 2026-09-14: swapped the hover "sheen sweep" for a tween of
+ * the gradient itself — angle rotates and the purple/accent stop grows
+ * a little more prominent on hover. Plain CSS can't transition between
+ * two different `linear-gradient(...)` values (a `background-image`
+ * change just snaps), so the three values that actually change are
+ * pulled out as their own `@property`-registered custom properties
+ * (typed + `inherits: true`, which is what makes them transitionable
+ * at all) and only those are what `.btn--primary:hover` overrides —
+ * `--btn-gradient` itself just re-reads them on every animation frame,
+ * so the *rendered* gradient tweens smoothly even though `background`
+ * never "transitions" in the traditional sense. */
+
+@property --btn-angle {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 135deg;
+}
+
+@property --btn-mid {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 62%;
+}
+
+@property --btn-to-alpha {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 84%;
+}
+
+@property --btn-iris-angle {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+.btn {
+  /* Falls back to brand green/purple wherever --product-color isn't
+   * in scope (i.e. everywhere except a product page's own wrapper). */
+  --btn-from: var(--product-color, var(--color-green));
+  --btn-to: var(--product-accent-color, var(--color-purple));
+  /* --btn-mid (not just color choice) is what makes the resting
+   * gradient read as "primarily green" — green holds every stop up to
+   * this point, purple/accent only takes over the last stretch. Reused
+   * as one variable (not hardcoded per rule below) so .btn--primary
+   * and the blog filter's active state — the one non-.btn element that
+   * still wants this exact fill, see the bottom of this file — can't
+   * drift out of sync with each other the way the old per-component
+   * copies did. --btn-angle/--btn-mid/--btn-to-alpha are the three
+   * @property-registered values .btn--primary:hover tweens (see the
+   * 2026-09-14 update note above). */
+  --btn-gradient: linear-gradient(
+    var(--btn-angle),
+    color-mix(in srgb, var(--btn-from) 92%, transparent) 0%,
+    color-mix(in srgb, var(--btn-from) 92%, transparent) var(--btn-mid),
+    color-mix(in srgb, var(--btn-to) var(--btn-to-alpha), transparent) 100%
+  );
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semi);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  /* Own stacking context so the glass top-highlight pseudo-element
+   * below can never escape above this button's siblings, and
+   * overflow:hidden clips it to the pill shape (border-radius: inherit
+   * isn't needed on the pseudo-element itself — a parent's
+   * overflow:hidden clips to its own border-box, radius included). */
+  isolation: isolate;
+  overflow: hidden;
+  /* No transform/position change on hover any more (Curtis's call,
+   * 2026-09-14 — the lift read as an unwanted "shift") — hover
+   * feedback is entirely the gradient tween + box-shadow below, both
+   * slowed to a full second so it reads as a deliberate, unhurried
+   * shift rather than a snap. */
+  transition: box-shadow 1s ease, filter var(--transition-base),
+    background-color var(--transition-base), border-color var(--transition-base),
+    --btn-angle 1s ease, --btn-mid 1s ease, --btn-to-alpha 1s ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--btn-from);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Real content sits above the glass top-highlight + iridescent rim
+ * (both z-index: 1) below. */
+.btn > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Primary: solid glass fill ─────────────────────────────────────
+ * Colors are translucent (color-mix ... transparent), not opaque —
+ * combined with backdrop-filter this is real frosted glass, not just
+ * a flat-color pill with a gradient painted on: whatever sits behind
+ * the button (a hero photo, a page background) still shows through,
+ * softened. That's what keeps this working over any background, and
+ * automatically in both site themes — nothing here is a fixed color,
+ * it's a blur of whatever's actually behind it. */
+.btn--primary {
+  color: var(--color-white);
+  background: var(--btn-gradient);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgb(255 255 255 / 0.32);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.25) inset,
+    0 10px 24px -10px color-mix(in srgb, var(--btn-from) 55%, transparent);
+}
+
+/* Glass top-highlight — a soft light-from-above sheen baked in
+ * permanently (rest and hover alike) so the pill reads as glass. Hover
+ * feedback itself comes from the gradient tween below, not this. */
+.btn--primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0) 55%);
+  pointer-events: none;
+}
+
+/* Hover: the gradient itself tweens instead of a sheen sweeping over
+ * it — rotates from the resting diagonal to a straight top-to-bottom
+ * pour (180deg: green stays up top, purple/accent settles in at the
+ * bottom edge), which also grows a little more prominent (--btn-mid
+ * moves in, --btn-to-alpha ticks up), all three easing together over
+ * the same slow 1s set on .btn above. Still clearly green-led at rest
+ * and on hover — this is "a little more purple/accent," not a swap to
+ * purple-led. */
+.btn--primary:hover,
+.btn--primary:focus-visible {
+  --btn-angle: 180deg;
+  --btn-mid: 50%;
+  --btn-to-alpha: 92%;
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.32) inset,
+    0 16px 32px -12px color-mix(in srgb, var(--btn-from) 62%, transparent);
+}
+
+/* Iridescent rim light — CSS approximation of the animated glass-edge
+ * "shader" look Curtis pointed at (a Dribbble upload-button shot,
+ * 2026-09-14): light appears to travel around the pill's own edge. A
+ * real shader isn't practical in plain CSS, so this fakes it the
+ * standard way — a conic-gradient ring, masked down to just a thin
+ * band at the border via the "padding + mask-composite: exclude"
+ * trick (the pseudo-element's padding sets the ring's thickness; the
+ * two masks cancel out everything except that band, letting the
+ * button's own background show through the hole in the middle). Built
+ * from --btn-from/--btn-to (+ white glints) rather than a generic
+ * rainbow, so it reads as *this* button's own glass catching light,
+ * not a decal — same reasoning the rest of this file gives its own
+ * product-color-awareness. Hover-only (Curtis's call, 2026-09-14 —
+ * originally always-on at low opacity, dialed back to purely a hover
+ * reveal): invisible and paused at rest, fades in and starts spinning
+ * only on :hover/:focus-visible. animation-play-state is what actually
+ * saves the idle cost, not just opacity — a paused animation does no
+ * work between hovers. */
+.btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--btn-iris-angle),
+    color-mix(in srgb, var(--btn-from) 65%, white) 0deg,
+    white 45deg,
+    color-mix(in srgb, var(--btn-to) 65%, white) 90deg,
+    white 135deg,
+    color-mix(in srgb, var(--btn-from) 65%, white) 180deg,
+    white 225deg,
+    color-mix(in srgb, var(--btn-to) 65%, white) 270deg,
+    white 315deg,
+    color-mix(in srgb, var(--btn-from) 65%, white) 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+  animation: btn-iris-spin 6s linear infinite;
+  animation-play-state: paused;
+}
+
+.btn--primary:hover::after,
+.btn--primary:focus-visible::after {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+@keyframes btn-iris-spin {
+  to {
+    --btn-iris-angle: 360deg;
+  }
+}
+
+/* Respect reduced-motion: keep the colored rim (it's still part of the
+ * button's identity) but stop it spinning. */
+@media (prefers-reduced-motion: reduce) {
+  .btn--primary::after {
+    animation: none;
+  }
+}
+
+/* ── Ghost: outline glass fill ──────────────────────────────────────
+ * Secondary actions (product sidebar's "Product Information Request"/
+ * "Supporting Materials", a CtaSection's second button) — same pill
+ * shape and glass mechanics, quieter: tinted-transparent fill instead
+ * of the full gradient, no permanent top-highlight — just a background/
+ * border-color shift on hover, no gradient to tween. */
+.btn--ghost {
+  color: var(--btn-from);
+  background: color-mix(in srgb, var(--btn-from) 9%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid color-mix(in srgb, var(--btn-from) 45%, transparent);
+}
+
+.btn--ghost:hover,
+.btn--ghost:focus-visible {
+  background: color-mix(in srgb, var(--btn-from) 16%, transparent);
+  border-color: color-mix(in srgb, var(--btn-from) 62%, transparent);
+}
+
+/* ── On a colored/photo surface ─────────────────────────────────────
+ * .btn--primary already reads fine on any surface (it's opaque-ish
+ * glass with its own shadow). .btn--ghost's text/border is --btn-from
+ * — legible on the page's normal bg-page/bg-raised surfaces, but that
+ * same brand-hue text can go low-contrast on a solid brand-color or
+ * photo backdrop (e.g. inside CtaSection's dark green banner). Opt in
+ * with this modifier wherever a ghost button sits on a colored/dark
+ * surface instead of the plain page background. */
+.btn--ghost.btn--on-color {
+  color: var(--color-white);
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.4);
+}
+
+.btn--ghost.btn--on-color:hover,
+.btn--ghost.btn--on-color:focus-visible {
+  background: rgb(255 255 255 / 0.18);
+  border-color: rgb(255 255 255 / 0.6);
+}
+
+/* ── Size ────────────────────────────────────────────────────────── */
+.btn--sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 767px) {
+  .btn {
+    padding: var(--space-3) var(--space-5);
+  }
+}
