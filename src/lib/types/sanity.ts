@@ -390,9 +390,11 @@ export interface HomeColumnSection {
   heading?: string
   /** 'split' ignores `columns` and uses only `items[0]` — its image
    * full-bleed to one edge (see `imagePosition`), its heading/body/cta
-   * in the other column. See homeSections.ts's homeColumnSection
-   * `layout` field. */
-  layout?: 'grid' | 'split'
+   * in the other column. 'overlap' also ignores `columns` and
+   * `items[0]`'s image — a text-only white card (heading/body/cta)
+   * pulled up to overlap the bottom-right of the previous section.
+   * See homeSections.ts's homeColumnSection `layout` field. */
+  layout?: 'grid' | 'split' | 'overlap'
   /** Split layout only. Which edge the full-bleed image sits against;
    * defaults to 'left' when unset. */
   imagePosition?: 'left' | 'right'
