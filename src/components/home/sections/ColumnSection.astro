@@ -363,14 +363,19 @@ const overlapItem = section.items?.[0]
   }
 
   .overlap-card {
-    /* right-aligned, not full width — "float over the bottom-right"
-     * of whatever's behind it, not span the whole section */
-    margin-left: auto;
-    max-width: 30rem;
+    /* Full --content-width (.overlap__inner's own width, already
+     * capped/centered to it) — a fixed narrower card cramped the
+     * heading into 5-6 lines, which is what actually read as
+     * "broken", not the overlap concept itself. Still overlaps only
+     * the bottom of the previous section (via .columns--overlap's
+     * negative margin-top), not its full height, so it still reads
+     * as a card floating up from below rather than a full second
+     * hero-height panel. */
+    width: 100%;
     background: var(--color-white);
     border-radius: var(--radius-3xl);
     box-shadow: var(--shadow-xl);
-    padding: var(--space-10);
+    padding: var(--space-12);
   }
 
   .overlap-card__eyebrow {
@@ -425,7 +430,6 @@ const overlapItem = section.items?.[0]
     }
 
     .overlap-card {
-      max-width: none;
       padding: var(--space-8) var(--space-6);
     }
   }
