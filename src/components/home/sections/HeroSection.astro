@@ -84,7 +84,14 @@ const centered = section.textAlign === 'center'
     </div>
   </div>
 
-  <ScrollIndicator />
+  {/* Default bottom offset (--space-8) sat close enough to the hero's
+     own bottom edge to get clipped by the overlap card floating up
+     over it below (ColumnSection's .columns--overlap, -140px margin —
+     its card top lands ~44px above this hero's own bottom regardless
+     of viewport width, confirmed at 1024/1440/1920). Lifted clear of
+     that with room to spare, same pattern HeroCarouselSection already
+     uses to clear its own dot pagination. */}
+  <ScrollIndicator bottomOffset="var(--space-16)" mobileBottomOffset="var(--space-8)" />
 </header>
 
 <style>
