@@ -42,6 +42,8 @@ import { universityResource } from '../schemas/documents/universityResource'
 import { page } from '../schemas/documents/page'
 import { backgroundPool } from '../schemas/documents/backgroundPool'
 import { homepage } from '../schemas/documents/homepage'
+import { podcastPage } from '../schemas/documents/podcastPage'
+import { technicalPodcastPage } from '../schemas/documents/technicalPodcastPage'
 import { formSettings } from '../schemas/documents/formSettings'
 import { siteWallpaper } from '../schemas/documents/siteWallpaper'
 
@@ -85,6 +87,8 @@ export const schemaTypes = [
   // site-level
   backgroundPool,
   homepage,
+  podcastPage,
+  technicalPodcastPage,
   formSettings,
   siteWallpaper,
 ]

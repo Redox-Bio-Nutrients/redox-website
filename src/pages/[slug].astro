@@ -45,6 +45,7 @@ import { urlFor } from '../lib/sanity'
 import { marketPalette } from '../lib/color'
 import { buildTextureVars } from '../lib/texture'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
+import HomeSections from '../components/home/HomeSections.astro'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 import CollectionShowcase from '../components/products/CollectionShowcase.astro'
 import TestimonialGrid from '../components/testimonials/TestimonialGrid.astro'
@@ -141,6 +142,8 @@ const testimonials =
       />
     </div>
   )}
+
+  {page.sections && page.sections.length > 0 && <HomeSections sections={page.sections} />}
 
   {testimonials.length > 0 && (
     <section class="testimonials-section">

@@ -322,6 +322,8 @@ export interface Page {
   heroImage?: SanityImage
   heroCta?: Cta
   body?: PortableTextBlock[]
+  /** Optional page-builder modules — same shapes as Homepage. */
+  sections?: HomeSection[]
   seo?: Seo
 }
 
@@ -487,5 +489,27 @@ export type HomeSection =
 export interface Homepage {
   _id: string
   sections?: HomeSection[]
+  seo?: Seo
+}
+
+// ── Podcast pages (singletons, same page-builder shape as Homepage) ──
+
+export interface TechnicalPodcastEpisode {
+  _key: string
+  title: string
+  youtubeId: string
+  episodeNumber?: number
+}
+
+export interface PodcastPage {
+  _id: string
+  sections?: HomeSection[]
+  seo?: Seo
+}
+
+export interface TechnicalPodcastPage {
+  _id: string
+  sections?: HomeSection[]
+  episodes?: TechnicalPodcastEpisode[]
   seo?: Seo
 }
