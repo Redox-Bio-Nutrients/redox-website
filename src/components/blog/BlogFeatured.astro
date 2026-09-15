@@ -35,7 +35,9 @@ const href = `/blog/${post.slug}`
 const heroImage =
   post.coverImage ??
   (post.fallbackPool?.length ? randomChoice(seededRandom(post._id), post.fallbackPool) : null)
-const imageUrl = heroImage
+// ?.asset, not just a truthy heroImage — see HeroSection.astro's own
+// comment on this same guard.
+const imageUrl = heroImage?.asset
   ? urlFor(heroImage).width(2400).height(1400).fit('crop').auto('format').quality(80).url()
   : null
 

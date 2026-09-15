@@ -86,7 +86,9 @@ const tiles = posts.map((post) => {
   return {
     post,
     heroImage,
-    imageUrl: heroImage
+    // ?.asset, not just a truthy heroImage — see HeroSection.astro's
+    // own comment on this same guard.
+    imageUrl: heroImage?.asset
       ? urlFor(heroImage).width(900).auto('format').quality(75).url()
       : null,
     aspectRatio,

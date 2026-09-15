@@ -63,7 +63,9 @@ if (!page) {
   return Astro.redirect('/404')
 }
 
-const heroImageUrl = page.heroImage
+// ?.asset, not just a truthy heroImage object — see HeroSection.astro's
+// own comment on this same guard.
+const heroImageUrl = page.heroImage?.asset
   ? urlFor(page.heroImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
 // Same grain + hue-shifted-bloom + diagonal-sweep treatment the
