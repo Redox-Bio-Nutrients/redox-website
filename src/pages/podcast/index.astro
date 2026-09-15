@@ -9,10 +9,15 @@
 // data (title/date/duration/cover/summary/audio URL), fetched and
 // parsed at build time same as any Sanity query, still zero manual
 // episode entry and still auto-updates every rebuild. See that file's
-// own WHY for why a regex parser instead of an XML library, and
-// [[redox-podcast-page]] for the "simple embed vs. full CMS catalog"
-// decision this sits between — no Sanity involved, the dormant
-// `podcastEpisode` schema/queries stay untouched.
+// own WHY for why a regex parser instead of an XML library — the
+// episode list itself stays RSS-driven, no Sanity involved (the
+// dormant `podcastEpisode` schema/queries stay untouched); only the
+// page's hero/surrounding content is Sanity-driven, same "sections"
+// page-builder as Homepage/Technology — see the `podcastPage` Sanity
+// document, HomeSections.astro, and getPodcastPage() in
+// src/lib/queries/podcast.ts. Same split-around-a-fixed-block pattern
+// as technologies/[slug].astro: the first section (typically a Hero)
+// renders above the episode grid, everything else below it.
 //
 // Layout: grouped by month (newest first) as compact list rows — cover
 // thumbnail, title, date, duration — instead of one big card per
@@ -23,14 +28,18 @@
 // of how many episodes exist.
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import PageHero from '../../components/global/PageHero.astro'
+import HomeSections from '../../components/home/HomeSections.astro'
 import { formatDate } from '../../lib/format'
 import { getPodcastEpisodes, monthLabel, formatDuration } from '../../lib/podcastFeed'
+import { getPodcastPage } from '../../lib/queries'
 import { groundedAccent } from '../../lib/color'
 import { buildTextureVars } from '../../lib/texture'
 import '../../styles/texture-surface.css'
 
 const episodes = await getPodcastEpisodes()
+const podcastPage = await getPodcastPage()
+const sections = podcastPage?.sections ?? []
+const [firstSection, ...restSections] = sections
 // Same "no brand color of its own" situation blog posts are in
 // (groundedAccent/buildTextureVars — see BlogMasonry.astro's own WHY
 // comment) — each card gets a deterministic grain+bloom wash seeded on
@@ -57,12 +66,13 @@ for (const ep of episodes) {
   title="Podcast"
   description="The Redox Grows Podcast — conversations with growers, agronomists, and industry leaders about what it takes to grow better."
 >
-  <PageHero
-    heading="Redox Grows Podcast"
-    subheading="Conversations with growers, agronomists, and industry leaders about what it takes to grow better."
-    seedKey="podcast"
-    cta={{ label: 'Explore the Technical Podcast', href: '/tech-podcast' }}
-  />
+  {firstSection ? (
+    <HomeSections sections={[firstSection]} />
+  ) : (
+    <div class="fallback">
+      <h1>Podcast</h1>
+    </div>
+  )}
 
   <div class="page">
     {groups.length > 0 ? (
@@ -123,6 +133,8 @@ for (const ep of episodes) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
     </button>
   </div>
+
+  {restSections.length > 0 && <HomeSections sections={restSections} />}
 </BaseLayout>
 
 <script>
@@ -178,6 +190,19 @@ for (const ep of episodes) {
 </script>
 
 <style>
+  .fallback {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) 0;
+  }
+
+  .fallback h1 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-4xl);
+    color: var(--color-green-dark);
+  }
+
   .page {
     max-width: var(--content-width);
     margin: 0 auto;
@@ -360,6 +385,15 @@ for (const ep of episodes) {
     background: var(--bg-raised);
     border-top: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-xl);
+  }
+
+  /* A plain `display` set directly on this class otherwise beats the
+   * browser's own `[hidden] { display: none }` UA rule (author styles
+   * always win over UA styles) — without this the bar renders open by
+   * default despite the `hidden` attribute in the markup. Same bug
+   * already caught and fixed on .video-modal (tech-podcast/index.astro). */
+  .now-playing[hidden] {
+    display: none;
   }
 
   .now-playing__image {

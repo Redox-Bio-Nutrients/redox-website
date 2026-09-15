@@ -52,6 +52,23 @@ export const page = defineType({
       title: 'Body',
       type: 'blockContent',
     }),
+    defineField({
+      name: 'sections',
+      title: 'Additional Sections',
+      type: 'array',
+      of: [
+        { type: 'homeHeroSection' },
+        { type: 'homeHeroCarouselSection' },
+        { type: 'homeColumnSection' },
+        { type: 'homeStatsSection' },
+        { type: 'homeCtaSection' },
+        { type: 'chartSection' },
+        { type: 'calloutSection' },
+        { type: 'bulletSection' },
+      ],
+      description:
+        'Optional page-builder modules rendered after the Body copy above — same building blocks as the Homepage. A brand new page can use these instead of (or alongside) Hero/Body.',
+    }),
     defineField({ name: 'seo', title: 'SEO', type: 'seo' }),
   ],
   preview: {

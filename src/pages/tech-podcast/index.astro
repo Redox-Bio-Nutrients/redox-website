@@ -6,14 +6,21 @@
 // camera) distinct from the main audio show — same real-world
 // program, published to YouTube instead of Buzzsprout for these
 // episodes specifically. No public feed to build on the way
-// podcastFeed.ts does for the main show (see technicalPodcast.ts's own
-// WHY), so this is a small static list instead — the tradeoff for a
+// podcastFeed.ts does for the main show, so the episode list (title/
+// YouTube ID/episode number) is a plain editable array on the
+// `technicalPodcastPage` Sanity singleton instead — the tradeoff for a
 // slow-growing (~19 episodes over several years), manually-curated
-// series without an API to automate against.
+// series without an API to automate against. Superseded the old
+// hardcoded src/lib/technicalPodcast.ts array (2026-09-15) so Curtis
+// can add/reorder episodes himself in Studio.
 //
 // Own top-level route (not nested under /podcast) and its own News
 // dropdown entry (src/config/site.ts) — Curtis's call, 2026-09-14: a
 // standalone page/nav item, not a sub-page of the main podcast.
+//
+// Hero/surrounding content is the same Sanity "sections" page-builder
+// as Homepage/Technology/the main Podcast page — see HomeSections.astro
+// and getTechnicalPodcastPage() in src/lib/queries/podcast.ts.
 //
 // Same tall-card/texture-fill visual language as /podcast
 // (src/pages/podcast/index.astro) for consistency, adapted for video:
@@ -24,14 +31,19 @@
 // play at once.
 
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import PageHero from '../../components/global/PageHero.astro'
+import HomeSections from '../../components/home/HomeSections.astro'
 import { groundedAccent } from '../../lib/color'
 import { buildTextureVars } from '../../lib/texture'
-import { technicalPodcastEpisodes } from '../../lib/technicalPodcast'
+import { getTechnicalPodcastPage } from '../../lib/queries'
 import '../../styles/texture-surface.css'
 
+const technicalPodcastPage = await getTechnicalPodcastPage()
+const episodes = technicalPodcastPage?.episodes ?? []
+const sections = technicalPodcastPage?.sections ?? []
+const [firstSection, ...restSections] = sections
+
 const textureVarsById = new Map(
-  technicalPodcastEpisodes.map((ep) => [ep.youtubeId, buildTextureVars(ep.youtubeId, groundedAccent(ep.youtubeId))]),
+  episodes.map((ep) => [ep.youtubeId, buildTextureVars(ep.youtubeId, groundedAccent(ep.youtubeId))]),
 )
 ---
 
@@ -39,17 +51,18 @@ const textureVarsById = new Map(
   title="Technical Podcast"
   description="The Redox Technical Podcast — a closer look at the science behind Redox Bio-Nutrients technologies, straight from the team building them."
 >
-  <PageHero
-    heading="Redox Technical Podcast"
-    subheading="A closer look at the science behind Redox Bio-Nutrients technologies — root development, nutrient uptake, soil health, and abiotic stress defense, straight from the team building them."
-    seedKey="technical-podcast"
-    cta={{ label: 'Back to the Podcast', href: '/podcast' }}
-  />
+  {firstSection ? (
+    <HomeSections sections={[firstSection]} />
+  ) : (
+    <div class="fallback">
+      <h1>Technical Podcast</h1>
+    </div>
+  )}
 
   <div class="page">
-    {technicalPodcastEpisodes.length > 0 ? (
+    {episodes.length > 0 ? (
       <div class="episode-group__rows">
-        {technicalPodcastEpisodes.map((ep) => (
+        {episodes.map((ep) => (
           <button
             type="button"
             class="episode-row"
@@ -99,6 +112,8 @@ const textureVarsById = new Map(
       <p class="video-modal__title" id="video-modal-title"></p>
     </div>
   </div>
+
+  {restSections.length > 0 && <HomeSections sections={restSections} />}
 </BaseLayout>
 
 <script>
@@ -133,6 +148,19 @@ const textureVarsById = new Map(
 </script>
 
 <style>
+  .fallback {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) 0;
+  }
+
+  .fallback h1 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-4xl);
+    color: var(--color-green-dark);
+  }
+
   .page {
     max-width: var(--content-width);
     margin: 0 auto;

@@ -23,6 +23,27 @@ export const structure: StructureResolver = (S) =>
             .title('Homepage'),
         ),
 
+      // Two more page-builder singletons, same pattern as Homepage.
+      // Titled "... Page" to stay distinct from the unrelated (unused)
+      // "Podcast" entry below, which is the dormant podcastEpisode list.
+      S.listItem()
+        .title('Podcast Page')
+        .child(
+          S.document()
+            .schemaType('podcastPage')
+            .documentId('podcastPage')
+            .title('Podcast Page'),
+        ),
+
+      S.listItem()
+        .title('Technical Podcast Page')
+        .child(
+          S.document()
+            .schemaType('technicalPodcastPage')
+            .documentId('technicalPodcastPage')
+            .title('Technical Podcast Page'),
+        ),
+
       S.divider(),
 
       S.listItem()
