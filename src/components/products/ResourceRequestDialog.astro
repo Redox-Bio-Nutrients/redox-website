@@ -23,9 +23,10 @@
 interface Props {
   productTitle: string
   color: string
+  accentColor?: string
 }
 
-const { productTitle, color } = Astro.props
+const { productTitle, color, accentColor } = Astro.props
 
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -41,7 +42,12 @@ const US_STATES = [
 const MATERIALS = ['Label', 'Brochure', 'SDS']
 ---
 
-<dialog id="resource-request-dialog" class="resource-dialog" style={`--dialog-color: ${color}`} aria-labelledby="resource-dialog-title">
+<dialog
+  id="resource-request-dialog"
+  class="resource-dialog"
+  style={`--dialog-color: ${color}${accentColor ? `; --dialog-accent-color: ${accentColor}` : ''}`}
+  aria-labelledby="resource-dialog-title"
+>
   <button type="button" class="resource-dialog__close" data-dialog-close aria-label="Close">×</button>
 
   <div id="resource-dialog-form-panel">
@@ -351,11 +357,17 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
 
   /* This dialog renders as a sibling of ProductDetail's .layout, not a
    * descendant (see <dialog> vs .layout in ProductDetail.astro) — the
-   * shared .btn's default --btn-from: var(--product-color, ...) can't
-   * inherit the product color from there, so it's set explicitly here
-   * from this component's own --dialog-color prop instead. */
+   * shared .btn's defaults (--btn-from: var(--product-color, ...),
+   * --btn-to: var(--product-accent-color, ...)) can't inherit either
+   * product color from there, so both are set explicitly here from
+   * this component's own --dialog-color/--dialog-accent-color props
+   * instead. Missing --btn-to (Curtis's report, 2026-09-14 — the
+   * button correctly picked up a product's primary color but the
+   * gradient's far end always fell back to plain brand purple) was
+   * this same gap, just for the second stop. */
   .resource-dialog__submit {
     --btn-from: var(--dialog-color, var(--color-green));
+    --btn-to: var(--dialog-accent-color, var(--color-purple));
     margin-top: var(--space-2);
     width: 100%;
     padding: var(--space-4) var(--space-5);

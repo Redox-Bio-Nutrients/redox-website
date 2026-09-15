@@ -244,6 +244,13 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   .header--scrolled .header__nav-link--active { color: var(--color-white); }
   .header--scrolled .header__utility-link { color: rgb(255 255 255 / 0.9); }
   .header--scrolled .header__utility-link:hover { color: var(--color-white); }
+  /* The dropdown caret's color comes from .header__caret-toggle's own
+   * `color` (the triangle is drawn with `currentColor` — see
+   * .header__caret below), which otherwise never repaints for this
+   * state the way .header__nav-link's text does, leaving a caret that
+   * visibly doesn't match its own label's color (Curtis's report,
+   * 2026-09-14). */
+  .header--scrolled .header__caret-toggle { color: rgb(255 255 255 / 0.9); }
   .header--scrolled .header__theme { border-color: rgb(255 255 255 / 0.4); }
   .header--scrolled .header__theme:hover { background: rgb(255 255 255 / 0.12); }
   .header--scrolled .header__toggle-bar { background: var(--color-white); }
@@ -327,6 +334,12 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
 
   .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__utility-link:hover {
     color: var(--color-white);
+  }
+
+  /* Same caret-color fix as the .header--scrolled rule above, for the
+   * at-rest-over-a-hero-photo case (the one in Curtis's screenshot). */
+  .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__caret-toggle {
+    color: rgb(255 255 255 / 0.9);
   }
 
   .header--on-dark:not(.header--scrolled) .header__toggle-input:not(:checked) ~ .header__nav .header__theme {

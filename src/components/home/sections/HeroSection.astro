@@ -37,7 +37,14 @@ const pool = section.useBackgroundPool
     }))
   : []
 const usePool = pool.length > 0
-const imageUrl = !usePool && section.backgroundImage
+// `section.backgroundImage?.asset` (not just a truthy backgroundImage
+// object) — Studio can save an image field with alt text but no
+// actual asset attached (e.g. an upload that never completed, or one
+// removed but not re-selected), which still projects as a non-null
+// object and previously crashed urlFor() with a null-asset error at
+// build time, taking the entire site down with it. A missing asset
+// now just falls through to the gradient fallback below instead.
+const imageUrl = !usePool && section.backgroundImage?.asset
   ? urlFor(section.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
   : null
 const videoUrl = section.backgroundVideoUrl ?? null

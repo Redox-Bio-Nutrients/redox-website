@@ -61,8 +61,9 @@ export const primaryNav: PrimaryNavItem[] = [
   {
     label: 'News',
     children: [
-      { label: 'Blog',    href: '/blog'    },
-      { label: 'Podcast', href: '/podcast' },
+      { label: 'Blog',              href: '/blog'          },
+      { label: 'Podcast',           href: '/podcast'       },
+      { label: 'Technical Podcast', href: '/tech-podcast'  },
     ],
   },
   { label: 'About Us', href: '/about-us' },

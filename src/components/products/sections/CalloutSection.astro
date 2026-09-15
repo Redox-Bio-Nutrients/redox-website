@@ -69,7 +69,9 @@ const hasBg = pool.length > 0
 // photography meant to be cropped full-bleed, which mangles a tall
 // product photo. Rendered by every variant below, floating over the
 // panel rather than behind it.
-const productImageUrl = section.backgroundImage
+// ?.asset, not just a truthy backgroundImage object — see
+// HeroSection.astro's own comment on this same guard.
+const productImageUrl = section.backgroundImage?.asset
   ? urlFor(section.backgroundImage).width(700).fit('max').auto('format').quality(85).url()
   : null
 

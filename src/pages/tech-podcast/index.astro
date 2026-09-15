@@ -1,0 +1,351 @@
+---
+// src/pages/tech-podcast/index.astro
+//
+// WHY: "Technical Podcast" is a smaller curated video series (Redox
+// staff walking through the science in more depth, recorded on
+// camera) distinct from the main audio show — same real-world
+// program, published to YouTube instead of Buzzsprout for these
+// episodes specifically. No public feed to build on the way
+// podcastFeed.ts does for the main show (see technicalPodcast.ts's own
+// WHY), so this is a small static list instead — the tradeoff for a
+// slow-growing (~19 episodes over several years), manually-curated
+// series without an API to automate against.
+//
+// Own top-level route (not nested under /podcast) and its own News
+// dropdown entry (src/config/site.ts) — Curtis's call, 2026-09-14: a
+// standalone page/nav item, not a sub-page of the main podcast.
+//
+// Same tall-card/texture-fill visual language as /podcast
+// (src/pages/podcast/index.astro) for consistency, adapted for video:
+// 16:9 media box (YouTube's own thumbnail shape, not a square podcast-
+// cover shape), and clicking a card opens the video in a modal instead
+// of handing it to a shared bottom audio bar — video wants to be
+// watched at a real size, not a thin strip, and only one should ever
+// play at once.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import PageHero from '../../components/global/PageHero.astro'
+import { groundedAccent } from '../../lib/color'
+import { buildTextureVars } from '../../lib/texture'
+import { technicalPodcastEpisodes } from '../../lib/technicalPodcast'
+import '../../styles/texture-surface.css'
+
+const textureVarsById = new Map(
+  technicalPodcastEpisodes.map((ep) => [ep.youtubeId, buildTextureVars(ep.youtubeId, groundedAccent(ep.youtubeId))]),
+)
+---
+
+<BaseLayout
+  title="Technical Podcast"
+  description="The Redox Technical Podcast — a closer look at the science behind Redox Bio-Nutrients technologies, straight from the team building them."
+>
+  <PageHero
+    heading="Redox Technical Podcast"
+    subheading="A closer look at the science behind Redox Bio-Nutrients technologies — root development, nutrient uptake, soil health, and abiotic stress defense, straight from the team building them."
+    seedKey="technical-podcast"
+    cta={{ label: 'Back to the Podcast', href: '/podcast' }}
+  />
+
+  <div class="page">
+    {technicalPodcastEpisodes.length > 0 ? (
+      <div class="episode-group__rows">
+        {technicalPodcastEpisodes.map((ep) => (
+          <button
+            type="button"
+            class="episode-row"
+            data-youtube-id={ep.youtubeId}
+            data-title={ep.title}
+            aria-label={`Play Episode ${ep.episodeNumber}: ${ep.title}`}
+          >
+            <div class="episode-row__media">
+              <div class="episode-row__texture texture-fill" style={textureVarsById.get(ep.youtubeId)} aria-hidden="true"></div>
+              <img
+                class="episode-row__art"
+                src={`https://i.ytimg.com/vi/${ep.youtubeId}/hqdefault.jpg`}
+                alt=""
+                loading="lazy"
+              />
+              <span class="episode-row__play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+              </span>
+            </div>
+            <span class="episode-row__body">
+              <span class="episode-row__eyebrow">Episode {ep.episodeNumber}</span>
+              <span class="episode-row__title">{ep.title}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">New episodes coming soon.</p>
+    )}
+  </div>
+
+  <div class="video-modal" id="video-modal" hidden>
+    <div class="video-modal__backdrop" id="video-modal-backdrop"></div>
+    <div class="video-modal__dialog">
+      <button type="button" class="video-modal__close" id="video-modal-close" aria-label="Close video">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      <div class="video-modal__frame">
+        <iframe
+          id="video-modal-iframe"
+          src=""
+          title="Technical Podcast episode"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <p class="video-modal__title" id="video-modal-title"></p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const modal = document.getElementById('video-modal') as HTMLDivElement | null
+  const iframe = document.getElementById('video-modal-iframe') as HTMLIFrameElement | null
+  const titleEl = document.getElementById('video-modal-title')
+  const backdrop = document.getElementById('video-modal-backdrop')
+  const closeBtn = document.getElementById('video-modal-close')
+  const cards = document.querySelectorAll<HTMLButtonElement>('.episode-row')
+
+  const closeModal = () => {
+    if (!modal || !iframe) return
+    iframe.src = ''
+    modal.hidden = true
+  }
+
+  cards.forEach((card) => {
+    card.addEventListener('click', () => {
+      if (!modal || !iframe) return
+      const id = card.dataset.youtubeId ?? ''
+      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1`
+      if (titleEl) titleEl.textContent = card.dataset.title ?? ''
+      modal.hidden = false
+    })
+  })
+
+  backdrop?.addEventListener('click', closeModal)
+  closeBtn?.addEventListener('click', closeModal)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.hidden) closeModal()
+  })
+</script>
+
+<style>
+  .page {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+
+  .empty-state {
+    color: var(--color-text-muted);
+  }
+
+  .episode-group__rows {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6) var(--space-5);
+  }
+
+  /* Same tall-card scaffold as the main podcast page's .episode-row —
+   * see that file's own comment for the full "why below, not overlaid"
+   * reasoning. Only three real differences here: 16:9 media (YouTube's
+   * native thumbnail shape) instead of 1:1, an "Episode N" eyebrow
+   * above the title since there's no date to show instead, and no
+   * .episode-row--playing state — a click opens the modal instead of
+   * toggling in place. */
+  .episode-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: none;
+    border-radius: var(--radius-xl);
+    background: var(--bg-surface);
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+  }
+
+  .episode-row:hover,
+  .episode-row:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .episode-row__media {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+
+  .episode-row__texture {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .episode-row__art {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.4s ease;
+  }
+
+  .episode-row:hover .episode-row__art {
+    transform: scale(1.04);
+  }
+
+  .episode-row__play {
+    position: absolute;
+    z-index: 2;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.2);
+    border: 1px solid rgb(255 255 255 / 0.5);
+    backdrop-filter: blur(8px);
+    color: var(--color-white);
+    box-shadow: var(--shadow-md);
+  }
+
+  .episode-row__play svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .episode-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+
+  .episode-row__eyebrow {
+    font-size: var(--text-xs);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-green);
+  }
+
+  .episode-row__title {
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: var(--leading-snug);
+  }
+
+  .video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+  }
+
+  /* A plain `display` on the class above otherwise wins over the
+   * browser's own `[hidden] { display: none }` UA rule (author styles
+   * always beat UA styles, regardless of source order/specificity) —
+   * without this the modal renders open by default despite the
+   * `hidden` attribute on it in the markup. */
+  .video-modal[hidden] {
+    display: none;
+  }
+
+  .video-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.8);
+  }
+
+  .video-modal__dialog {
+    position: relative;
+    width: min(960px, 100%);
+  }
+
+  .video-modal__close {
+    position: absolute;
+    top: calc(-1 * var(--space-10));
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 0.12);
+    color: var(--color-white);
+    cursor: pointer;
+  }
+
+  .video-modal__close svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .video-modal__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-black);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .video-modal__frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .video-modal__title {
+    margin-top: var(--space-4);
+    text-align: center;
+    color: var(--color-white);
+    font-weight: var(--font-medium);
+  }
+
+  @media (max-width: 1279px) {
+    .episode-group__rows {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .page {
+      padding: var(--space-8) var(--space-6) var(--space-24);
+    }
+
+    .episode-group__rows {
+      grid-template-columns: 1fr;
+    }
+
+    .video-modal__close {
+      top: auto;
+      bottom: calc(100% + var(--space-2));
+    }
+  }
+</style>

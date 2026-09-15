@@ -49,7 +49,9 @@ const tiles = posts.map((post) => {
   return {
     post,
     heroImage,
-    imageUrl: heroImage ? urlFor(heroImage).width(900).auto('format').quality(75).url() : null,
+    // ?.asset, not just a truthy heroImage — see HeroSection.astro's
+    // own comment on this same guard.
+    imageUrl: heroImage?.asset ? urlFor(heroImage).width(900).auto('format').quality(75).url() : null,
     // One consistent portrait ratio (not BlogMasonry's randomized
     // height buckets) — this is a tidy equal-width row, not a masonry
     // grid, so every card should read as the same "weight".

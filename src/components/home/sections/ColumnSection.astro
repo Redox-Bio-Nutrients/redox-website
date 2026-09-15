@@ -22,8 +22,10 @@ interface Props {
 
 const { section } = Astro.props
 const bgType = section.backgroundType ?? 'none'
+// ?.asset, not just a truthy backgroundImage object — see
+// HeroSection.astro's own comment on this same guard.
 const bgImageUrl =
-  bgType === 'image' && section.backgroundImage
+  bgType === 'image' && section.backgroundImage?.asset
     ? urlFor(section.backgroundImage).width(2400).fit('max').auto('format').quality(75).url()
     : null
 // Same {url, lqip} shape PoolBackground/CalloutSection already use —

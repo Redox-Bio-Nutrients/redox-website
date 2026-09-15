@@ -29,7 +29,12 @@ const interval = section.interval ?? 6
 <div class="hero-carousel" data-autoplay={String(autoplay)} data-interval={interval} data-header-theme="light">
   <div class="hero-carousel__track">
     {slides.map((slide, i) => {
-      const imageUrl = slide.backgroundImage
+      // ?.asset, not just a truthy backgroundImage object — see
+      // HeroSection.astro's own comment on this: Studio can save an
+      // image field with alt text but no actual asset attached, which
+      // still projects as non-null and would otherwise crash urlFor()
+      // at build time.
+      const imageUrl = slide.backgroundImage?.asset
         ? urlFor(slide.backgroundImage).width(2400).height(1400).fit('crop').auto('format').quality(75).url()
         : null
       const videoUrl = slide.backgroundVideoUrl ?? null
