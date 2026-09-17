@@ -221,11 +221,24 @@ export interface Author {
   bio?: string
   email?: string
   phone?: string
-  /** states/counties this person personally covers — region-page-only,
-   * see author.ts's coverageAreas */
+  /** exact states this person covers — drives Product Information
+   * Request email routing (resource-request.ts), see author.ts */
   coverageAreas?: string[]
+  /** optional short display label shown on the team card instead of
+   * listing every state in coverageAreas — cosmetic only, see
+   * author.ts's coverageLabel */
+  coverageLabel?: string
   zipPrefixes?: string[]
   region?: { title: string; slug: string }
+}
+
+/** Narrow projection of Author used only for routing the Product
+ * Information Request email to the rep covering the selected state —
+ * see getStateCoverageReps() in src/lib/queries/people.ts. */
+export interface CoverageRep {
+  name: string
+  email: string
+  coverageAreas: string[]
 }
 
 /** A customer/partner quote — a shared pool reused across whichever
