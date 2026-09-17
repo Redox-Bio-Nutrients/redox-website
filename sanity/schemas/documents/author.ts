@@ -143,11 +143,20 @@ export const author = defineType({
     }),
     defineField({
       name: 'coverageAreas',
-      title: 'States / Counties Covered',
+      title: 'States Covered',
       type: 'array',
       of: [{ type: 'string' }],
       description:
-        'e.g. "Iowa", "Story County, IA" — shown on their region team card. Two agronomists in the same region typically split it between them.',
+        'Exact state names only, e.g. "Iowa", "Nebraska" — this is what routes a Product Information Request to this person when a visitor picks a matching state (see src/pages/api/resource-request.ts). Two agronomists in the same region typically split it between them. If this list gets long, set a Coverage Label below so the team card shows something short instead of every state.',
+      fieldset: 'region',
+      hidden: ({ document }) => !document?.region,
+    }),
+    defineField({
+      name: 'coverageLabel',
+      title: 'Coverage Label',
+      type: 'string',
+      description:
+        'Optional short label shown on the team card instead of listing every state, e.g. "Pacific Northwest" for someone covering Washington/Oregon/Idaho. Purely cosmetic — email routing always uses the actual States Covered above, not this label. Falls back to listing the states themselves if left blank.',
       fieldset: 'region',
       hidden: ({ document }) => !document?.region,
     }),

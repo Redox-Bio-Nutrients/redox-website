@@ -115,9 +115,22 @@ reusable from WordPress's).
      requests too.
 7. **In Sanity Studio → Form Settings** (bottom of the content list):
    set **Product Information Request Recipient** to whatever inbox
-   should receive these leads. This is read live at request time, not
-   baked in at build — changing it takes effect on the next
+   should receive these leads by default. This is read live at request
+   time, not baked in at build — changing it takes effect on the next
    submission, no redeploy needed.
+
+**Per-state routing (2026-09):** if the visitor's selected State
+matches a Team Member's **States Covered** (Studio → People → that
+person → Regional Agronomist fieldset), the email goes to that
+person's **Email** directly instead of the general recipient, with the
+general recipient CC'd as a backup. States Covered needs *exact* state
+names (e.g. "Iowa", not "Midwest" or "Story County, IA") — anything
+else won't match. If nobody covers the selected state, it falls back
+to the general recipient exactly as before. A separate, optional
+**Coverage Label** field lets that person's team card show something
+short (e.g. "Pacific Northwest") instead of listing every state — it's
+cosmetic only and has no effect on routing. See `findRepForState()` in
+`src/pages/api/resource-request.ts`.
 
 **Optional hardening, not required to get this working:** by default,
 app-only `Mail.Send` can send as *any* mailbox in the tenant. An
