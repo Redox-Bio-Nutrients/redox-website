@@ -147,7 +147,7 @@ export const author = defineType({
       type: 'array',
       of: [{ type: 'string' }],
       description:
-        'Exact state names only, e.g. "Iowa", "Nebraska" — this is what routes a Product Information Request to this person when a visitor picks a matching state (see src/pages/api/resource-request.ts). Two agronomists in the same region typically split it between them. If this list gets long, set a Coverage Label below so the team card shows something short instead of every state.',
+        'Exact state names only, e.g. "Iowa", "Nebraska" — shown on this person\'s team card so visitors know who covers where. Display only: it has no effect on where a Product Information Request email goes (see src/pages/api/resource-request.ts) — all requests go to one gatekeeper address regardless of state. Two agronomists in the same region typically split it between them. If this list gets long, set a Coverage Label below so the team card shows something short instead of every state.',
       fieldset: 'region',
       hidden: ({ document }) => !document?.region,
     }),
@@ -156,7 +156,7 @@ export const author = defineType({
       title: 'Coverage Label',
       type: 'string',
       description:
-        'Optional short label shown on the team card instead of listing every state, e.g. "Pacific Northwest" for someone covering Washington/Oregon/Idaho. Purely cosmetic — email routing always uses the actual States Covered above, not this label. Falls back to listing the states themselves if left blank.',
+        'Optional short label shown on the team card instead of listing every state, e.g. "Pacific Northwest" for someone covering Washington/Oregon/Idaho. Purely cosmetic, display only. Falls back to listing the states themselves if left blank.',
       fieldset: 'region',
       hidden: ({ document }) => !document?.region,
     }),
