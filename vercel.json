@@ -14,6 +14,29 @@
       "source": "/technologies",
       "destination": "/technologies/ram-technology",
       "permanent": false
-    }
+    },
+
+    { "source": "/ag-bionutrients", "destination": "/agriculture", "permanent": true },
+    { "source": "/turf-bionutrients", "destination": "/turf", "permanent": true },
+    { "source": "/turf-podcast", "destination": "/tech-podcast", "permanent": true },
+    { "source": "/about", "destination": "/about-us", "permanent": true },
+    { "source": "/about/our-company", "destination": "/about-us", "permanent": true },
+    { "source": "/ag-representatives", "destination": "/about-us#team", "permanent": true },
+    { "source": "/turf-representatives", "destination": "/about-us#team", "permanent": true },
+
+    { "source": "/product/turfrx-kplus-micro-crystal", "destination": "/products/turfrx-k-plus-micro-crystal", "permanent": true },
+    { "source": "/product/mainstay-calcium", "destination": "/products/mainstay-calcium-2-0", "permanent": true },
+    { "source": "/product/mainstay-calcium-organic", "destination": "/products/mainstay-calcium-2-0", "permanent": true },
+    { "source": "/product/h-85-organic", "destination": "/products/h-85", "permanent": true },
+    { "source": "/product/triplex-zinc-organic", "destination": "/products/triplex-zinc", "permanent": true },
+    { "source": "/product/triplex-micro-organic", "destination": "/products/triplex-micro", "permanent": true },
+    { "source": "/product/penecal-organic", "destination": "/products/penecal", "permanent": true },
+    { "source": "/product/mainstay-si-organic", "destination": "/products/mainstay-si", "permanent": true },
+    { "source": "/product/optimax", "destination": "/agriculture/products", "permanent": true },
+    { "source": "/product/:slug", "destination": "/products/:slug", "permanent": true },
+
+    { "source": "/news", "destination": "/blog", "permanent": true },
+    { "source": "/news/category/:slug", "destination": "/blog", "permanent": true },
+    { "source": "/news/:slug", "destination": "/blog/:slug", "permanent": true }
   ]
 }
