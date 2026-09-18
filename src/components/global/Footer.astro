@@ -1,7 +1,7 @@
 ---
 // src/components/global/Footer.astro
 
-import { primaryNav, site, utilityNav } from '../../config/site'
+import { legalNav, primaryNav, site, utilityNav } from '../../config/site'
 
 const year = new Date().getFullYear()
 ---
@@ -30,6 +30,19 @@ const year = new Date().getFullYear()
         </li>
       </ul>
     </nav>
+  </div>
+
+  <div class="footer__legal">
+    <ul class="footer__legal-list">
+      {legalNav.map((item) => (
+        <li><a href={item.href} class="footer__legal-link">{item.label}</a></li>
+      ))}
+      <li>
+        <button type="button" class="footer__legal-link footer__legal-link--button" data-open-cookie-settings>
+          Cookie Settings
+        </button>
+      </li>
+    </ul>
   </div>
 
   <div class="footer__bottom">
@@ -89,8 +102,36 @@ const year = new Date().getFullYear()
     text-decoration: underline;
   }
 
-  .footer__bottom {
+  .footer__legal {
     border-top: 1px solid rgb(255 255 255 / 0.15);
+    padding: var(--space-5) var(--space-6) 0;
+  }
+
+  .footer__legal-list {
+    list-style: none;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-6);
+  }
+
+  .footer__legal-link {
+    font-size: var(--text-xs);
+    color: var(--footer-muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .footer__legal-link:hover {
+    color: var(--footer-text);
+    text-decoration: underline;
+  }
+
+  .footer__bottom {
     padding: var(--space-4) var(--space-6);
     text-align: center;
     font-size: var(--text-xs);

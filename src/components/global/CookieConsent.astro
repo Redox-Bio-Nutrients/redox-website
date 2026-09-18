@@ -1,0 +1,386 @@
+---
+// src/components/global/CookieConsent.astro
+//
+// WHY: The new site sets zero non-essential cookies today (no
+// analytics, no ads) — but a Google Analytics rollout is planned (see
+// docs/deployment.md's Analytics section), and EU/UK GDPR require
+// consent to be captured *before* any non-essential cookie is set, not
+// after. Building the consent mechanism now, ahead of the actual
+// tracking script, means whoever visits between now and launch day
+// already has a recorded, honored choice — nobody needs to be
+// re-prompted the day analytics ships.
+//
+// Categories mirror what the Cookie Policy pages (EU/UK/CA — see
+// sanity/schemas/documents/page.ts content, seeded 2026-09-18) already
+// promise: Necessary (always on, no toggle), Analytics, Functional,
+// Marketing. Nothing currently loads behind Analytics/Functional/
+// Marketing — see src/components/global/Analytics.astro, which only
+// ever emits a script tag if PUBLIC_GA_MEASUREMENT_ID is set (it isn't
+// yet). This component's whole job today is recording an honest
+// per-category choice for later, not gating anything real yet.
+//
+// Global Privacy Control (GPC): the CA Cookie Policy explicitly
+// promises "we honor [GPC] as a valid opt-out request" — checked here
+// via navigator.globalPrivacyControl and auto-applied as an immediate
+// reject-non-essential, no banner shown, since showing a banner asking
+// permission to do the thing the visitor already told their browser to
+// refuse would be its own kind of dark pattern.
+//
+// Reopening this later: any element anywhere can carry
+// data-open-cookie-settings and this component's own script wires
+// every one of them, present now or added later (see Footer.astro).
+---
+
+<div id="cookie-consent-banner" class="cookie-banner" hidden role="dialog" aria-live="polite" aria-label="Cookie consent">
+  <p class="cookie-banner__text">
+    We use cookies to ensure the site works properly and, where you allow it, to understand how it's used. See our
+    <a href="/cookie-policy-eu">Cookie Policy</a> for details.
+  </p>
+  <div class="cookie-banner__actions">
+    <button type="button" class="btn btn--ghost cookie-banner__btn" id="cookie-banner-manage">Manage Preferences</button>
+    <button type="button" class="btn btn--ghost cookie-banner__btn" id="cookie-banner-reject">Reject Non-Essential</button>
+    <button type="button" class="btn btn--primary cookie-banner__btn" id="cookie-banner-accept">Accept All</button>
+  </div>
+</div>
+
+<dialog id="cookie-settings-dialog" class="cookie-dialog" aria-labelledby="cookie-dialog-title">
+  <button type="button" class="cookie-dialog__close" data-dialog-close aria-label="Close">×</button>
+  <h2 id="cookie-dialog-title">Cookie Preferences</h2>
+  <p class="cookie-dialog__intro">
+    Choose which categories of cookies you're comfortable with. Necessary cookies keep the site working and can't be
+    turned off. You can change these choices at any time from the "Cookie Settings" link in the footer.
+  </p>
+
+  <div class="cookie-dialog__categories">
+    <label class="cookie-dialog__category">
+      <span class="cookie-dialog__category-text">
+        <strong>Strictly Necessary</strong>
+        <span>Required for core features like security and remembering your cookie choice. Always on.</span>
+      </span>
+      <input type="checkbox" checked disabled aria-label="Strictly necessary cookies (always on)" />
+    </label>
+
+    <label class="cookie-dialog__category">
+      <span class="cookie-dialog__category-text">
+        <strong>Analytics &amp; Performance</strong>
+        <span>Helps us understand how visitors use the site. Nothing loads behind this yet.</span>
+      </span>
+      <input type="checkbox" id="cookie-cat-analytics" data-category="analytics" />
+    </label>
+
+    <label class="cookie-dialog__category">
+      <span class="cookie-dialog__category-text">
+        <strong>Functional</strong>
+        <span>Remembers preferences like language or region. Nothing loads behind this yet.</span>
+      </span>
+      <input type="checkbox" id="cookie-cat-functional" data-category="functional" />
+    </label>
+
+    <label class="cookie-dialog__category">
+      <span class="cookie-dialog__category-text">
+        <strong>Marketing &amp; Targeting</strong>
+        <span>Used for advertising and remarketing. Nothing loads behind this yet.</span>
+      </span>
+      <input type="checkbox" id="cookie-cat-marketing" data-category="marketing" />
+    </label>
+  </div>
+
+  <div class="cookie-dialog__footer">
+    <button type="button" class="btn btn--ghost cookie-dialog__btn" id="cookie-dialog-reject">Reject Non-Essential</button>
+    <button type="button" class="btn btn--primary cookie-dialog__btn" id="cookie-dialog-save">Save Preferences</button>
+  </div>
+</dialog>
+
+<script>
+  interface ConsentState {
+    necessary: true
+    analytics: boolean
+    functional: boolean
+    marketing: boolean
+    ts: string
+  }
+
+  const COOKIE_NAME = 'redox_consent'
+  const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
+
+  function readConsent(): ConsentState | null {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`))
+    if (!match) return null
+    try {
+      return JSON.parse(decodeURIComponent(match[1]))
+    } catch {
+      return null
+    }
+  }
+
+  function writeConsent(partial: Omit<ConsentState, 'necessary' | 'ts'>) {
+    const consent: ConsentState = { necessary: true, ts: new Date().toISOString(), ...partial }
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(consent))}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`
+    window.dispatchEvent(new CustomEvent('redox:consent-change', { detail: consent }))
+    return consent
+  }
+
+  const banner = document.getElementById('cookie-consent-banner')
+  const dialog = document.getElementById('cookie-settings-dialog') as HTMLDialogElement | null
+  const analyticsToggle = document.getElementById('cookie-cat-analytics') as HTMLInputElement | null
+  const functionalToggle = document.getElementById('cookie-cat-functional') as HTMLInputElement | null
+  const marketingToggle = document.getElementById('cookie-cat-marketing') as HTMLInputElement | null
+
+  function hideBanner() {
+    banner?.setAttribute('hidden', '')
+  }
+
+  function showBanner() {
+    banner?.removeAttribute('hidden')
+  }
+
+  function syncTogglesFrom(consent: ConsentState) {
+    if (analyticsToggle) analyticsToggle.checked = consent.analytics
+    if (functionalToggle) functionalToggle.checked = consent.functional
+    if (marketingToggle) marketingToggle.checked = consent.marketing
+  }
+
+  // Global Privacy Control — honored as an immediate, silent opt-out.
+  // See the CA Cookie Policy, which promises exactly this.
+  const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true
+
+  const existing = readConsent()
+  if (existing) {
+    syncTogglesFrom(existing)
+  } else if (gpc) {
+    syncTogglesFrom(writeConsent({ analytics: false, functional: false, marketing: false }))
+  } else {
+    showBanner()
+  }
+
+  document.getElementById('cookie-banner-accept')?.addEventListener('click', () => {
+    syncTogglesFrom(writeConsent({ analytics: true, functional: true, marketing: true }))
+    hideBanner()
+  })
+
+  document.getElementById('cookie-banner-reject')?.addEventListener('click', () => {
+    syncTogglesFrom(writeConsent({ analytics: false, functional: false, marketing: false }))
+    hideBanner()
+  })
+
+  document.getElementById('cookie-banner-manage')?.addEventListener('click', () => {
+    dialog?.showModal()
+  })
+
+  document.getElementById('cookie-dialog-reject')?.addEventListener('click', () => {
+    syncTogglesFrom(writeConsent({ analytics: false, functional: false, marketing: false }))
+    hideBanner()
+    dialog?.close()
+  })
+
+  document.getElementById('cookie-dialog-save')?.addEventListener('click', () => {
+    writeConsent({
+      analytics: analyticsToggle?.checked ?? false,
+      functional: functionalToggle?.checked ?? false,
+      marketing: marketingToggle?.checked ?? false,
+    })
+    hideBanner()
+    dialog?.close()
+  })
+
+  dialog?.querySelectorAll('[data-dialog-close]').forEach((btn) => {
+    btn.addEventListener('click', () => dialog.close())
+  })
+  dialog?.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close()
+  })
+
+  // Reopen from anywhere — the footer's "Cookie Settings" link today,
+  // any future one tomorrow, without either side needing to know about
+  // the other beyond this one data attribute.
+  document.querySelectorAll('[data-open-cookie-settings]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault()
+      const current = readConsent()
+      if (current) syncTogglesFrom(current)
+      dialog?.showModal()
+    })
+  })
+</script>
+
+<style>
+  .cookie-banner[hidden] {
+    display: none;
+  }
+
+  .cookie-banner {
+    position: fixed;
+    z-index: 200;
+    bottom: var(--space-4);
+    left: var(--space-4);
+    right: var(--space-4);
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-6);
+    border-radius: var(--radius-xl);
+    border: var(--border-thin) solid var(--border-subtle);
+    background: var(--bg-page);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .cookie-banner__text {
+    flex: 1 1 320px;
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    color: var(--color-text-secondary);
+  }
+
+  .cookie-banner__text a {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+
+  .cookie-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .cookie-banner__btn {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+  }
+
+  .cookie-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(520px, calc(100vw - var(--space-8)));
+    max-height: calc(100vh - var(--space-8));
+    padding: var(--space-8);
+    border: none;
+    border-radius: var(--radius-3xl);
+    background: var(--bg-page);
+    box-shadow: var(--shadow-xl);
+    overflow: auto;
+  }
+
+  .cookie-dialog::backdrop {
+    background: rgb(0 0 0 / 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .cookie-dialog[open] {
+    animation: cookie-dialog-in 0.2s ease;
+  }
+
+  @keyframes cookie-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+
+  .cookie-dialog__close {
+    position: absolute;
+    top: var(--space-5);
+    right: var(--space-5);
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    color: var(--color-text-secondary);
+    font-size: var(--text-xl);
+    line-height: 1;
+  }
+
+  .cookie-dialog h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+    padding-right: var(--space-8);
+  }
+
+  .cookie-dialog__intro {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-5);
+  }
+
+  .cookie-dialog__categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .cookie-dialog__category {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .cookie-dialog__category-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+
+  .cookie-dialog__category-text strong {
+    color: var(--color-text-primary);
+  }
+
+  .cookie-dialog__category-text span {
+    color: var(--color-text-secondary);
+  }
+
+  .cookie-dialog__category input[type='checkbox'] {
+    flex-shrink: 0;
+    margin-top: var(--space-1);
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-green);
+  }
+
+  .cookie-dialog__footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-3);
+  }
+
+  .cookie-dialog__btn {
+    padding: var(--space-3) var(--space-5);
+  }
+
+  @media (max-width: 639px) {
+    .cookie-banner {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .cookie-banner__actions {
+      justify-content: stretch;
+    }
+
+    .cookie-banner__btn {
+      flex: 1;
+    }
+
+    .cookie-dialog {
+      padding: var(--space-6);
+    }
+  }
+</style>

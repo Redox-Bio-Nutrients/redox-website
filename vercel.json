@@ -114,6 +114,15 @@
     { "source": "/grower-survey", "destination": "/", "permanent": true },
     { "source": "/grower-survey/", "destination": "/", "permanent": true },
     { "source": "/almond-grower-giveaway", "destination": "/", "permanent": true },
-    { "source": "/almond-grower-giveaway/", "destination": "/", "permanent": true }
+    { "source": "/almond-grower-giveaway/", "destination": "/", "permanent": true },
+
+    { "source": "/opt-out-personal-information", "destination": "/do-not-sell-my-info", "permanent": true },
+    { "source": "/opt-out-personal-information/", "destination": "/do-not-sell-my-info", "permanent": true },
+    { "source": "/opt-out-preferences", "destination": "/", "permanent": true },
+    { "source": "/opt-out-preferences/", "destination": "/", "permanent": true },
+    { "source": "/disclaimer", "destination": "/", "permanent": true },
+    { "source": "/disclaimer/", "destination": "/", "permanent": true },
+    { "source": "/imprint", "destination": "/", "permanent": true },
+    { "source": "/imprint/", "destination": "/", "permanent": true }
   ]
 }
