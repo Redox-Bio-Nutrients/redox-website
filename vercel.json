@@ -77,6 +77,7 @@
     { "source": "/our-technology", "destination": "/technologies", "permanent": true },
     { "source": "/our-technology/", "destination": "/technologies", "permanent": true },
     { "source": "/our-technology/:path*", "destination": "/technologies/ram-technology", "permanent": true },
+    { "source": "/our-technology/:path*/", "destination": "/technologies/ram-technology", "permanent": true },
     { "source": "/stop-losing-nutrients-to-your-soil", "destination": "/technologies/ram-technology", "permanent": true },
     { "source": "/stop-losing-nutrients-to-your-soil/", "destination": "/technologies/ram-technology", "permanent": true },
     { "source": "/nutrient-optimization", "destination": "/technologies/ram-technology", "permanent": true },
@@ -100,6 +101,7 @@
     { "source": "/crops", "destination": "/agriculture", "permanent": true },
     { "source": "/crops/", "destination": "/agriculture", "permanent": true },
     { "source": "/crops/:path*", "destination": "/agriculture", "permanent": true },
+    { "source": "/crops/:path*/", "destination": "/agriculture", "permanent": true },
 
     { "source": "/redox-results", "destination": "/", "permanent": true },
     { "source": "/redox-results/", "destination": "/", "permanent": true },
