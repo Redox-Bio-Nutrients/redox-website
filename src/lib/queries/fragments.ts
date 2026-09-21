@@ -296,7 +296,11 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   ),
   tone,
   color,
-  accentColor
+  accentColor,
+  // homePullQuoteSection only — no other section type uses these
+  // field names, so a bare passthrough is fine, no select() needed.
+  quote,
+  attribution
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{

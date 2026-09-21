@@ -480,6 +480,16 @@ export interface HomeBlogShowcaseSection {
   posts: BlogPostCard[]
 }
 
+/** Same shape as blockContent's "pullQuote" embed object — see
+ * homeSections.ts's own comment for why this is a separate section
+ * type instead of reusing that one directly. */
+export interface HomePullQuoteSection {
+  _type: 'homePullQuoteSection'
+  _key: string
+  quote: string
+  attribution?: string
+}
+
 export type HomeSection =
   | HomeHeroSection
   | HomeHeroCarouselSection
@@ -488,6 +498,7 @@ export type HomeSection =
   | HomeCtaSection
   | HomeFeaturedProductSection
   | HomeBlogShowcaseSection
+  | HomePullQuoteSection
   | ChartSection
   | CalloutSection
   | BulletSection

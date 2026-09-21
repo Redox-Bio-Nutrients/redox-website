@@ -435,6 +435,44 @@ export const homeCtaSection = defineType({
 // feature and supplies the one thing the product doesn't have an
 // opinion on (the eyebrow label).
 
+// ── Pull Quote — a standalone emphasis statement ────────────────────
+//
+// WHY a dedicated section instead of reusing the blockContent
+// "pullQuote" embed object: that one only exists inside a `page`
+// document's rich-text `body` field, and the Homepage's `sections`
+// array isn't blockContent — it's the typed page-builder. Same visual
+// treatment either way (renders through the identical
+// PortableTextPullQuote.astro component, see HomeSections.astro), just
+// a thin wrapper so it's pickable from the Homepage's own "+" menu.
+// Built 2026-09-21 to move a quote off the Contact Us page and onto
+// the Homepage, directly under the hero.
+export const homePullQuoteSection = defineType({
+  name: 'homePullQuoteSection',
+  title: 'Pull Quote',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'quote',
+      title: 'Quote',
+      type: 'text',
+      rows: 2,
+      validation: (rule: any) => rule.required(),
+    }),
+    defineField({
+      name: 'attribution',
+      title: 'Attribution',
+      type: 'string',
+      description: 'Optional — e.g. a name, or leave blank for an unattributed statement.',
+    }),
+  ],
+  preview: {
+    select: { quote: 'quote' },
+    prepare({ quote }: { quote?: string }) {
+      return { title: quote ? `“${quote.slice(0, 60)}${quote.length > 60 ? '…' : ''}”` : 'Pull Quote' }
+    },
+  },
+})
+
 export const homeFeaturedProductSection = defineType({
   name: 'homeFeaturedProductSection',
   title: 'Featured Product',
