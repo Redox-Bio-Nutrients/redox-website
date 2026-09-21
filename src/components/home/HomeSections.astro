@@ -21,7 +21,6 @@ import CalloutSection from '../products/sections/CalloutSection.astro'
 import BulletSection from '../products/sections/BulletSection.astro'
 import FeaturedProductSection from './sections/FeaturedProductSection.astro'
 import BlogShowcaseSection from './sections/BlogShowcaseSection.astro'
-import PortableTextPullQuote from '../portableText/PortableTextPullQuote.astro'
 
 interface Props {
   sections: HomeSection[]
@@ -87,20 +86,6 @@ const { sections } = Astro.props
         return (
           <div class="home-sections__constrain">
             <BulletSection section={section} />
-          </div>
-        )
-      case 'homePullQuoteSection':
-        // Reuses the exact same component/visual treatment as the
-        // blockContent "pullQuote" embed (see PortableTextPullQuote.astro
-        // and homeSections.ts's schema comment for why this needs its
-        // own section type instead of literally sharing that object).
-        // Called directly rather than through <PortableText> itself, so
-        // it needs index/isInline supplied by hand — index is unused by
-        // this component, isInline is always false, it's a block-level
-        // standalone quote.
-        return (
-          <div class="home-sections__constrain">
-            <PortableTextPullQuote node={{ _type: 'pullQuote', quote: section.quote, attribution: section.attribution }} index={0} isInline={false} />
           </div>
         )
       default:

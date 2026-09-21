@@ -31,7 +31,6 @@ export const homepage = defineType({
         // add one even though the frontend already knew how.
         { type: 'calloutSection' },
         { type: 'bulletSection' },
-        { type: 'homePullQuoteSection' },
       ],
     }),
     defineField({ name: 'seo', title: 'SEO', type: 'seo' }),

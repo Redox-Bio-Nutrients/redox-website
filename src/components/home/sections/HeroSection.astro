@@ -89,6 +89,12 @@ const centered = section.textAlign === 'center'
         </a>
       )}
     </div>
+    {section.quote && (
+      <figure class="hero__quote">
+        <blockquote>{section.quote}</blockquote>
+        {section.quoteAttribution && <figcaption>— {section.quoteAttribution}</figcaption>}
+      </figure>
+    )}
   </div>
 
   {/* Default bottom offset (--space-8) sat close enough to the hero's
@@ -191,6 +197,34 @@ const centered = section.textAlign === 'center'
     color: rgb(255 255 255 / 0.9);
   }
 
+  /* Lighter-weight than PortableTextPullQuote.astro's standalone
+   * treatment (no oversized quote mark) — sits inside the hero's own
+   * already-busy typographic hierarchy (huge serif heading, plain
+   * sans subheading), so an italic serif line reads as the next step
+   * down rather than competing with either. */
+  .hero__quote {
+    margin-top: var(--space-6);
+    max-width: 44ch;
+  }
+
+  .hero__quote blockquote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .hero__quote figcaption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.7);
+  }
+
   /* Centered variant (textAlign: 'center' in Sanity) — the content box
    * itself is already horizontally centered on the page (.hero__content
    * above); this just centers the text/CTA row *within* that box too,
@@ -203,7 +237,8 @@ const centered = section.textAlign === 'center'
     justify-content: center;
   }
 
-  .hero--center .hero__subheading {
+  .hero--center .hero__subheading,
+  .hero--center .hero__quote {
     margin-left: auto;
     margin-right: auto;
   }
