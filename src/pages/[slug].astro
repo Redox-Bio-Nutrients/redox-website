@@ -12,8 +12,10 @@
 // photo header (Homepage hero treatment); pages without just get a
 // plain title/subheading block.
 //
-// The About Us page (slug "about-us") additionally gets a "Meet the
-// Team" section appended after the body copy — the office staff pool
+// The Contact Us page (slug "contact-us", renamed 2026-09 from "About
+// Us" — same document, same content, just a new name/URL per a direct
+// change request) additionally gets a "Meet the Team" section appended
+// after the body copy — the office staff pool
 // (author.ts's isOfficeStaff flag) as an "HQ" group, followed by each
 // Region's own agronomist roster (getAllRegionsWithTeams() — the same
 // query the old standalone /regions page used) as its own labeled
@@ -74,14 +76,14 @@ const heroImageUrl = page.heroImage?.asset
 // tint over the hero photo — see HeroSection.astro's own use of this
 // for the fuller reasoning. Agriculture/Turf get their own market
 // base color (marketPalette(), same source CollectionShowcase/blog
-// cards already use for market identity); every other page (About
+// cards already use for market identity); every other page (Contact
 // Us, and anything else this catch-all renders) falls back to plain
-// Agriculture green — there's no "About Us color" to reach for.
+// Agriculture green — there's no "Contact Us color" to reach for.
 const heroTextureColor = marketPalette(slug === 'turf' ? 'turf' : 'agriculture').base
 const heroTextureVars = buildTextureVars(slug!, heroTextureColor)
 
-const officeStaff = slug === 'about-us' ? await getOfficeStaff() : []
-const regionTeams = slug === 'about-us' ? await getAllRegionsWithTeams() : []
+const officeStaff = slug === 'contact-us' ? await getOfficeStaff() : []
+const regionTeams = slug === 'contact-us' ? await getAllRegionsWithTeams() : []
 
 const marketCatalog =
   slug === 'agriculture' ? '/agriculture/products' : slug === 'turf' ? '/turf/products' : null
@@ -408,7 +410,7 @@ const testimonials =
     text-align: center;
   }
 
-  /* ── Meet the Team (About Us only) ───────────────────────────── */
+  /* ── Meet the Team (Contact Us only) ───────────────────────────── */
   .team {
     padding: var(--space-8) 0 var(--space-24);
   }

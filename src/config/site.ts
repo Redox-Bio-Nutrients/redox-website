@@ -66,7 +66,7 @@ export const primaryNav: PrimaryNavItem[] = [
       { label: 'Technical Podcast', href: '/tech-podcast'  },
     ],
   },
-  { label: 'About Us', href: '/about-us' },
+  { label: 'Contact Us', href: '/contact-us' },
   { label: 'Swag Store', href: 'https://stores.inksoft.com/redoxgrows/shop/home', external: true },
 ]
 
