@@ -31,14 +31,24 @@ const { sections } = Astro.props
 ---
 
 <div class="home-sections">
-  {sections.map((section) => {
+  {sections.map((section, index) => {
     switch (section._type) {
       case 'homeHeroSection':
         return <HeroSection section={section} />
       case 'homeHeroCarouselSection':
         return <HeroCarouselSection section={section} />
-      case 'homeColumnSection':
-        return <ColumnSection section={section} />
+      case 'homeColumnSection': {
+        // ColumnSection's "overlap" layout pulls itself up with a
+        // negative margin onto whatever renders directly before it —
+        // only correct when that's actually a Hero (the full-bleed
+        // photo it was designed to float over). A non-hero section
+        // inserted between the two (e.g. a Pull Quote) would otherwise
+        // get partially swallowed by that same negative margin — see
+        // ColumnSection.astro's own comment on the `followsHero` prop.
+        const previousType = sections[index - 1]?._type
+        const followsHero = previousType === 'homeHeroSection' || previousType === 'homeHeroCarouselSection'
+        return <ColumnSection section={section} followsHero={followsHero} />
+      }
       case 'homeStatsSection':
         return <StatsSection section={section} />
       case 'homeCtaSection':

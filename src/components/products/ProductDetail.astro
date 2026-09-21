@@ -47,6 +47,20 @@ const isTurf = variant === 'turf'
 // for why an explicit accentColor picked as a hero-gradient "shadow"
 // side can otherwise be nearly invisible as foreground text).
 const turfAccent = ensureReadableOnDark(deriveCalloutPalette(color, accentColor).complement)
+// `turfAccent` (not the raw `accentColor`) is what actually ends up
+// in --product-accent-color on .layout below, for every product
+// regardless of market — so any .btn--primary in this component that
+// leans on that inherited variable for its own default --btn-to (the
+// sitewide button convention: var(--product-accent-color, var(--color-purple)))
+// picks up this Turf-specific derived "wash" color even on an Ag
+// product page. Harmless where it's meant to apply (Turf's own
+// sidebar/hero treatment), but wrong for a plain button — found live
+// 2026-09-21 on the "Talk to an agronomist" link: a random muddy
+// teal-to-coral gradient on RootRx (Ag, no accentColor set) instead
+// of the expected teal-to-purple default. That link now sets its own
+// --btn-to explicitly back to the raw accentColor-or-purple
+// convention, same reasoning ResourceRequestDialog.astro already
+// documents for its own submit button.
 // Background pool: heroImage + the backgrounds gallery. The server
 // renders the first image so the page never flashes empty; an inline
 // script swaps in a random pick before paint on every load.
@@ -318,6 +332,7 @@ const documents = (product.documents ?? []).map((doc) => ({
       <a
         class:list={[isTurf ? ['sidebar__cta', 'turf-cut'] : ['btn', 'btn--primary', 'sidebar__cta']]}
         href="/contact-us"
+        style={isTurf ? undefined : `--btn-to: ${accentColor ?? 'var(--color-purple)'};`}
       >
         Talk to an agronomist
       </a>
