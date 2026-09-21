@@ -352,6 +352,10 @@ export interface HomeHeroSection {
   _key: string
   heading: string
   subheading?: string
+  /** optional standalone statement shown under the subheading, same
+   * italic serif treatment as a blockContent Pull Quote */
+  quote?: string
+  quoteAttribution?: string
   backgroundImage?: SanityImage
   /** resolved file URL — takes priority over backgroundImage when present */
   backgroundVideoUrl?: string
@@ -480,16 +484,6 @@ export interface HomeBlogShowcaseSection {
   posts: BlogPostCard[]
 }
 
-/** Same shape as blockContent's "pullQuote" embed object — see
- * homeSections.ts's own comment for why this is a separate section
- * type instead of reusing that one directly. */
-export interface HomePullQuoteSection {
-  _type: 'homePullQuoteSection'
-  _key: string
-  quote: string
-  attribution?: string
-}
-
 export type HomeSection =
   | HomeHeroSection
   | HomeHeroCarouselSection
@@ -498,7 +492,6 @@ export type HomeSection =
   | HomeCtaSection
   | HomeFeaturedProductSection
   | HomeBlogShowcaseSection
-  | HomePullQuoteSection
   | ChartSection
   | CalloutSection
   | BulletSection

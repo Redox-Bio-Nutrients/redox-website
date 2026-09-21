@@ -18,9 +18,18 @@ import '../../../styles/texture-surface.css'
 
 interface Props {
   section: HomeColumnSection
+  /** Only meaningful for `layout === 'overlap'` — whether the section
+   * immediately before this one (in the page's own section order) is
+   * actually a Hero. That negative-margin overlap trick (see below)
+   * only reads correctly floating over a Hero's full-bleed photo;
+   * default `true` so any call site that doesn't pass this explicitly
+   * keeps the original, always-overlaps behavior — today that's every
+   * call site except HomeSections.astro, which computes the real
+   * answer from actual section order. */
+  followsHero?: boolean
 }
 
-const { section } = Astro.props
+const { section, followsHero = true } = Astro.props
 const bgType = section.backgroundType ?? 'none'
 // ?.asset, not just a truthy backgroundImage object — see
 // HeroSection.astro's own comment on this same guard.
@@ -66,6 +75,11 @@ const splitImageUrl = splitItem?.image
 // cut between sections. No image of its own (ignores items[0].image
 // entirely) — the backdrop is whatever image the previous section
 // already provides. Uses only items[0], same reasoning as split.
+// Only actually pulls up when `followsHero` is true (see that prop's
+// own comment) — 2026-09-21, a Pull Quote section inserted directly
+// before this one on the Homepage got partially swallowed by the
+// same negative margin before this guard existed; caught and fixed
+// live.
 const isOverlap = section.layout === 'overlap'
 const overlapItem = section.items?.[0]
 
@@ -135,7 +149,7 @@ const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duo
     </div>
   </section>
 ) : isOverlap && overlapItem ? (
-  <section class="columns columns--overlap">
+  <section class:list={['columns', 'columns--overlap', { 'columns--overlap-flush': !followsHero }]}>
     <div class="overlap__inner">
       <div class="overlap-card">
         {section.eyebrow && <p class="overlap-card__eyebrow">{section.eyebrow}</p>}
@@ -579,6 +593,15 @@ const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duo
     padding-bottom: var(--space-16);
   }
 
+  /* Not directly after a Hero (followsHero={false}) — the negative
+   * pull-up has nothing appropriate to float over (see the `followsHero`
+   * prop's own comment), so this falls back to the section's normal
+   * place in the page's flex `gap` instead of eating into whatever
+   * came before it. */
+  .columns--overlap-flush {
+    margin-top: 0;
+  }
+
   .overlap__inner {
     max-width: var(--content-width);
     margin: 0 auto;
@@ -650,6 +673,10 @@ const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duo
     .columns--overlap {
       margin-top: -80px;
       padding-bottom: var(--space-12);
+    }
+
+    .columns--overlap-flush {
+      margin-top: 0;
     }
 
     .overlap-card {

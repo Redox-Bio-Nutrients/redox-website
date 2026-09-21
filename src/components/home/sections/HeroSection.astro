@@ -73,7 +73,7 @@ const centered = section.textAlign === 'center'
   {hasMedia && <div class="hero__overlay" aria-hidden="true"></div>}
   {hasMedia && <div class="hero__texture texture-wash" style={textureVars} aria-hidden="true"></div>}
 
-  <div class="hero__content">
+  <div class:list={['hero__content', { 'hero__content--has-quote': section.quote }]}>
     <h1 class="hero__title">{section.heading}</h1>
     <div class="hero__meta">
       {section.subheading && <p class="hero__subheading">{section.subheading}</p>}
@@ -89,6 +89,13 @@ const centered = section.textAlign === 'center'
         </a>
       )}
     </div>
+    {section.quote && (
+      <figure class="hero__quote">
+        <span class="hero__quote-mark" aria-hidden="true">&ldquo;</span>
+        <blockquote>{section.quote}</blockquote>
+        {section.quoteAttribution && <figcaption>— {section.quoteAttribution}</figcaption>}
+      </figure>
+    )}
   </div>
 
   {/* Default bottom offset (--space-8) sat close enough to the hero's
@@ -167,6 +174,21 @@ const centered = section.textAlign === 'center'
     padding: calc(var(--space-16) + var(--header-space)) var(--space-8) var(--space-16);
   }
 
+  /* A quote is the last thing in .hero__content, right above where a
+   * following overlap ColumnSection's card would pull up onto this
+   * section's bottom edge (-140px, see that component's own comment).
+   * .hero itself centers its content vertically, so a taller block
+   * only pushes the bottom down by roughly half of what it grows —
+   * measured with the shortest real quote so far, that still only
+   * left about 15px of clearance before the overlap card's own top
+   * edge, thin enough that a longer quote or a second line of
+   * attribution could genuinely collide with it again. This
+   * guarantees real breathing room regardless of quote length,
+   * rather than re-tuning a pixel value every time the copy changes. */
+  .hero__content--has-quote {
+    padding-bottom: 12rem;
+  }
+
   .hero__title {
     font-family: var(--font-serif);
     font-weight: var(--font-normal);
@@ -191,6 +213,49 @@ const centered = section.textAlign === 'center'
     color: rgb(255 255 255 / 0.9);
   }
 
+  /* Lighter-weight than PortableTextPullQuote.astro's standalone
+   * treatment (no oversized quote mark) — sits inside the hero's own
+   * already-busy typographic hierarchy (huge serif heading, plain
+   * sans subheading), so an italic serif line reads as the next step
+   * down rather than competing with either. */
+  .hero__quote {
+    margin-top: var(--space-8);
+    max-width: 46ch;
+  }
+
+  /* Same oversized-quotation-mark language PortableTextPullQuote.astro/
+   * TestimonialCard.astro already use sitewide, scaled down to fit
+   * inside the Hero's own type hierarchy and recolored for a photo
+   * backdrop (their green tint assumes a plain surface — over a real
+   * photo it could disappear against a green field shot or clash with
+   * a red/gold one; translucent white reads on anything). */
+  .hero__quote-mark {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 2.75rem;
+    line-height: 1;
+    color: rgb(255 255 255 / 0.45);
+    margin-bottom: -0.5rem;
+  }
+
+  .hero__quote blockquote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--text-2xl);
+    line-height: var(--leading-snug);
+    color: var(--color-white);
+  }
+
+  .hero__quote figcaption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.7);
+  }
+
   /* Centered variant (textAlign: 'center' in Sanity) — the content box
    * itself is already horizontally centered on the page (.hero__content
    * above); this just centers the text/CTA row *within* that box too,
@@ -203,7 +268,8 @@ const centered = section.textAlign === 'center'
     justify-content: center;
   }
 
-  .hero--center .hero__subheading {
+  .hero--center .hero__subheading,
+  .hero--center .hero__quote {
     margin-left: auto;
     margin-right: auto;
   }
