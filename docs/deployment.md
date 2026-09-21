@@ -114,23 +114,25 @@ reusable from WordPress's).
    - Apply to both Production and Preview so staging can send test
      requests too.
 7. **In Sanity Studio → Form Settings** (bottom of the content list):
-   set **Product Information Request Recipient** to whatever inbox
-   should receive these leads by default. This is read live at request
-   time, not baked in at build — changing it takes effect on the next
-   submission, no redeploy needed.
+   set **Product Information Request Recipient** to the single inbox
+   that should receive every one of these leads. This is read live at
+   request time, not baked in at build — changing it takes effect on
+   the next submission, no redeploy needed. Every submission goes here
+   regardless of the visitor's selected State — see below.
 
-**Per-state routing (2026-09):** if the visitor's selected State
-matches a Team Member's **States Covered** (Studio → People → that
-person → Regional Agronomist fieldset), the email goes to that
-person's **Email** directly instead of the general recipient, with the
-general recipient CC'd as a backup. States Covered needs *exact* state
-names (e.g. "Iowa", not "Midwest" or "Story County, IA") — anything
-else won't match. If nobody covers the selected state, it falls back
-to the general recipient exactly as before. A separate, optional
-**Coverage Label** field lets that person's team card show something
-short (e.g. "Pacific Northwest") instead of listing every state — it's
-cosmetic only and has no effect on routing. See `findRepForState()` in
-`src/pages/api/resource-request.ts`.
+**One gatekeeper, not per-state routing (2026-09-18):** a per-state
+routing feature briefly existed here (built 2026-09-15, live
+2026-09-17) that sent the email directly to whichever Team Member's
+**States Covered** matched the visitor's selected State, CC'ing the
+general recipient as backup. It was reverted at Curtis's explicit
+request: the regional VPs couldn't agree on ownership boundaries, so
+now every submission goes to the one **Product Information Request
+Recipient** above and that person disseminates it manually. The
+visitor's State is still collected and shown in the email body for
+their reference — it just no longer decides who receives it. A Team
+Member's **States Covered** / **Coverage Label** fields still exist and
+still drive the "Covers ..." line on their About Us team card; they're
+purely cosmetic now, with zero effect on this form.
 
 **Optional hardening, not required to get this working:** by default,
 app-only `Mail.Send` can send as *any* mailbox in the tenant. An

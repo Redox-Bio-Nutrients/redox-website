@@ -1,0 +1,227 @@
+---
+// src/pages/do-not-sell-my-info.astro
+//
+// The CCPA/Nevada "Do Not Sell or Share My Personal Information" opt-
+// out — a real legal mechanism (see the California Privacy Notice and
+// every Cookie Policy page, which all point here), not just a content
+// page. Fields match the form on the old redoxgrows.com exactly
+// (First Name, Last Name, Email, Phone, Address, City, State, Zip).
+// Submits to /api/compliance-request (type=ccpa-opt-out), which emails
+// the request to info@redoxgrows.com — same pattern as
+// ResourceRequestDialog.astro's submit/success/error handling, just a
+// full page instead of a modal since this is a standalone destination,
+// not something triggered from a product page.
+
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+
+<BaseLayout
+  title="Do Not Sell or Share My Personal Information"
+  description="Opt out of the sale or sharing of your personal information under the CCPA and Nevada privacy law."
+  seo={{ noIndex: true }}
+>
+  <div class="legal-form-page">
+    <h1>Do Not Sell or Share My Personal Information</h1>
+    <p class="legal-form-page__intro">
+      As a California or Nevada resident, you have the right to opt out of the "sale" or "sharing" of your personal
+      information. Complete the form below, or contact us directly at <a href="tel:2086782610">208-678-2610</a> or
+      <a href="mailto:info@redoxgrows.com">info@redoxgrows.com</a>.
+    </p>
+
+    <form class="legal-form" id="opt-out-form" action="/api/compliance-request" method="POST">
+      <input type="hidden" name="type" value="ccpa-opt-out" />
+
+      <p class="legal-form__error" id="opt-out-error" hidden></p>
+
+      <div class="legal-form__row">
+        <label class="legal-form__field">
+          First Name
+          <input type="text" name="firstName" required autocomplete="given-name" />
+        </label>
+        <label class="legal-form__field">
+          Last Name
+          <input type="text" name="lastName" required autocomplete="family-name" />
+        </label>
+      </div>
+
+      <div class="legal-form__row">
+        <label class="legal-form__field">
+          Email
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label class="legal-form__field">
+          Phone Number
+          <input type="tel" name="phone" autocomplete="tel" />
+        </label>
+      </div>
+
+      <label class="legal-form__field">
+        Address
+        <input type="text" name="address" autocomplete="street-address" />
+      </label>
+
+      <div class="legal-form__row legal-form__row--three">
+        <label class="legal-form__field">
+          City
+          <input type="text" name="city" autocomplete="address-level2" />
+        </label>
+        <label class="legal-form__field">
+          State
+          <input type="text" name="state" autocomplete="address-level1" />
+        </label>
+        <label class="legal-form__field">
+          Zip Code
+          <input type="text" name="zip" autocomplete="postal-code" />
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn--primary legal-form__submit">Submit Request</button>
+    </form>
+
+    <div class="legal-form__success" id="opt-out-success" hidden>
+      <h2>Request received</h2>
+      <p>Thanks — we've received your opt-out request and will process it in accordance with applicable law.</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById('opt-out-form') as HTMLFormElement | null
+  const errorEl = document.getElementById('opt-out-error')
+  const success = document.getElementById('opt-out-success')
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorEl?.setAttribute('hidden', '')
+    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
+    if (submitBtn) {
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Sending…'
+    }
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || 'Something went wrong — please try again.')
+      }
+      form.hidden = true
+      success?.removeAttribute('hidden')
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong — please try again.'
+        errorEl.removeAttribute('hidden')
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false
+        submitBtn.textContent = 'Submit Request'
+      }
+    }
+  })
+</script>
+
+<style>
+  .legal-form-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .legal-form-page h1 {
+    font-family: var(--font-serif);
+    font-size: var(--text-3xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .legal-form-page__intro {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-8);
+  }
+
+  .legal-form-page__intro a {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+
+  .legal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .legal-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .legal-form__row--three {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .legal-form__error {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, #c0392b 12%, var(--bg-surface));
+    color: #c0392b;
+    font-size: var(--text-sm);
+  }
+
+  .legal-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    min-width: 0;
+  }
+
+  .legal-form__field input {
+    width: 100%;
+    font: inherit;
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    color: var(--color-text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+
+  .legal-form__field input:focus {
+    outline: 2px solid var(--color-green);
+    outline-offset: 1px;
+  }
+
+  .legal-form__submit {
+    margin-top: var(--space-2);
+    align-self: flex-start;
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .legal-form__success h2 {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .legal-form__success p {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+  }
+
+  @media (max-width: 639px) {
+    .legal-form__row,
+    .legal-form__row--three {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

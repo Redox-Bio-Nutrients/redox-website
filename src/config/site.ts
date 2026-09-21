@@ -70,6 +70,20 @@ export const primaryNav: PrimaryNavItem[] = [
   { label: 'Swag Store', href: 'https://stores.inksoft.com/redoxgrows/shop/home', external: true },
 ]
 
+// Legal/compliance footer links — deliberately separate from
+// primaryNav (these have no business in the header's own dropdowns).
+// "Cookie Policy" points at the EU version as the single footer link;
+// that page itself is the most detailed of the three regional cookie
+// policies and a reasonable default for a US-based visitor, while UK/CA
+// residents get their own version linked from within it and from the
+// California Privacy Notice below.
+export const legalNav = [
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'California Privacy Notice', href: '/california-privacy-policy' },
+  { label: 'Cookie Policy', href: '/cookie-policy-eu' },
+  { label: 'Do Not Sell or Share My Info', href: '/do-not-sell-my-info' },
+]
+
 // Utility navigation (header right-side)
 export const utilityNav = {
   dashboard: {

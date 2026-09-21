@@ -13,6 +13,8 @@ import { urlFor } from '../lib/sanity'
 import { getSiteWallpaper } from '../lib/queries'
 import Header from '../components/global/Header.astro'
 import Footer from '../components/global/Footer.astro'
+import CookieConsent from '../components/global/CookieConsent.astro'
+import Analytics from '../components/global/Analytics.astro'
 
 interface Props {
   title: string
@@ -58,6 +60,7 @@ const darkWallpaperUrl = wallpaper?.darkImage
         document.documentElement.dataset.theme = theme
       })()
     </script>
+    <Analytics />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
@@ -100,6 +103,7 @@ const darkWallpaperUrl = wallpaper?.darkImage
       <slot />
     </main>
     <Footer />
+    <CookieConsent />
 
     <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top">
       ↑

@@ -221,8 +221,10 @@ export interface Author {
   bio?: string
   email?: string
   phone?: string
-  /** exact states this person covers — drives Product Information
-   * Request email routing (resource-request.ts), see author.ts */
+  /** exact states this person covers — shown on their team card, see
+   * author.ts. Purely a display field; the Product Information
+   * Request form always goes to one gatekeeper address regardless of
+   * state (see resource-request.ts). */
   coverageAreas?: string[]
   /** optional short display label shown on the team card instead of
    * listing every state in coverageAreas — cosmetic only, see
@@ -230,15 +232,6 @@ export interface Author {
   coverageLabel?: string
   zipPrefixes?: string[]
   region?: { title: string; slug: string }
-}
-
-/** Narrow projection of Author used only for routing the Product
- * Information Request email to the rep covering the selected state —
- * see getStateCoverageReps() in src/lib/queries/people.ts. */
-export interface CoverageRep {
-  name: string
-  email: string
-  coverageAreas: string[]
 }
 
 /** A customer/partner quote — a shared pool reused across whichever

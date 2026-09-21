@@ -1,0 +1,182 @@
+---
+// src/pages/account-management.astro
+//
+// Google Play Store account/data deletion request page — required by
+// Google's Play Console policy for any app that supports account
+// creation (must have a publicly reachable page for requesting
+// account/data deletion, whether or not the person still has the app
+// installed). The equivalent page on the old redoxgrows.com is
+// currently broken in production (renders the literal
+// `[fluentform id="4"]` shortcode instead of a working form — a real,
+// pre-existing bug, unrelated to this migration). This is a fresh,
+// working replacement, not a port of anything that worked.
+//
+// Submits to /api/compliance-request (type=account-deletion), which
+// emails the request to info@redoxgrows.com — same pattern as
+// do-not-sell-my-info.astro.
+
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+
+<BaseLayout
+  title="Account Management"
+  description="Request deletion of your account and data from the Redox Bio-Nutrients Google Play Store app."
+  seo={{ noIndex: true }}
+>
+  <div class="legal-form-page">
+    <h1>Account Management</h1>
+    <p class="legal-form-page__intro">
+      Please fill out the form below to request deletion of your account and associated data from our Google Play
+      Store app and database. We'll confirm once your request has been processed.
+    </p>
+
+    <form class="legal-form" id="account-deletion-form" action="/api/compliance-request" method="POST">
+      <input type="hidden" name="type" value="account-deletion" />
+
+      <p class="legal-form__error" id="account-deletion-error" hidden></p>
+
+      <label class="legal-form__field">
+        Name
+        <input type="text" name="name" required autocomplete="name" />
+      </label>
+
+      <label class="legal-form__field">
+        Email
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+
+      <label class="legal-form__field">
+        Details (optional)
+        <textarea name="details" rows="4" placeholder="Anything that helps us find your account, e.g. the email or username you used in the app."></textarea>
+      </label>
+
+      <button type="submit" class="btn btn--primary legal-form__submit">Submit Request</button>
+    </form>
+
+    <div class="legal-form__success" id="account-deletion-success" hidden>
+      <h2>Request received</h2>
+      <p>Thanks — we've received your account deletion request and will follow up by email.</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById('account-deletion-form') as HTMLFormElement | null
+  const errorEl = document.getElementById('account-deletion-error')
+  const success = document.getElementById('account-deletion-success')
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorEl?.setAttribute('hidden', '')
+    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
+    if (submitBtn) {
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Sending…'
+    }
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || 'Something went wrong — please try again.')
+      }
+      form.hidden = true
+      success?.removeAttribute('hidden')
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong — please try again.'
+        errorEl.removeAttribute('hidden')
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false
+        submitBtn.textContent = 'Submit Request'
+      }
+    }
+  })
+</script>
+
+<style>
+  .legal-form-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .legal-form-page h1 {
+    font-family: var(--font-serif);
+    font-size: var(--text-3xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .legal-form-page__intro {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-8);
+  }
+
+  .legal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .legal-form__error {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, #c0392b 12%, var(--bg-surface));
+    color: #c0392b;
+    font-size: var(--text-sm);
+  }
+
+  .legal-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+  }
+
+  .legal-form__field input,
+  .legal-form__field textarea {
+    width: 100%;
+    font: inherit;
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    color: var(--color-text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    resize: vertical;
+  }
+
+  .legal-form__field input:focus,
+  .legal-form__field textarea:focus {
+    outline: 2px solid var(--color-green);
+    outline-offset: 1px;
+  }
+
+  .legal-form__submit {
+    margin-top: var(--space-2);
+    align-self: flex-start;
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .legal-form__success h2 {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .legal-form__success p {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+  }
+</style>
