@@ -371,12 +371,25 @@
       align-items: stretch;
     }
 
+    /* Reset the desktop row layout's width hint (flex: 1 1 320px) —
+     * left alone, that 320px basis applies to the column's now-vertical
+     * main axis instead, reserving 320px of mostly-empty height for a
+     * two-line paragraph. */
+    .cookie-banner__text {
+      flex: none;
+    }
+
+    /* Three buttons (one with a long, non-wrapping label) don't fit in
+     * one row on a narrow phone — stack them full-width instead of
+     * forcing equal thirds, which just clipped "Reject Non-Essential"'s
+     * text outside its own pill. */
     .cookie-banner__actions {
-      justify-content: stretch;
+      flex-direction: column;
+      align-items: stretch;
     }
 
     .cookie-banner__btn {
-      flex: 1;
+      flex: none;
     }
 
     .cookie-dialog {
