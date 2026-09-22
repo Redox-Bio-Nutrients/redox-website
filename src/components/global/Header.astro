@@ -789,12 +789,40 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   // position: fixed and no longer reserves flow space on its own).
   // Re-measured on resize since the mobile layout's row height differs
   // from desktop's.
+  //
+  // Confirmed real bug, 2026-09-22: on a cold/slow production load,
+  // this could run before the header's own scoped CSS had applied yet
+  // — caught in its default unstyled state, <nav>/<ul>/each <li> stack
+  // as plain block elements instead of one flex row, so offsetHeight
+  // measures 300-400px instead of ~63px. Since this only re-runs on
+  // resize, that wrong value stuck for the rest of the session,
+  // pushing every page's content down by the same huge amount (masked
+  // on hero pages, which cancel --header-space with an equal-and-
+  // opposite negative margin — right or wrong, both sides use the same
+  // value and it nets to ~0 either way; pages with no hero to cancel
+  // it showed the raw error as a real empty gap above the content).
+  // Reported live on a real user's machine (MacBook Pro M4, Safari,
+  // 1512x982) via the Agriculture Products page.
+  //
+  // Same underlying class of Safari timing race as
+  // applyOnDarkIfLeading() below, which already had to abandon a
+  // single synchronous measurement in favor of a double-rAF +
+  // window.load pair — giving setHeaderSpace() that same treatment
+  // here. HEADER_SPACE_MAX is a second, independent line of defense:
+  // even if some other timing issue we haven't hit yet measures the
+  // header wrong, --header-space can never blow out into a visible
+  // void above the page content again — comfortably above any real
+  // header height at any breakpoint, so it never clips a legitimate
+  // measurement.
+  const HEADER_SPACE_MAX = 120
   const setHeaderSpace = () => {
-    if (header) {
+    if (header && header.offsetHeight <= HEADER_SPACE_MAX) {
       document.documentElement.style.setProperty('--header-space', `${header.offsetHeight}px`)
     }
   }
   setHeaderSpace()
+  requestAnimationFrame(() => requestAnimationFrame(setHeaderSpace))
+  window.addEventListener('load', setHeaderSpace)
   window.addEventListener('resize', setHeaderSpace)
 
   // At rest, flip to white text if a full-bleed dark hero
