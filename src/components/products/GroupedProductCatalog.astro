@@ -119,7 +119,16 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     margin-bottom: var(--space-16);
     padding: var(--space-3);
     background: var(--bg-surface);
-    border-radius: var(--radius-full);
+    /* A full pill radius here left transparent corner wedges (border-
+     * radius clips an element's own background to the curve — nothing
+     * paints the corner outside it) that were visible in practice: as
+     * a sticky bar over actively-scrolling content, whatever's directly
+     * behind at that moment "peeks through" the rounded ends — caught
+     * live as a group heading flashing through in Safari. A smaller,
+     * card-style radius (same value Header.astro's own mobile nav
+     * panel uses) keeps the rounded look with a corner wedge small
+     * enough not to expose scrolling content behind it. */
+    border-radius: var(--radius-2xl);
     /* Sticks just under the fixed header (--header-space is the
      * header's live-measured height, kept in sync by Header.astro) so
      * it's always reachable while scrolling a long catalog page.
