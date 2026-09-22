@@ -19,9 +19,6 @@ const products = await getProductsByMarket('agriculture')
   description="Redox Bio-Nutrients products for agriculture — improving soil, water, and plant health in row crops, orchards, and more."
 >
   <div class="page">
-    <div class="crumbs">
-      <a href="/agriculture">← Agriculture</a>
-    </div>
     <header class="page__header">
       <h1>Agriculture Products</h1>
       <p>Bio-nutrient products for healthier soil and stronger crops.</p>
@@ -35,16 +32,6 @@ const products = await getProductsByMarket('agriculture')
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-8) var(--space-6) var(--space-24);
-  }
-
-  .crumbs {
-    margin-bottom: var(--space-6);
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-  }
-
-  .crumbs a:hover {
-    color: var(--color-text-primary);
   }
 
   .page__header {

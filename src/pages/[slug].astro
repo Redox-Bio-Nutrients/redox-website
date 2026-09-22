@@ -162,7 +162,7 @@ const testimonials =
         <h2>Meet the Team</h2>
 
         {officeStaff.length > 0 && (
-          <div class="team__group">
+          <div class="team__group" id="team-hq">
             <h3 class="team__group-heading">HQ</h3>
             <hr class="team__group-rule" />
             <EmployeeGrid team={officeStaff} />
@@ -170,7 +170,7 @@ const testimonials =
         )}
 
         {regionTeams.map((region) => (
-          <div class="team__group">
+          <div class="team__group" id={`team-${region.slug}`}>
             <h3 class="team__group-heading">{region.title} Agronomists</h3>
             <hr class="team__group-rule" />
             <EmployeeGrid team={region.team ?? []} emptyMessage={`No ${region.title} agronomists assigned yet.`} />
@@ -436,6 +436,13 @@ const testimonials =
    * used on the old standalone /regions page. */
   .team__group {
     margin-bottom: var(--space-16);
+    /* The header is position: fixed and floats over content — without
+     * this, jumping straight to a group anchor (#team-west etc.) tucks
+     * its heading right behind the header instead of below it. Same
+     * pattern as GroupedRegionRoster.astro/GroupedProductCatalog.astro's
+     * own anchors, minus their sticky-subnav term since this page has
+     * no jump nav of its own. */
+    scroll-margin-top: calc(var(--header-space) + var(--space-4));
   }
 
   .team__group:last-child {
