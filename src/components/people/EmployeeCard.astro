@@ -83,16 +83,16 @@ const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
   <div class="employee__body">
     <p class="employee__name">{author.name}</p>
     {author.role && <p class="employee__role">{author.role}</p>}
-    {author.coverageAreas && author.coverageAreas.length > 0 && (
+    {(author.coverageLabel || (author.coverageAreas && author.coverageAreas.length > 0)) && (
       <div class="employee__coverage">
         <p class="employee__coverage-label">Covers</p>
-        {/* coverageAreas now holds exact state names for email routing
-            (see resource-request.ts) — that list can run long, so a
+        {/* coverageAreas holds exact state names and can run long, so a
             short coverageLabel (e.g. "Pacific Northwest") shows here
-            instead when one's set; the full state list is still the
-            fallback for anyone without a label yet. */}
+            instead when one's set — with or without any states listed;
+            the full state list is the fallback for anyone without a
+            label. */}
         <p class="employee__coverage-list">
-          {author.coverageLabel || author.coverageAreas.join(' · ')}
+          {author.coverageLabel || author.coverageAreas?.join(' · ')}
         </p>
       </div>
     )}
