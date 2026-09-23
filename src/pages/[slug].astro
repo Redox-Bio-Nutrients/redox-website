@@ -50,7 +50,7 @@ import { onMissingPortableTextComponent, portableTextComponents } from '../lib/p
 import HomeSections from '../components/home/HomeSections.astro'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 import CollectionShowcase from '../components/products/CollectionShowcase.astro'
-import TestimonialGrid from '../components/testimonials/TestimonialGrid.astro'
+import TestimonialCarousel from '../components/testimonials/TestimonialCarousel.astro'
 import ScrollIndicator from '../components/ui/ScrollIndicator.astro'
 import '../styles/texture-surface.css'
 
@@ -90,6 +90,7 @@ const marketCatalog =
 const collections = slug === 'agriculture' ? await getAllCollections() : []
 const testimonials =
   slug === 'agriculture' || slug === 'turf' ? await getTestimonialsByMarket(slug) : []
+const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Saying' : 'What Growers Are Saying'
 ---
 
 <BaseLayout title={page.title} seo={page.seo}>
@@ -150,8 +151,8 @@ const testimonials =
   {testimonials.length > 0 && (
     <section class="testimonials-section">
       <div class="testimonials-section__inner">
-        <h2>{slug === 'turf' ? 'What Turf Professionals Are Saying' : 'What Growers Are Saying'}</h2>
-        <TestimonialGrid testimonials={testimonials} />
+        <h2 id="testimonials-heading">{testimonialsHeading}</h2>
+        <TestimonialCarousel testimonials={testimonials} label={testimonialsHeading} />
       </div>
     </section>
   )}
