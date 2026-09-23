@@ -69,14 +69,26 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
       />
     </a>
 
-    <input type="checkbox" id="nav-toggle" class="header__toggle-input" aria-hidden="true" />
-    <label for="nav-toggle" class="header__toggle" aria-label="Toggle menu">
-      <span class="header__toggle-bar"></span>
-      <span class="header__toggle-bar"></span>
-      <span class="header__toggle-bar"></span>
-    </label>
+    {/* The hidden checkbox still drives the open/closed CSS below; the
+        visible control is a real <button> (focusable, announced as
+        "Menu, collapsed/expanded") that flips it — a bare <label> can't
+        be reached by keyboard or operated by a screen reader. See the
+        disclosure script at the bottom. */}
+    <input type="checkbox" id="nav-toggle" class="header__toggle-input" tabindex="-1" aria-hidden="true" />
+    <button
+      type="button"
+      class="header__toggle"
+      data-disclosure-for="nav-toggle"
+      aria-controls="primary-nav"
+      aria-expanded="false"
+      aria-label="Menu"
+    >
+      <span class="header__toggle-bar" aria-hidden="true"></span>
+      <span class="header__toggle-bar" aria-hidden="true"></span>
+      <span class="header__toggle-bar" aria-hidden="true"></span>
+    </button>
 
-    <nav class="header__nav" aria-label="Primary">
+    <nav class="header__nav" id="primary-nav" aria-label="Primary">
       <ul class="header__nav-list">
         <li class="header__nav-chip" aria-hidden="true"></li>
         {primaryNav.map((item, i) =>
@@ -97,6 +109,7 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
                 type="checkbox"
                 id={`nav-split-${i}`}
                 class="header__split-toggle-input"
+                tabindex="-1"
                 aria-hidden="true"
               />
               <div class="header__split-row">
@@ -107,11 +120,18 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
                 >
                   {item.label}
                 </a>
-                <label for={`nav-split-${i}`} class="header__caret-toggle" aria-label={`Show ${item.label} menu`}>
+                <button
+                  type="button"
+                  class="header__caret-toggle"
+                  data-disclosure-for={`nav-split-${i}`}
+                  aria-controls={`nav-split-${i}-menu`}
+                  aria-expanded="false"
+                  aria-label={`${item.label} menu`}
+                >
                   <span class="header__caret" aria-hidden="true"></span>
-                </label>
+                </button>
               </div>
-              <ul class="header__subnav">
+              <ul class="header__subnav" id={`nav-split-${i}-menu`}>
                 {item.children.map((child) => (
                   <li>
                     <a
@@ -429,11 +449,11 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
   }
 
   .header__nav-link:hover {
-    color: var(--color-green-dark);
+    color: var(--color-green-ink);
   }
 
   .header__nav-link--active {
-    color: var(--color-green-dark);
+    color: var(--color-green-ink);
   }
 
   /* ── Subnav (optional per item — see PrimaryNavItem in site.ts) ──
@@ -526,6 +546,11 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     margin: calc(-1 * var(--space-2));
     cursor: pointer;
     color: var(--color-text-secondary);
+    background: none;
+    border: none;
+    font: inherit;
+    min-width: 24px;
+    min-height: 24px; /* WCAG 2.5.8 minimum target size */
   }
 
   .header__split-toggle-input:checked ~ .header__split-row .header__caret {
@@ -600,6 +625,9 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
     gap: 5px;
     cursor: pointer;
     padding: var(--space-2);
+    background: none;
+    border: none;
+    border-radius: var(--radius-md);
   }
 
   .header__toggle-bar {
@@ -751,6 +779,33 @@ const isItemActive = (item: { href?: string; children?: { href: string }[] }) =>
 </style>
 
 <script>
+  // Disclosure buttons (mobile menu + split-item carets) — each flips
+  // its hidden checkbox (which the CSS keys off) and mirrors the state
+  // into aria-expanded. Escape closes whatever's open and puts focus
+  // back on the button that opened it.
+  const disclosureButtons = document.querySelectorAll<HTMLButtonElement>('[data-disclosure-for]')
+
+  const setDisclosure = (button: HTMLButtonElement, open: boolean) => {
+    const input = document.getElementById(button.dataset.disclosureFor ?? '') as HTMLInputElement | null
+    if (input) input.checked = open
+    button.setAttribute('aria-expanded', String(open))
+  }
+
+  disclosureButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      setDisclosure(button, button.getAttribute('aria-expanded') !== 'true')
+    })
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return
+    // Innermost first: a split caret's submenu, then the mobile menu.
+    const open = [...disclosureButtons].reverse().find((b) => b.getAttribute('aria-expanded') === 'true')
+    if (!open) return
+    setDisclosure(open, false)
+    open.focus()
+  })
+
   // Theme toggle — flips data-theme on <html> and persists the choice.
   // Initial value is set pre-paint by the inline script in BaseLayout.
   document.getElementById('theme-toggle')?.addEventListener('click', () => {

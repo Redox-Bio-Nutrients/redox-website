@@ -111,7 +111,7 @@ const { bottomOffset = 'var(--space-8)', mobileBottomOffset = 'var(--space-5)' }
       // reuse that existing marker instead of a tag-name selector.
       const hero = button.closest('[data-header-theme]')
       const next = hero?.nextElementSibling
-      next?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      next?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
     })
   })
 </script>

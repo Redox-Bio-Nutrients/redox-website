@@ -629,7 +629,9 @@ const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duo
     font-weight: var(--font-semi);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--color-green);
+    /* Literal, like the rest of this card — --color-green lightens in
+     * dark theme and fails contrast (2.85:1) on this always-white card. */
+    color: #3A7D50;
     margin-bottom: var(--space-3);
   }
 

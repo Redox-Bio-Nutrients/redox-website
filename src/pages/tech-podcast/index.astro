@@ -94,11 +94,11 @@ const textureVarsById = new Map(
     )}
   </div>
 
-  <div class="video-modal" id="video-modal" hidden>
+  <div class="video-modal" id="video-modal" role="dialog" aria-modal="true" aria-labelledby="video-modal-title" hidden>
     <div class="video-modal__backdrop" id="video-modal-backdrop"></div>
     <div class="video-modal__dialog">
       <button type="button" class="video-modal__close" id="video-modal-close" aria-label="Close video">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
       <div class="video-modal__frame">
         <iframe
@@ -124,10 +124,26 @@ const textureVarsById = new Map(
   const closeBtn = document.getElementById('video-modal-close')
   const cards = document.querySelectorAll<HTMLButtonElement>('.episode-row')
 
+  // Modal focus handling: lift the modal to <body> so everything else
+  // can be made `inert` while it's open (keeps keyboard + screen-reader
+  // focus inside it), move focus to the close button on open, and hand
+  // focus back to the episode that opened it on close.
+  if (modal) document.body.appendChild(modal)
+  let opener: HTMLElement | null = null
+
+  const setBackgroundInert = (inert: boolean) => {
+    for (const el of document.body.children) {
+      if (el !== modal && el instanceof HTMLElement) el.inert = inert
+    }
+  }
+
   const closeModal = () => {
     if (!modal || !iframe) return
     iframe.src = ''
     modal.hidden = true
+    setBackgroundInert(false)
+    opener?.focus()
+    opener = null
   }
 
   cards.forEach((card) => {
@@ -136,7 +152,10 @@ const textureVarsById = new Map(
       const id = card.dataset.youtubeId ?? ''
       iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1`
       if (titleEl) titleEl.textContent = card.dataset.title ?? ''
+      opener = card
       modal.hidden = false
+      setBackgroundInert(true)
+      closeBtn?.focus()
     })
   })
 
