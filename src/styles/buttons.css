@@ -266,6 +266,13 @@
  * border-color shift on hover, no gradient to tween. */
 .btn--ghost {
   color: var(--btn-from);
+  /* Legibility clamp: product/brand colors are mid-tones, and as text
+   * on this pale tint several fall under WCAG AA 4.5:1 (e.g. brand
+   * green 4.41, diKaP orange 2.59). Cap the lightness so any color
+   * stays dark enough — colors already dark enough are untouched, hue
+   * and chroma are kept. Browsers without relative color syntax just
+   * keep the line above. Dark theme mirrors this with a floor below. */
+  color: oklch(from var(--btn-from) min(l, 0.5) c h);
   background: color-mix(in srgb, var(--btn-from) 9%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -276,6 +283,10 @@
 .btn--ghost:focus-visible {
   background: color-mix(in srgb, var(--btn-from) 16%, transparent);
   border-color: color-mix(in srgb, var(--btn-from) 62%, transparent);
+}
+
+[data-theme='dark'] .btn--ghost {
+  color: oklch(from var(--btn-from) max(l, 0.72) c h);
 }
 
 /* ── On a colored/photo surface ─────────────────────────────────────

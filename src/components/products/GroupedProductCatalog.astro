@@ -200,6 +200,13 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--group-color, var(--color-green-dark));
+    /* Same legibility clamp as .btn--ghost (buttons.css) — collection
+     * colors like gold/blue are too light as small text on white. */
+    color: oklch(from var(--group-color, var(--color-green-dark)) min(l, 0.5) c h);
+  }
+
+  :global([data-theme='dark']) .catalog__eyebrow {
+    color: oklch(from var(--group-color, var(--color-green-dark)) max(l, 0.72) c h);
   }
 
   .catalog__desc {

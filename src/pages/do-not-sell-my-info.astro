@@ -31,7 +31,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
     <form class="legal-form" id="opt-out-form" action="/api/compliance-request" method="POST">
       <input type="hidden" name="type" value="ccpa-opt-out" />
 
-      <p class="legal-form__error" id="opt-out-error" hidden></p>
+      <p class="legal-form__error" id="opt-out-error" role="alert" hidden></p>
 
       <div class="legal-form__row">
         <label class="legal-form__field">
@@ -78,7 +78,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
       <button type="submit" class="btn btn--primary legal-form__submit">Submit Request</button>
     </form>
 
-    <div class="legal-form__success" id="opt-out-success" hidden>
+    <div class="legal-form__success" id="opt-out-success" tabindex="-1" hidden>
       <h2>Request received</h2>
       <p>Thanks — we've received your opt-out request and will process it in accordance with applicable law.</p>
     </div>
@@ -110,6 +110,9 @@ import BaseLayout from '../layouts/BaseLayout.astro'
       }
       form.hidden = true
       success?.removeAttribute('hidden')
+      // Form (and the focused submit button) just disappeared — move focus
+      // to the confirmation so keyboard/screen-reader users land on it.
+      success?.focus()
     } catch (err) {
       if (errorEl) {
         errorEl.textContent = err instanceof Error ? err.message : 'Something went wrong — please try again.'

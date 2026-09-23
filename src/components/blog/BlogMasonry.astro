@@ -132,9 +132,9 @@ const tabletColumns = intoColumns(tiles, 2)
        same convention the background-pool fallback uses, so
        "Agriculture" isn't a near-empty view relative to "All Posts". */}
     <div class="masonry-filter" role="group" aria-label="Filter by market">
-      <button type="button" class="btn btn--ghost btn--sm filter-btn is-active" data-filter="all">All Posts</button>
-      <button type="button" class="btn btn--ghost btn--sm filter-btn" data-filter="agriculture">Agriculture</button>
-      <button type="button" class="btn btn--ghost btn--sm filter-btn" data-filter="turf">Turf</button>
+      <button type="button" class="btn btn--ghost btn--sm filter-btn is-active" data-filter="all" aria-pressed="true">All Posts</button>
+      <button type="button" class="btn btn--ghost btn--sm filter-btn" data-filter="agriculture" aria-pressed="false">Agriculture</button>
+      <button type="button" class="btn btn--ghost btn--sm filter-btn" data-filter="turf" aria-pressed="false">Turf</button>
     </div>
     <div class="masonry-cols masonry-cols--desktop">
       {desktopColumns.map((column) => (
@@ -190,8 +190,12 @@ const tabletColumns = intoColumns(tiles, 2)
 
   buttons?.forEach((button) => {
     button.addEventListener('click', () => {
-      buttons.forEach((b) => b.classList.remove('is-active'))
+      buttons.forEach((b) => {
+        b.classList.remove('is-active')
+        b.setAttribute('aria-pressed', 'false')
+      })
       button.classList.add('is-active')
+      button.setAttribute('aria-pressed', 'true')
       applyFilter(button.dataset.filter ?? 'all')
     })
   })

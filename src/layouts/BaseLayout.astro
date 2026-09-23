@@ -98,8 +98,9 @@ const darkWallpaperUrl = wallpaper?.darkImage
         )}
       </div>
     )}
+    <a class="skip-link" href="#main">Skip to main content</a>
     <Header />
-    <main id="main">
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <Footer />
@@ -114,7 +115,7 @@ const darkWallpaperUrl = wallpaper?.darkImage
       const btn = document.getElementById('back-to-top')
       if (btn) {
         btn.addEventListener('click', () => {
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
         })
         const toggle = () => {
           btn.classList.toggle('is-visible', window.scrollY > window.innerHeight)

@@ -920,7 +920,7 @@ const documents = (product.documents ?? []).map((doc) => ({
 
   @media (max-width: 1023px) {
     .layout {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr); /* not bare 1fr — that floors at the widest child's min-content and overflowed ~7px at 320px (WCAG 1.4.10) */
       gap: var(--space-12);
     }
 

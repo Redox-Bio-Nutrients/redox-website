@@ -13,7 +13,6 @@
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   /* The leaf-sprig motif (design-system.md §7) deliberately spills
    * past its own box on purpose — callout boxes carry no overflow
@@ -65,6 +64,57 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Visually hidden utility — for screen reader text */
+/* Smooth in-page scrolling only for people who haven't asked their OS
+ * to reduce motion (WCAG 2.3.3 / vestibular comfort). */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Blanket reduced-motion safety net: collapse transitions/animations
+ * site-wide for anyone who's asked their OS for less motion. Individual
+ * components can still opt back in to a non-moving alternative. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip link — first focusable element on every page, off-screen until
+ * a keyboard user tabs to it (WCAG 2.4.1). #main carries tabindex="-1"
+ * so focus actually lands there, not just the scroll position. */
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 1000;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  /* Fixed brand green, not the theme token — --color-green-dark turns
+   * pale in dark mode and white text would wash out on it. */
+  background: #2E6B3E;
+  color: #FFFFFF;
+  font-weight: var(--font-semi);
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--space-6)));
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* Programmatic focus targets (#main after the skip link, a form's
+ * success message) aren't controls — no focus ring on them. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
