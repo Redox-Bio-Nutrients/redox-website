@@ -1,0 +1,275 @@
+---
+// src/components/testimonials/TestimonialCarousel.astro
+//
+// Horizontal, swipeable row of TestimonialCards — replaced the old
+// 3/2/1-column TestimonialGrid (2026-09-23) after feedback that the
+// stacked mobile version made the landing pages long and unwieldy, and
+// that uneven quote lengths left most grid cards tall and mostly empty.
+//
+// Native CSS scroll-snap does the swiping (touch, trackpad, shift+wheel)
+// with no library; the script only drives the prev/next arrows + dots
+// and keeps them in sync with the scroll position. Deliberately no
+// autoplay — auto-advancing content is an accessibility problem (WCAG
+// 2.2.2) and people read quotes at very different speeds. Controls hide
+// themselves whenever every card already fits in view.
+
+import type { Testimonial } from '../../lib/types/sanity'
+import TestimonialCard from './TestimonialCard.astro'
+
+interface Props {
+  testimonials: Testimonial[]
+  /** Accessible name for the carousel region, e.g. the section heading. */
+  label?: string
+}
+
+const { testimonials, label = 'Testimonials' } = Astro.props
+const total = testimonials.length
+---
+
+{total > 0 && (
+  <div class="carousel" role="region" aria-roledescription="carousel" aria-label={label} data-carousel>
+    <ul class="carousel__track" tabindex="0" aria-label={`${label} — scroll or swipe for more`} data-carousel-track>
+      {testimonials.map((testimonial, i) => (
+        <li class="carousel__slide" aria-roledescription="slide" aria-label={`${i + 1} of ${total}`}>
+          <TestimonialCard testimonial={testimonial} />
+        </li>
+      ))}
+    </ul>
+
+    <div class="carousel__controls" data-carousel-controls hidden>
+      <div class="carousel__dots">
+        {testimonials.map((testimonial, i) => (
+          <button
+            type="button"
+            class="carousel__dot"
+            data-carousel-dot={i}
+            aria-label={`Show testimonial ${i + 1}: ${testimonial.name}`}
+            aria-current={i === 0 ? 'true' : undefined}
+          >
+            <span aria-hidden="true"></span>
+          </button>
+        ))}
+      </div>
+      <div class="carousel__arrows">
+        <button type="button" class="carousel__arrow" data-carousel-prev aria-label="Previous testimonial">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <button type="button" class="carousel__arrow" data-carousel-next aria-label="Next testimonial">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+<script>
+  const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
+    const track = root.querySelector<HTMLElement>('[data-carousel-track]')!
+    const slides = [...track.children] as HTMLElement[]
+    const controls = root.querySelector<HTMLElement>('[data-carousel-controls]')!
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('[data-carousel-dot]')]
+    const prev = root.querySelector<HTMLButtonElement>('[data-carousel-prev]')!
+    const next = root.querySelector<HTMLButtonElement>('[data-carousel-next]')!
+
+    // Slide whose left edge is closest to the track's snap start.
+    const currentIndex = () => {
+      const start = track.getBoundingClientRect().left + parseFloat(getComputedStyle(track).scrollPaddingLeft || '0')
+      let best = 0
+      let bestDist = Infinity
+      slides.forEach((slide, i) => {
+        const dist = Math.abs(slide.getBoundingClientRect().left - start)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = i
+        }
+      })
+      return best
+    }
+
+    const goTo = (index: number) => {
+      const clamped = Math.max(0, Math.min(slides.length - 1, index))
+      const target = slides[clamped]
+      const padding = parseFloat(getComputedStyle(track).scrollPaddingLeft || '0')
+      track.scrollTo({
+        left: target.offsetLeft - track.offsetLeft - padding,
+        behavior: reduceMotion() ? 'auto' : 'smooth',
+      })
+    }
+
+    const sync = () => {
+      const overflowing = track.scrollWidth > track.clientWidth + 2
+      controls.hidden = !overflowing
+      if (!overflowing) return
+
+      const atStart = track.scrollLeft <= 2
+      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2
+      // At the far right the last slide may never reach the snap start
+      // (several can be in view at once) — treat it as current then.
+      const index = atEnd ? slides.length - 1 : currentIndex()
+
+      prev.disabled = atStart
+      next.disabled = atEnd
+      dots.forEach((dot, i) => {
+        if (i === index) dot.setAttribute('aria-current', 'true')
+        else dot.removeAttribute('aria-current')
+      })
+    }
+
+    prev.addEventListener('click', () => goTo(currentIndex() - 1))
+    next.addEventListener('click', () => goTo(currentIndex() + 1))
+    dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)))
+
+    let frame = 0
+    track.addEventListener(
+      'scroll',
+      () => {
+        cancelAnimationFrame(frame)
+        frame = requestAnimationFrame(sync)
+      },
+      { passive: true },
+    )
+    new ResizeObserver(sync).observe(track)
+    sync()
+  })
+</script>
+
+<style>
+  .carousel {
+    /* Gutter the track bleeds into on narrow screens so the next card
+     * can peek in from the viewport edge, not a content-width wall. */
+    --carousel-gutter: var(--space-6);
+  }
+
+  .carousel__track {
+    display: flex;
+    gap: var(--space-6);
+    margin: 0;
+    padding: var(--space-2) 0 var(--space-4);
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .carousel__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carousel__track:focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 4px;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Desktop: two wide cards per view — wide enough that even the
+   * longest quote stays a comfortable block of text. */
+  .carousel__slide {
+    flex: 0 0 calc((100% - var(--space-6)) / 2);
+    display: flex;
+    scroll-snap-align: start;
+  }
+
+  .carousel__slide > :global(*) {
+    flex: 1;
+  }
+
+  /* Tablet + phone: one card at a time, with the next one peeking in
+   * from the edge so "there's more — swipe" reads without instructions. */
+  @media (max-width: 1023px) {
+    .carousel__track {
+      margin: 0 calc(-1 * var(--carousel-gutter));
+      padding-left: var(--carousel-gutter);
+      padding-right: var(--carousel-gutter);
+      scroll-padding: 0 var(--carousel-gutter);
+      gap: var(--space-4);
+    }
+
+    .carousel__slide {
+      flex-basis: min(560px, 84%);
+    }
+  }
+
+  .carousel__controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+
+  .carousel__controls[hidden] {
+    display: none;
+  }
+
+  .carousel__dots {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  /* 24px hit area (WCAG 2.5.8) around a small visual dot. */
+  .carousel__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .carousel__dot span {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
+    transition: width 0.25s ease, background 0.25s ease;
+  }
+
+  .carousel__dot[aria-current='true'] span {
+    width: 24px;
+    background: var(--color-green);
+  }
+
+  .carousel__arrows {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .carousel__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: var(--radius-full);
+    border: 1.5px solid color-mix(in srgb, var(--color-green) 45%, transparent);
+    background: color-mix(in srgb, var(--color-green) 9%, transparent);
+    color: var(--color-green-ink);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .carousel__arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .carousel__arrow:hover:not(:disabled),
+  .carousel__arrow:focus-visible {
+    background: color-mix(in srgb, var(--color-green) 18%, transparent);
+    border-color: color-mix(in srgb, var(--color-green) 65%, transparent);
+  }
+
+  .carousel__arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+</style>

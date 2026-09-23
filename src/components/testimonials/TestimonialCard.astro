@@ -22,11 +22,21 @@ const avatarUrl = testimonial.avatar
   ? urlFor(testimonial.avatar).width(96).height(96).fit('crop').auto('format').quality(85).url()
   : null
 const initial = testimonial.name.trim().charAt(0).toUpperCase()
+
+// Quotes range from one line to a full paragraph; cards in a carousel
+// row stretch to the tallest, so short quotes get larger type to fill
+// their card instead of floating in empty space, and long ones step
+// down to stay a readable block.
+const quoteLength = testimonial.quote?.length ?? 0
+const quoteSize = quoteLength < 180 ? 'short' : quoteLength < 420 ? 'medium' : 'long'
 ---
 
 <figure class="card">
   <span class="card__mark" aria-hidden="true">&ldquo;</span>
-  <blockquote class="card__quote">{testimonial.quote}</blockquote>
+  <blockquote class="card__quote" data-size={quoteSize} data-clampable={quoteSize !== 'short' ? '' : undefined}>{testimonial.quote}</blockquote>
+  {quoteSize !== 'short' && (
+    <button type="button" class="card__more" aria-expanded="false" hidden>Read more</button>
+  )}
   <figcaption class="card__meta">
     {avatarUrl ? (
       <img
@@ -49,43 +59,166 @@ const initial = testimonial.name.trim().charAt(0).toUpperCase()
   </figcaption>
 </figure>
 
+<script>
+  // Phones/tablets clamp long quotes (see .card__quote[data-clampable]
+  // below) so one paragraph-length testimonial doesn't make the whole
+  // carousel row screen-tall. The toggle only appears when the text is
+  // actually cut off at the current width, and is re-checked on resize.
+  // The clamp is visual only — screen readers always get the full quote.
+  document.querySelectorAll<HTMLElement>('.card__quote[data-clampable]').forEach((quote) => {
+    const button = quote.nextElementSibling as HTMLButtonElement | null
+    if (!button?.classList.contains('card__more')) return
+
+    const sync = () => {
+      if (button.getAttribute('aria-expanded') === 'true') return
+      button.hidden = quote.scrollHeight <= quote.clientHeight + 1
+    }
+
+    button.addEventListener('click', () => {
+      const expanded = button.getAttribute('aria-expanded') !== 'true'
+      button.setAttribute('aria-expanded', String(expanded))
+      button.textContent = expanded ? 'Show less' : 'Read more'
+      quote.classList.toggle('is-expanded', expanded)
+    })
+
+    new ResizeObserver(sync).observe(quote)
+    sync()
+  })
+</script>
+
 <style>
   .card {
+    position: relative;
     display: flex;
     flex-direction: column;
     background: var(--bg-surface);
     border: var(--border-thin) solid var(--border-subtle);
-    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
-    padding: var(--space-8);
+    border-radius: 0 var(--radius-3xl) 0 var(--radius-3xl);
+    padding: var(--space-10) var(--space-10) var(--space-8);
     margin: 0;
+    overflow: hidden;
   }
 
+  /* Oversized decorative mark tucked into the top-left corner, behind
+   * the quote — reads as a graphic, not a character in the text. */
   .card__mark {
+    position: absolute;
+    top: 0.02em;
+    left: 0.12em;
     font-family: var(--font-serif);
-    font-size: 3.5rem;
+    font-size: 9rem;
     line-height: 1;
     color: var(--color-green);
-    opacity: 0.25;
-    margin-bottom: -0.75rem;
+    opacity: 0.16;
+    pointer-events: none;
+    user-select: none;
   }
 
   .card__quote {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-style: italic;
+    position: relative;
+    margin: var(--space-10) 0 0;
+    /* Body sans, upright — DM Serif Display (the heading face) is a
+     * high-contrast display cut and got hard to read as paragraph-length
+     * italic text. The serif stays on the section heading and the big
+     * quote mark, which carry the editorial feel. */
+    font-family: var(--font-sans);
+    font-style: normal;
     font-weight: var(--font-normal);
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
-    letter-spacing: -0.01em;
     color: var(--color-text-primary);
     flex-grow: 1;
+    text-wrap: pretty;
+  }
+
+  .card__quote[data-size='short'] {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-medium);
+    line-height: var(--leading-snug);
+    letter-spacing: -0.01em;
+  }
+
+  .card__quote[data-size='medium'] {
+    font-size: var(--text-xl);
+  }
+
+  .card__quote[data-size='long'] {
+    font-size: var(--text-base);
+  }
+
+  .card__more {
+    align-self: flex-start;
+    margin-top: var(--space-3);
+    padding: var(--space-1) 0;
+    min-height: 24px;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semi);
+    color: var(--color-green-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .card__more[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .card__quote[data-clampable]:not(.is-expanded) {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 8;
+      line-clamp: 8;
+      overflow: hidden;
+      flex-grow: 0;
+    }
+
+    /* The clamped quote no longer grows, so the name block is pushed to
+     * the card's bottom edge instead (keeps every card's meta row
+     * aligned); the quote/toggle carry the minimum gap above it. */
+    .card__quote[data-clampable],
+    .card__more {
+      margin-bottom: var(--space-8);
+    }
+
+    .card__quote[data-clampable]:has(+ .card__more:not([hidden])) {
+      margin-bottom: 0;
+    }
+
+    .card__more + .card__meta,
+    .card__quote + .card__meta {
+      margin-top: auto;
+    }
   }
 
   .card__meta {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    margin-top: var(--space-6);
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: var(--border-thin) solid var(--border-subtle);
+  }
+
+  @media (max-width: 639px) {
+    .card {
+      padding: var(--space-8) var(--space-6) var(--space-6);
+    }
+
+    .card__mark {
+      font-size: 7rem;
+    }
+
+    .card__quote[data-size='short'] {
+      font-size: var(--text-xl);
+    }
+
+    .card__quote[data-size='medium'] {
+      font-size: var(--text-lg);
+    }
   }
 
   .card__avatar {
