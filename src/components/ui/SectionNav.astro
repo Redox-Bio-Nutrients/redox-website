@@ -1,0 +1,333 @@
+---
+// src/components/ui/SectionNav.astro
+//
+// Same-page section navigation: a sticky side rail on desktop, a single
+// sticky "Jump to" native <select> on phones/tablets. Extracted
+// 2026-09-23 from GroupedProductCatalog.astro (where it replaced a
+// wrapping pill row that grew ~200px tall on phones and jumped to stale
+// load-time offsets) so the Contact Us team regions could reuse it.
+//
+// The parent owns the layout: put this <nav> as the first child of a
+// two-column grid (e.g. `grid-template-columns: 200px minmax(0, 1fr)`)
+// that collapses to a single block column below 1024px — the rail and
+// picker swap at that same breakpoint. Each target section needs the
+// matching `id` and `tabindex="-1"` (focus is moved to it on jump).
+//
+// Offsets are computed at the moment of each jump from where the fixed
+// header (and, on phones, the stuck picker) actually are — never from a
+// height measured once at load.
+
+export interface SectionNavItem {
+  id: string
+  label: string
+  count?: number
+  /** Accent for the rail's dot + active marker; defaults to brand green. */
+  color?: string | null
+}
+
+interface Props {
+  items: SectionNavItem[]
+  /** Accessible name for the <nav> landmark, e.g. "Product categories". */
+  label: string
+  /** Small uppercase heading above the rail, e.g. "Categories". */
+  title: string
+  /** Noun used in the count's accessible label, e.g. "products". */
+  countNoun?: string
+  /** Placeholder shown in the phone picker until a section is reached.
+   * Omit to highlight the first item from the start (use when the first
+   * section begins right at the top of the navigated content). */
+  placeholder?: string
+}
+
+const { items, label, title, countNoun = 'items', placeholder } = Astro.props
+const pickerId = `section-nav-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+---
+
+<nav class="section-nav" aria-label={label} data-section-nav data-default-first={placeholder ? undefined : ''}>
+  <p class="section-nav__title" aria-hidden="true">{title}</p>
+  <ul class="section-nav__rail">
+    {items.map((item, i) => (
+      <li style={item.color ? `--section-color: ${item.color}` : undefined}>
+        <a
+          class="section-nav__link"
+          href={`#${item.id}`}
+          data-section-link={item.id}
+          aria-current={!placeholder && i === 0 ? 'true' : undefined}
+        >
+          <span class="section-nav__dot" aria-hidden="true"></span>
+          <span class="section-nav__label">{item.label}</span>
+          {item.count !== undefined && (
+            <span class="section-nav__count" aria-label={`${item.count} ${countNoun}`}>{item.count}</span>
+          )}
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <div class="section-nav__picker">
+    <label class="section-nav__picker-label" for={pickerId}>Jump to</label>
+    <select id={pickerId} class="section-nav__picker-select" data-section-picker>
+      {placeholder && <option value="" disabled selected>{placeholder}</option>}
+      {items.map((item) => (
+        <option value={item.id}>{item.count !== undefined ? `${item.label} (${item.count})` : item.label}</option>
+      ))}
+    </select>
+    <svg class="section-nav__chevron" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+  </div>
+</nav>
+
+<script>
+  const GAP = 24
+
+  document.querySelectorAll<HTMLElement>('[data-section-nav]').forEach((nav) => {
+    const header = document.getElementById('site-header')
+    const picker = nav.querySelector<HTMLSelectElement>('[data-section-picker]')
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>('[data-section-link]')]
+    const targets = links
+      .map((link) => document.getElementById(link.dataset.sectionLink!))
+      .filter((el): el is HTMLElement => el !== null)
+    const defaultFirst = nav.hasAttribute('data-default-first')
+
+    const pickerMode = () => picker !== null && picker.offsetParent !== null
+
+    // Bottom edge of everything pinned over the top of the page.
+    const coveredTop = () => {
+      const headerBottom = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0
+      if (!pickerMode()) return headerBottom
+      // The picker's stuck position = its CSS `top` + its own height,
+      // whether or not it's currently stuck.
+      const stuckTop = parseFloat(getComputedStyle(nav).top) || headerBottom
+      return Math.max(headerBottom, stuckTop + nav.offsetHeight)
+    }
+
+    const setActive = (id: string | null) => {
+      links.forEach((link) => {
+        if (link.dataset.sectionLink === id) link.setAttribute('aria-current', 'true')
+        else link.removeAttribute('aria-current')
+      })
+      if (picker) picker.value = id ?? ''
+    }
+
+    const scrollToTarget = (target: HTMLElement, smooth: boolean) => {
+      const top = target.getBoundingClientRect().top + window.scrollY - coveredTop() - GAP
+      // 'instant', not 'auto' — 'auto' defers to the page's CSS
+      // scroll-behavior: smooth and would animate anyway.
+      window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'instant' })
+    }
+
+    // While a jump is animating, hold the highlight on the destination
+    // instead of flickering through every section scrolled past.
+    let lockedUntil = 0
+
+    const jumpTo = (id: string) => {
+      const target = document.getElementById(id)
+      if (!target) return
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      lockedUntil = Date.now() + (smooth ? 1200 : 0)
+      setActive(id)
+      scrollToTarget(target, smooth)
+      history.replaceState(null, '', `#${id}`)
+      // Keyboard/screen-reader focus follows, without a second scroll.
+      target.focus({ preventScroll: true })
+    }
+
+    links.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault()
+        jumpTo(link.dataset.sectionLink!)
+      })
+    })
+
+    picker?.addEventListener('change', () => {
+      if (picker.value) jumpTo(picker.value)
+    })
+
+    // Scroll-spy: the active section is the last one whose top has
+    // reached just below the covered area.
+    const spy = () => {
+      if (Date.now() < lockedUntil) return
+      const line = coveredTop() + GAP + 8
+      let current: HTMLElement | null = defaultFirst ? (targets[0] ?? null) : null
+      for (const target of targets) {
+        if (target.getBoundingClientRect().top <= line) current = target
+      }
+      setActive(current?.id ?? null)
+    }
+
+    let frame = 0
+    window.addEventListener(
+      'scroll',
+      () => {
+        cancelAnimationFrame(frame)
+        frame = requestAnimationFrame(spy)
+      },
+      { passive: true },
+    )
+    window.addEventListener('scrollend', () => {
+      lockedUntil = 0
+      spy()
+    })
+
+    // Arriving with one of our #ids in the URL: redo the jump once layout
+    // has settled (fonts/images), so it uses the same offset math.
+    const initial = targets.find((t) => t.id === decodeURIComponent(location.hash.slice(1)))
+    if (initial) {
+      window.addEventListener('load', () => {
+        scrollToTarget(initial, false)
+        setActive(initial.id)
+      })
+    } else {
+      spy()
+    }
+  })
+</script>
+
+<style>
+  .section-nav {
+    position: sticky;
+    top: calc(var(--header-space) + var(--space-8));
+    z-index: var(--z-raised);
+  }
+
+  .section-nav__title {
+    margin-bottom: var(--space-3);
+    padding-left: var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .section-nav__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border-subtle);
+  }
+
+  .section-nav__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    line-height: 1.3;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  /* Active marker sits on the rail's own left line. */
+  .section-nav__link::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: var(--space-1);
+    bottom: var(--space-1);
+    width: 3px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+
+  .section-nav__link:hover,
+  .section-nav__link[aria-current='true'] {
+    background: var(--bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  .section-nav__link[aria-current='true']::before {
+    background: var(--section-color, var(--color-green));
+  }
+
+  .section-nav__dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--section-color, var(--color-green));
+  }
+
+  .section-nav__label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .section-nav__count {
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+  }
+
+  /* Phones/tablets get the picker instead — display:none on the other
+   * so only one of the two is ever in the accessibility tree. */
+  .section-nav__picker {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .section-nav {
+      top: calc(var(--header-space) + var(--space-3));
+      margin-bottom: var(--space-10);
+    }
+
+    .section-nav__title,
+    .section-nav__rail {
+      display: none;
+    }
+
+    .section-nav__picker {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+      background: var(--bg-raised);
+      border: var(--border-thin) solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-md);
+    }
+
+    .section-nav__picker-label {
+      flex-shrink: 0;
+      font-size: var(--text-xs);
+      font-weight: var(--font-semi);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .section-nav__picker-select {
+      flex: 1;
+      min-width: 0;
+      min-height: 40px;
+      padding: 0 var(--space-10) 0 var(--space-4);
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg-surface);
+      border: none;
+      border-radius: var(--radius-full);
+      font: inherit;
+      font-size: var(--text-sm);
+      font-weight: var(--font-semi);
+      color: var(--color-text-primary);
+      cursor: pointer;
+    }
+
+    .section-nav__chevron {
+      position: absolute;
+      right: var(--space-5);
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-secondary);
+      pointer-events: none;
+    }
+  }
+</style>
