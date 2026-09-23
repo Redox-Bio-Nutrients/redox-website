@@ -7,9 +7,9 @@
 // modeled as content rather than a hardcoded enum. Deliberately no
 // tabs/sub-nav: every group renders on the same page, in the catalog's
 // own category order (not alphabetized — only products *within* a
-// group are alphabetical), with a same-page anchor "quick jump" row up
-// top so a long page stays navigable without hiding any content behind
-// a click. Chosen over flat-grid and color-washed-band alternatives —
+// group are alphabetical), with same-page category navigation (a side
+// rail on desktop, a sticky picker on phones — see the markup below) so
+// a long page stays navigable without hiding any content behind a click. Chosen over flat-grid and color-washed-band alternatives —
 // see chat/design history for the other two explored directions.
 //
 // A product with no Collection (or a Collection outside the known
@@ -49,22 +49,55 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
   const bi = CATEGORY_ORDER.indexOf(b.collection?.title ?? '')
   return (ai === -1 ? CATEGORY_ORDER.length : ai) - (bi === -1 ? CATEGORY_ORDER.length : bi)
 })
+
+const groupId = (group: Group) => group.collection?.slug ?? 'more-products'
+const hasNav = groups.length > 1
 ---
 
 {products.length > 0 ? (
-  <div class="catalog">
-    {groups.length > 1 && (
-      <nav class="catalog__jump" aria-label="Jump to category">
-        {groups.map((group) => (
-          <a
-            href={`#${group.collection?.slug ?? 'more-products'}`}
-            style={group.collection?.color ? `--jump-color: ${group.collection.color}` : undefined}
-          >
-            {group.collection?.title ?? 'More Products'}
-          </a>
-        ))}
+  <div class:list={['catalog', { 'catalog--with-nav': hasNav }]}>
+    {hasNav && (
+      // Category navigation, rebuilt 2026-09-23 (was a sticky wrapping
+      // pill row that grew to ~200px tall on phones and relied on a
+      // height measured once at load, so jumps landed wrong whenever it
+      // changed). Desktop: a sticky list beside the grid, which covers
+      // no content at all. Phones/tablets: one compact native <select>
+      // (the OS's own picker). Both are driven by the script below,
+      // which computes the scroll offset at click time from where the
+      // header/bar actually are, and highlights the category in view.
+      <nav class="catalog__nav" aria-label="Product categories" data-catalog-nav>
+        <p class="catalog__nav-title" aria-hidden="true">Categories</p>
+        <ul class="catalog__rail">
+          {groups.map((group, i) => (
+            <li style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}>
+              <a
+                class="catalog__rail-link"
+                href={`#${groupId(group)}`}
+                data-catalog-link={groupId(group)}
+                aria-current={i === 0 ? 'true' : undefined}
+              >
+                <span class="catalog__rail-dot" aria-hidden="true"></span>
+                <span class="catalog__rail-label">{group.collection?.title ?? 'More Products'}</span>
+                <span class="catalog__rail-count" aria-label={`${group.products.length} products`}>{group.products.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <div class="catalog__picker">
+          <label class="catalog__picker-label" for="catalog-picker">Jump to</label>
+          <select id="catalog-picker" class="catalog__picker-select" data-catalog-picker>
+            {groups.map((group) => (
+              <option value={groupId(group)}>
+                {group.collection?.title ?? 'More Products'} ({group.products.length})
+              </option>
+            ))}
+          </select>
+          <svg class="catalog__picker-chevron" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+        </div>
       </nav>
     )}
+    <div class="catalog__groups">
     {groups.map((group) => {
       // A lone "More Products" bucket (no real Collection exists for
       // any product on the page) is the whole page, not a category
@@ -74,7 +107,7 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
       // place back automatically.
       const showHeader = group.collection !== null || groups.length > 1
       return (
-        <section class="catalog__group" id={group.collection?.slug ?? 'more-products'}>
+        <section class="catalog__group" id={groupId(group)} tabindex="-1" data-catalog-group>
           {showHeader && (
             <div
               class="catalog__group-head"
@@ -106,66 +139,192 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
         </section>
       )
     })}
+    </div>
   </div>
 ) : (
   <p class="catalog__empty">{emptyMessage}</p>
 )}
 
 <style>
-  .catalog__jump {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-16);
-    padding: var(--space-3);
-    background: var(--bg-surface);
-    /* A full pill radius here left transparent corner wedges (border-
-     * radius clips an element's own background to the curve — nothing
-     * paints the corner outside it) that were visible in practice: as
-     * a sticky bar over actively-scrolling content, whatever's directly
-     * behind at that moment "peeks through" the rounded ends — caught
-     * live as a group heading flashing through in Safari. A smaller,
-     * card-style radius (same value Header.astro's own mobile nav
-     * panel uses) keeps the rounded look with a corner wedge small
-     * enough not to expose scrolling content behind it. */
-    border-radius: var(--radius-2xl);
-    /* Sticks just under the fixed header (--header-space is the
-     * header's live-measured height, kept in sync by Header.astro) so
-     * it's always reachable while scrolling a long catalog page.
-     * Below --z-nav (the header itself) so the header still overlaps
-     * it, but above ordinary page content. */
+  /* ── Layout: side rail (desktop) / sticky picker (phones+tablets) ── */
+  .catalog--with-nav {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  .catalog__nav {
     position: sticky;
-    top: calc(var(--header-space) + var(--space-4));
+    top: calc(var(--header-space) + var(--space-8));
     z-index: var(--z-raised);
   }
 
-  .catalog__jump a {
-    padding: var(--space-2) var(--space-5);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    color: var(--color-text-secondary);
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-raised);
-    transition: var(--transition-fast);
+  .catalog__nav-title {
+    margin-bottom: var(--space-3);
+    padding-left: var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semi);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
   }
 
-  .catalog__jump a:hover {
-    border-color: var(--jump-color, var(--color-green));
-    color: var(--jump-color, var(--color-green-dark));
+  .catalog__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border-subtle);
+  }
+
+  .catalog__rail-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    line-height: 1.3;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  /* Active marker sits on the rail's own left line. */
+  .catalog__rail-link::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: var(--space-1);
+    bottom: var(--space-1);
+    width: 3px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+
+  .catalog__rail-link:hover {
+    background: var(--bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  .catalog__rail-link[aria-current='true'] {
+    background: var(--bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  .catalog__rail-link[aria-current='true']::before {
+    background: var(--group-color, var(--color-green));
+  }
+
+  .catalog__rail-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--group-color, var(--color-green));
+  }
+
+  .catalog__rail-label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .catalog__rail-count {
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+  }
+
+  /* Phones/tablets get the picker instead — hidden with display:none
+   * so only one of the two is ever in the accessibility tree. */
+  .catalog__picker {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .catalog--with-nav {
+      display: block;
+    }
+
+    .catalog__nav {
+      top: calc(var(--header-space) + var(--space-3));
+      margin-bottom: var(--space-10);
+    }
+
+    .catalog__nav-title,
+    .catalog__rail {
+      display: none;
+    }
+
+    .catalog__picker {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+      background: var(--bg-raised);
+      border: var(--border-thin) solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-md);
+    }
+
+    .catalog__picker-label {
+      flex-shrink: 0;
+      font-size: var(--text-xs);
+      font-weight: var(--font-semi);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .catalog__picker-select {
+      flex: 1;
+      min-width: 0;
+      min-height: 40px;
+      padding: 0 var(--space-10) 0 var(--space-4);
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg-surface);
+      border: none;
+      border-radius: var(--radius-full);
+      font: inherit;
+      font-size: var(--text-sm);
+      font-weight: var(--font-semi);
+      color: var(--color-text-primary);
+      cursor: pointer;
+    }
+
+    .catalog__picker-chevron {
+      position: absolute;
+      right: var(--space-5);
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-secondary);
+      pointer-events: none;
+    }
   }
 
   .catalog__group {
     margin-bottom: var(--space-16);
-    /* Keeps the jumped-to section clear of both the fixed header AND
-     * the sticky jump nav sitting just below it — --subnav-space is
-     * that nav's own live-measured height (see script below), same
-     * pattern as --header-space itself (Header.astro). Without it, a
-     * clicked jump-nav link scrolled the heading directly behind the
-     * jump nav, not just the header. Falls back to 0px so pages with
-     * only one category (no jump nav rendered at all) aren't left
-     * with a stale/unset value. */
-    scroll-margin-top: calc(var(--header-space) + var(--space-4) + var(--subnav-space, 0px) + var(--space-4));
+    /* No-JS / direct-hash fallback only — clicks go through the script
+     * below, which measures the real offset at click time. */
+    scroll-margin-top: calc(var(--header-space) + var(--space-8));
+  }
+
+  .catalog__group:focus {
+    outline: none;
+  }
+
+  @media (max-width: 1023px) {
+    .catalog__group {
+      scroll-margin-top: calc(var(--header-space) + 88px);
+    }
   }
 
   .catalog__group:last-child {
@@ -227,6 +386,11 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     gap: var(--space-10) var(--space-6);
   }
 
+  /* The side rail takes ~250px on desktop, so one fewer column there. */
+  .catalog--with-nav .catalog__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   .catalog__empty {
     text-align: center;
     color: var(--color-text-muted);
@@ -237,33 +401,129 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
     .catalog__grid {
       grid-template-columns: repeat(3, 1fr);
     }
+
+    .catalog--with-nav .catalog__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 1023px) {
-    .catalog__grid {
+    .catalog__grid,
+    .catalog--with-nav .catalog__grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media (max-width: 639px) {
-    .catalog__grid {
+    .catalog__grid,
+    .catalog--with-nav .catalog__grid {
       grid-template-columns: 1fr;
     }
   }
 </style>
 
 <script>
-  // Measures the sticky jump nav's own rendered height into
-  // --subnav-space so .catalog__group's scroll-margin-top (above) can
-  // reserve room for it, same live-measurement pattern --header-space
-  // uses in Header.astro. Re-measured on resize since the pill row can
-  // wrap to more lines on narrow viewports, changing its height.
-  const jumpNav = document.querySelector<HTMLElement>('.catalog__jump')
-  if (jumpNav) {
-    const setSubnavSpace = () => {
-      document.documentElement.style.setProperty('--subnav-space', `${jumpNav.offsetHeight}px`)
+  // Category navigation engine (see the markup comment above).
+  //
+  // Offset is computed at the moment of each jump from where things
+  // actually are on screen — the fixed header's bottom edge, plus the
+  // sticky picker's stuck position on phones — instead of a height
+  // measured once at load. That stale-measurement approach is what made
+  // jumps land too far whenever fonts/wrapping/toolbars changed sizes.
+  const nav = document.querySelector<HTMLElement>('[data-catalog-nav]')
+
+  if (nav) {
+    const header = document.getElementById('site-header')
+    const picker = nav.querySelector<HTMLSelectElement>('[data-catalog-picker]')
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>('[data-catalog-link]')]
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-catalog-group]')]
+    const GAP = 24
+
+    const pickerMode = () => picker !== null && picker.offsetParent !== null
+
+    // Bottom edge of everything pinned over the top of the page.
+    const coveredTop = () => {
+      const headerBottom = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0
+      if (!pickerMode()) return headerBottom
+      // The picker's stuck position = its CSS `top` + its own height,
+      // whether or not it's currently stuck.
+      const stuckTop = parseFloat(getComputedStyle(nav).top) || headerBottom
+      return Math.max(headerBottom, stuckTop + nav.offsetHeight)
     }
-    setSubnavSpace()
-    window.addEventListener('resize', setSubnavSpace)
+
+    const setActive = (id: string) => {
+      links.forEach((link) => {
+        if (link.dataset.catalogLink === id) link.setAttribute('aria-current', 'true')
+        else link.removeAttribute('aria-current')
+      })
+      if (picker && picker.value !== id) picker.value = id
+    }
+
+    // While a jump is animating, hold the highlight on the destination
+    // instead of flickering through every category scrolled past.
+    let lockedUntil = 0
+
+    const jumpTo = (id: string) => {
+      const group = document.getElementById(id)
+      if (!group) return
+      const top = group.getBoundingClientRect().top + window.scrollY - coveredTop() - GAP
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      lockedUntil = Date.now() + (smooth ? 1200 : 0)
+      setActive(id)
+      window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' })
+      history.replaceState(null, '', `#${id}`)
+      // Move keyboard/screen-reader focus to the section too, without a
+      // second scroll.
+      group.focus({ preventScroll: true })
+    }
+
+    links.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault()
+        jumpTo(link.dataset.catalogLink!)
+      })
+    })
+
+    picker?.addEventListener('change', () => jumpTo(picker.value))
+
+    // Scroll-spy: the active category is the last one whose top has
+    // reached just below the covered area.
+    const spy = () => {
+      if (Date.now() < lockedUntil) return
+      const line = coveredTop() + GAP + 8
+      let current = groups[0]
+      for (const group of groups) {
+        if (group.getBoundingClientRect().top <= line) current = group
+      }
+      if (current) setActive(current.id)
+    }
+
+    let frame = 0
+    window.addEventListener(
+      'scroll',
+      () => {
+        cancelAnimationFrame(frame)
+        frame = requestAnimationFrame(spy)
+      },
+      { passive: true },
+    )
+    window.addEventListener('scrollend', () => {
+      lockedUntil = 0
+      spy()
+    })
+
+    // Arriving with a #category in the URL: re-run the jump once layout
+    // has settled (fonts/images), so it uses the same offset math.
+    const initialId = decodeURIComponent(location.hash.slice(1))
+    if (initialId && document.getElementById(initialId)?.hasAttribute('data-catalog-group')) {
+      window.addEventListener('load', () => {
+        const group = document.getElementById(initialId)!
+        const top = group.getBoundingClientRect().top + window.scrollY - coveredTop() - GAP
+        window.scrollTo({ top: Math.max(0, top), behavior: 'auto' })
+        setActive(initialId)
+      })
+    } else {
+      spy()
+    }
   }
 </script>
