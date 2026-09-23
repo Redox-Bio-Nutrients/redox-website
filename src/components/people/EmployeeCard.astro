@@ -62,6 +62,16 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 const LEAF_SIZES = [0.6, 0.9, 1.2, 1.6]
 const leafCorner = index % 2 === 0 ? 'tl' : 'br'
 const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
+
+// Anti-harvesting: email/phone never appear in the page source as text
+// or as mailto:/tel: hrefs — only as a reversed + base64'd data
+// attribute behind an "Email me"/"Call me" link, decoded by the script
+// below on click. Address-harvesting bots read raw HTML and don't run
+// JS or click, which is what this defeats; a real visitor gets the
+// value revealed in place plus their mail/phone app.
+const encodeContact = (value: string) => btoa([...value].reverse().join(''))
+const emailCode = author.email ? encodeContact(author.email.trim()) : null
+const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
 ---
 
 <div class="employee" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
@@ -97,15 +107,52 @@ const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
       </div>
     )}
     <div class="employee__contact">
-      {author.email && (
-        <a class="employee__link" href={`mailto:${author.email}`}>{author.email}</a>
+      {emailCode && (
+        <a class="btn btn--ghost btn--on-color btn--sm employee__contact-btn" href="#" role="button" data-contact="email" data-code={emailCode} aria-label={`Email ${author.name}`}>
+          <svg class="employee__contact-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+          <span class="employee__contact-text">Email me</span>
+        </a>
       )}
-      {author.phone && (
-        <a class="employee__link" href={`tel:${author.phone.replace(/[^\d+]/g, '')}`}>{author.phone}</a>
+      {phoneCode && (
+        <a class="btn btn--ghost btn--on-color btn--sm employee__contact-btn" href="#" role="button" data-contact="phone" data-code={phoneCode} aria-label={`Call ${author.name}`}>
+          <svg class="employee__contact-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+          <span class="employee__contact-text">Call me</span>
+        </a>
       )}
     </div>
   </div>
 </div>
+
+<script>
+  // One delegated listener for every card on the page (Astro bundles
+  // and dedupes this script however many cards render). First click
+  // decodes the value, shows it in place, and swaps in the real
+  // mailto:/tel: href; email then opens the mail app right away, phone
+  // only dials straight away on touch devices — on desktop, revealing
+  // the number is the useful part and a tel: prompt would just be noise.
+  const decode = (code: string) => [...atob(code)].reverse().join('')
+
+  document.addEventListener('click', (event) => {
+    const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[data-contact][data-code]')
+    if (!link) return
+    event.preventDefault()
+
+    const value = decode(link.dataset.code!)
+    const isEmail = link.dataset.contact === 'email'
+    const href = isEmail ? `mailto:${value}` : `tel:${value.replace(/[^\d+]/g, '')}`
+
+    link.querySelector('.employee__contact-text')!.textContent = value
+    link.href = href
+    link.classList.add('is-revealed')
+    link.removeAttribute('role')
+    link.removeAttribute('aria-label')
+    delete link.dataset.code
+
+    if (isEmail || window.matchMedia('(pointer: coarse)').matches) {
+      window.location.href = href
+    }
+  })
+</script>
 
 <style>
   .employee {
@@ -214,21 +261,38 @@ const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
     color: rgb(255 255 255 / 0.85);
   }
 
+  /* Side-by-side pill buttons (shared .btn ghost/on-color styles from
+   * buttons.css), equal width at rest. Once one's clicked and shows the
+   * full address/number, it's allowed to wrap onto its own row rather
+   * than truncate — flex-wrap handles that without a layout switch. */
   .employee__contact {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    margin-top: var(--space-3);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
   }
 
-  .employee__link {
-    font-size: var(--text-sm);
-    color: var(--color-white);
-    word-break: break-word;
+  .employee__contact:empty {
+    display: none;
   }
 
-  .employee__link:hover {
-    text-decoration: underline;
+  .employee__contact-btn {
+    flex: 1 1 0;
+    min-width: max-content;
+  }
+
+  .employee__contact-btn.is-revealed {
+    flex-basis: auto;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+  }
+
+  .employee__contact-icon {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
   }
 
   /* ── Leaf sprig — hidden until hover ──────────────────────────────
