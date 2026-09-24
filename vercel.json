@@ -30,6 +30,8 @@
     { "source": "/product/mainstay-calcium-organic/", "destination": "/products/mainstay-calcium-2-0", "permanent": true },
     { "source": "/product/h-85-organic", "destination": "/products/h-85", "permanent": true },
     { "source": "/product/h-85-organic/", "destination": "/products/h-85", "permanent": true },
+    { "source": "/product/h-85-flowable", "destination": "/products/h-85", "permanent": true },
+    { "source": "/product/h-85-flowable/", "destination": "/products/h-85", "permanent": true },
     { "source": "/product/triplex-zinc-organic", "destination": "/products/triplex-zinc", "permanent": true },
     { "source": "/product/triplex-zinc-organic/", "destination": "/products/triplex-zinc", "permanent": true },
     { "source": "/product/triplex-micro-organic", "destination": "/products/triplex-micro", "permanent": true },
