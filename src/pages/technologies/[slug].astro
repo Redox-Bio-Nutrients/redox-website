@@ -22,44 +22,25 @@ if (!technology) {
   return Astro.redirect('/404')
 }
 
-// Breadcrumb sits between the first section (typically the Hero) and
-// whatever comes after it — never overlapping the sticky nav, never
-// pushed below the whole composed page. Splitting the array in two
-// lets HomeSections render each half independently around it.
+// No breadcrumb (removed 2026-09-24 — Curtis: "not necessary"; the
+// nav already links RAM Technology directly and /technologies just
+// redirects back to it). Sections render as one uninterrupted run, the
+// same as the Homepage.
 const sections = technology.sections ?? []
-const [firstSection, ...restSections] = sections
 ---
 
 <BaseLayout title={technology.title} description={technology.tagline} seo={technology.seo}>
-  {firstSection ? (
-    <HomeSections sections={[firstSection]} />
+  {sections.length > 0 ? (
+    <HomeSections sections={sections} />
   ) : (
     <div class="fallback">
       <h1>{technology.title}</h1>
       {technology.tagline && <p>{technology.tagline}</p>}
     </div>
   )}
-
-  <div class="crumbs">
-    <a href="/technologies">← Technologies</a>
-  </div>
-
-  {restSections.length > 0 && <HomeSections sections={restSections} />}
 </BaseLayout>
 
 <style>
-  .crumbs {
-    max-width: var(--content-width);
-    margin: 0 auto;
-    padding: var(--space-8) var(--space-6);
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-  }
-
-  .crumbs a:hover {
-    color: var(--color-text-primary);
-  }
-
   .fallback {
     max-width: var(--content-width);
     margin: 0 auto;
