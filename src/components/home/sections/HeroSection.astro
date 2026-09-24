@@ -165,13 +165,20 @@ const centered = section.textAlign === 'center'
     opacity: 0.55;
   }
 
+  /* Same column as the header bar and page content below it
+   * (--content-width + a --space-6 gutter, see Header.astro's own
+   * inner bar) so a left-aligned hero's heading lines up with the logo
+   * and the content under it. It used the much wider --max-width-2xl
+   * until 2026-09-24, which put left-aligned text (the podcast pages)
+   * ~110px left of everything else on a 1440px screen; centered heroes
+   * never showed the difference. */
   .hero__content {
     position: relative;
-    width: min(var(--max-width-2xl), 100%);
+    width: min(var(--content-width), 100%);
     margin: 0 auto;
     /* Extra top clearance so the heading doesn't sit under the nav —
      * cancels out .hero's own margin-top pull-up. */
-    padding: calc(var(--space-16) + var(--header-space)) var(--space-8) var(--space-16);
+    padding: calc(var(--space-16) + var(--header-space)) var(--space-6) var(--space-16);
   }
 
   /* A quote is the last thing in .hero__content, right above where a
@@ -264,8 +271,15 @@ const centered = section.textAlign === 'center'
     text-align: center;
   }
 
+  /* Stacked, not side by side: in a centered hero the subheading's
+   * auto side-margins (below) soak up the row's free space and shove a
+   * CTA off to the right edge. Only surfaced once the podcast heroes
+   * (which have a CTA) switched to centered, 2026-09-24 — the
+   * homepage/RAM centered heroes have no CTA. */
   .hero--center .hero__meta {
+    flex-direction: column;
     justify-content: center;
+    gap: var(--space-6);
   }
 
   .hero--center .hero__subheading,
