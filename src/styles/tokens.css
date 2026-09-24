@@ -52,6 +52,7 @@
   --border-subtle: rgb(0 0 0 / 0.07);
 
   --footer-bg:    #2E6B3E;
+  --footer-bg-end: #163620;  /* dark forest green the footer's gradient flows down into */
   --footer-text:  #F7F4EF;
   --footer-muted: #D6E4CF;   /* was #C8D8C0 — 4.26:1 on footer green, now ≥4.5:1 */
 
@@ -204,6 +205,7 @@
   --color-warning: #E2685C;
 
   --footer-bg:    #131A15;
+  --footer-bg-end: #090D0A;
   --footer-text:  #E9E6DD;
   --footer-muted: #93A296;
 

@@ -94,6 +94,55 @@ export const utilityNav = {
   },
 }
 
+// Footer link groups (2026-09 footer redesign) — the footer's own
+// grouping of the same destinations as primaryNav/utilityNav, plus the
+// legal row. Kept separate from primaryNav because the header's
+// dropdown structure (Products/News) doesn't map onto footer columns.
+export interface FooterLink {
+  label: string
+  href: string
+  external?: boolean
+}
+
+export const footerNav: { heading: string; links: FooterLink[] }[] = [
+  {
+    heading: 'Markets',
+    links: [
+      { label: 'Agriculture',          href: '/agriculture'          },
+      { label: 'Turf',                 href: '/turf'                 },
+      { label: 'Agriculture Products', href: '/agriculture/products' },
+      { label: 'Turf Products',        href: '/turf/products'        },
+    ],
+  },
+  {
+    heading: 'Learn',
+    links: [
+      { label: 'RAM Technology',    href: '/technologies/ram-technology' },
+      { label: 'Blog',              href: '/blog'                        },
+      { label: 'Podcast',           href: '/podcast'                     },
+      { label: 'Technical Podcast', href: '/tech-podcast'                },
+    ],
+  },
+  {
+    heading: 'Company',
+    links: [
+      { label: 'Contact Us',      href: '/contact-us' },
+      primaryNav.find((item) => item.label === 'Swag Store') as FooterLink,
+      utilityNav.dashboard,
+    ],
+  },
+]
+
+// Social profiles — same accounts the old redoxgrows.com footer linked.
+// `icon` picks the matching symbol from Footer.astro's inline sprite.
+export const socialLinks = [
+  { label: 'YouTube',   href: 'https://www.youtube.com/channel/UCUN8gi7y_lk2MW71llHqFag/', icon: 'youtube'   },
+  { label: 'X',         href: 'https://x.com/redoxgrows',                                  icon: 'x'         },
+  { label: 'Instagram', href: 'https://www.instagram.com/redoxgrows',                      icon: 'instagram' },
+  { label: 'Facebook',  href: 'https://www.facebook.com/redoxgrows',                       icon: 'facebook'  },
+  { label: 'LinkedIn',  href: 'https://www.linkedin.com/company/redoxgrows/',              icon: 'linkedin'  },
+] as const
+
 // External service URLs
 // Update these when services change — no other files need touching.
 export const externalLinks = {
