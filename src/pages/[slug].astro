@@ -51,6 +51,7 @@ import HomeSections from '../components/home/HomeSections.astro'
 import EmployeeGrid from '../components/people/EmployeeGrid.astro'
 import CollectionShowcase from '../components/products/CollectionShowcase.astro'
 import TestimonialCarousel from '../components/testimonials/TestimonialCarousel.astro'
+import SectionNav, { type SectionNavItem } from '../components/ui/SectionNav.astro'
 import ScrollIndicator from '../components/ui/ScrollIndicator.astro'
 import '../styles/texture-surface.css'
 
@@ -84,6 +85,11 @@ const heroTextureVars = buildTextureVars(slug!, heroTextureColor)
 
 const officeStaff = slug === 'contact-us' ? await getOfficeStaff() : []
 const regionTeams = slug === 'contact-us' ? await getAllRegionsWithTeams() : []
+const regionNavItems: SectionNavItem[] = regionTeams.map((region) => ({
+  id: `team-${region.slug}`,
+  label: region.title,
+  count: region.team?.length ?? 0,
+}))
 
 const marketCatalog =
   slug === 'agriculture' ? '/agriculture/products' : slug === 'turf' ? '/turf/products' : null
@@ -162,6 +168,21 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
       <div class="team__inner">
         <h2>Meet the Team</h2>
 
+        {/* Region navigation (HQ deliberately left out — it's for
+            customers finding their local agronomist). Same shared
+            SectionNav as the product catalogs. */}
+        <div class:list={['team__layout', { 'team__layout--with-nav': regionNavItems.length > 1 }]}>
+        {regionNavItems.length > 1 && (
+          <SectionNav
+            items={regionNavItems}
+            label="Agronomist regions"
+            title="Regions"
+            countNoun="agronomists"
+            placeholder="Choose a region"
+          />
+        )}
+        <div class="team__groups">
+
         {officeStaff.length > 0 && (
           <div class="team__group" id="team-hq">
             <h3 class="team__group-heading">HQ</h3>
@@ -171,12 +192,14 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
         )}
 
         {regionTeams.map((region) => (
-          <div class="team__group" id={`team-${region.slug}`}>
+          <div class="team__group" id={`team-${region.slug}`} tabindex="-1">
             <h3 class="team__group-heading">{region.title} Agronomists</h3>
             <hr class="team__group-rule" />
             <EmployeeGrid team={region.team ?? []} emptyMessage={`No ${region.title} agronomists assigned yet.`} />
           </div>
         ))}
+        </div>
+        </div>
       </div>
     </section>
   )}
@@ -448,6 +471,34 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
 
   .team__group:last-child {
     margin-bottom: 0;
+  }
+
+  .team__group:focus {
+    outline: none;
+  }
+
+  /* Region side rail beside the roster on desktop (same layout as the
+   * product catalogs); below 1024px SectionNav becomes a sticky picker
+   * above the roster instead. */
+  .team__layout--with-nav {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  /* The rail takes ~250px, so the 3-up roster gets too narrow for the
+   * cards' Email/Call buttons until the viewport is wide enough. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .team__layout--with-nav :global(.grid) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .team__layout--with-nav {
+      display: block;
+    }
   }
 
   .team__group-heading {

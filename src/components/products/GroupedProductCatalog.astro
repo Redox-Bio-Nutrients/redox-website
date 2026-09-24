@@ -21,6 +21,7 @@ import type { ProductCard as ProductCardType, Collection } from '../../lib/types
 import ProductCard from './ProductCard.astro'
 import { urlFor } from '../../lib/sanity'
 import { CATEGORY_ORDER } from '../../lib/catalogTaxonomy'
+import SectionNav, { type SectionNavItem } from '../ui/SectionNav.astro'
 
 interface Props {
   products: ProductCardType[]
@@ -52,50 +53,18 @@ const groups = Array.from(groupMap.values()).sort((a, b) => {
 
 const groupId = (group: Group) => group.collection?.slug ?? 'more-products'
 const hasNav = groups.length > 1
+const navItems: SectionNavItem[] = groups.map((group) => ({
+  id: groupId(group),
+  label: group.collection?.title ?? 'More Products',
+  count: group.products.length,
+  color: group.collection?.color,
+}))
 ---
 
 {products.length > 0 ? (
   <div class:list={['catalog', { 'catalog--with-nav': hasNav }]}>
     {hasNav && (
-      // Category navigation, rebuilt 2026-09-23 (was a sticky wrapping
-      // pill row that grew to ~200px tall on phones and relied on a
-      // height measured once at load, so jumps landed wrong whenever it
-      // changed). Desktop: a sticky list beside the grid, which covers
-      // no content at all. Phones/tablets: one compact native <select>
-      // (the OS's own picker). Both are driven by the script below,
-      // which computes the scroll offset at click time from where the
-      // header/bar actually are, and highlights the category in view.
-      <nav class="catalog__nav" aria-label="Product categories" data-catalog-nav>
-        <p class="catalog__nav-title" aria-hidden="true">Categories</p>
-        <ul class="catalog__rail">
-          {groups.map((group, i) => (
-            <li style={group.collection?.color ? `--group-color: ${group.collection.color}` : undefined}>
-              <a
-                class="catalog__rail-link"
-                href={`#${groupId(group)}`}
-                data-catalog-link={groupId(group)}
-                aria-current={i === 0 ? 'true' : undefined}
-              >
-                <span class="catalog__rail-dot" aria-hidden="true"></span>
-                <span class="catalog__rail-label">{group.collection?.title ?? 'More Products'}</span>
-                <span class="catalog__rail-count" aria-label={`${group.products.length} products`}>{group.products.length}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <div class="catalog__picker">
-          <label class="catalog__picker-label" for="catalog-picker">Jump to</label>
-          <select id="catalog-picker" class="catalog__picker-select" data-catalog-picker>
-            {groups.map((group) => (
-              <option value={groupId(group)}>
-                {group.collection?.title ?? 'More Products'} ({group.products.length})
-              </option>
-            ))}
-          </select>
-          <svg class="catalog__picker-chevron" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-        </div>
-      </nav>
+      <SectionNav items={navItems} label="Product categories" title="Categories" countNoun="products" />
     )}
     <div class="catalog__groups">
     {groups.map((group) => {
@@ -107,7 +76,7 @@ const hasNav = groups.length > 1
       // place back automatically.
       const showHeader = group.collection !== null || groups.length > 1
       return (
-        <section class="catalog__group" id={groupId(group)} tabindex="-1" data-catalog-group>
+        <section class="catalog__group" id={groupId(group)} tabindex="-1">
           {showHeader && (
             <div
               class="catalog__group-head"
@@ -154,166 +123,16 @@ const hasNav = groups.length > 1
     align-items: start;
   }
 
-  .catalog__nav {
-    position: sticky;
-    top: calc(var(--header-space) + var(--space-8));
-    z-index: var(--z-raised);
-  }
-
-  .catalog__nav-title {
-    margin-bottom: var(--space-3);
-    padding-left: var(--space-4);
-    font-size: var(--text-xs);
-    font-weight: var(--font-semi);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-  }
-
-  .catalog__rail {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-left: 1px solid var(--border-subtle);
-  }
-
-  .catalog__rail-link {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
-    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    line-height: 1.3;
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-
-  /* Active marker sits on the rail's own left line. */
-  .catalog__rail-link::before {
-    content: '';
-    position: absolute;
-    left: -1px;
-    top: var(--space-1);
-    bottom: var(--space-1);
-    width: 3px;
-    border-radius: var(--radius-full);
-    background: transparent;
-    transition: background 0.15s ease;
-  }
-
-  .catalog__rail-link:hover {
-    background: var(--bg-surface);
-    color: var(--color-text-primary);
-  }
-
-  .catalog__rail-link[aria-current='true'] {
-    background: var(--bg-surface);
-    color: var(--color-text-primary);
-  }
-
-  .catalog__rail-link[aria-current='true']::before {
-    background: var(--group-color, var(--color-green));
-  }
-
-  .catalog__rail-dot {
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-full);
-    background: var(--group-color, var(--color-green));
-  }
-
-  .catalog__rail-label {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .catalog__rail-count {
-    font-size: var(--text-xs);
-    font-variant-numeric: tabular-nums;
-    color: var(--color-text-muted);
-  }
-
-  /* Phones/tablets get the picker instead — hidden with display:none
-   * so only one of the two is ever in the accessibility tree. */
-  .catalog__picker {
-    display: none;
-  }
-
   @media (max-width: 1023px) {
     .catalog--with-nav {
       display: block;
-    }
-
-    .catalog__nav {
-      top: calc(var(--header-space) + var(--space-3));
-      margin-bottom: var(--space-10);
-    }
-
-    .catalog__nav-title,
-    .catalog__rail {
-      display: none;
-    }
-
-    .catalog__picker {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
-      background: var(--bg-raised);
-      border: var(--border-thin) solid var(--border-subtle);
-      border-radius: var(--radius-full);
-      box-shadow: var(--shadow-md);
-    }
-
-    .catalog__picker-label {
-      flex-shrink: 0;
-      font-size: var(--text-xs);
-      font-weight: var(--font-semi);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-    }
-
-    .catalog__picker-select {
-      flex: 1;
-      min-width: 0;
-      min-height: 40px;
-      padding: 0 var(--space-10) 0 var(--space-4);
-      appearance: none;
-      -webkit-appearance: none;
-      background: var(--bg-surface);
-      border: none;
-      border-radius: var(--radius-full);
-      font: inherit;
-      font-size: var(--text-sm);
-      font-weight: var(--font-semi);
-      color: var(--color-text-primary);
-      cursor: pointer;
-    }
-
-    .catalog__picker-chevron {
-      position: absolute;
-      right: var(--space-5);
-      width: 18px;
-      height: 18px;
-      color: var(--color-text-secondary);
-      pointer-events: none;
     }
   }
 
   .catalog__group {
     margin-bottom: var(--space-16);
-    /* No-JS / direct-hash fallback only — clicks go through the script
-     * below, which measures the real offset at click time. */
+    /* No-JS / direct-hash fallback only — clicks go through
+     * SectionNav's script, which measures the real offset at click time. */
     scroll-margin-top: calc(var(--header-space) + var(--space-8));
   }
 
@@ -422,108 +241,3 @@ const hasNav = groups.length > 1
   }
 </style>
 
-<script>
-  // Category navigation engine (see the markup comment above).
-  //
-  // Offset is computed at the moment of each jump from where things
-  // actually are on screen — the fixed header's bottom edge, plus the
-  // sticky picker's stuck position on phones — instead of a height
-  // measured once at load. That stale-measurement approach is what made
-  // jumps land too far whenever fonts/wrapping/toolbars changed sizes.
-  const nav = document.querySelector<HTMLElement>('[data-catalog-nav]')
-
-  if (nav) {
-    const header = document.getElementById('site-header')
-    const picker = nav.querySelector<HTMLSelectElement>('[data-catalog-picker]')
-    const links = [...nav.querySelectorAll<HTMLAnchorElement>('[data-catalog-link]')]
-    const groups = [...document.querySelectorAll<HTMLElement>('[data-catalog-group]')]
-    const GAP = 24
-
-    const pickerMode = () => picker !== null && picker.offsetParent !== null
-
-    // Bottom edge of everything pinned over the top of the page.
-    const coveredTop = () => {
-      const headerBottom = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0
-      if (!pickerMode()) return headerBottom
-      // The picker's stuck position = its CSS `top` + its own height,
-      // whether or not it's currently stuck.
-      const stuckTop = parseFloat(getComputedStyle(nav).top) || headerBottom
-      return Math.max(headerBottom, stuckTop + nav.offsetHeight)
-    }
-
-    const setActive = (id: string) => {
-      links.forEach((link) => {
-        if (link.dataset.catalogLink === id) link.setAttribute('aria-current', 'true')
-        else link.removeAttribute('aria-current')
-      })
-      if (picker && picker.value !== id) picker.value = id
-    }
-
-    // While a jump is animating, hold the highlight on the destination
-    // instead of flickering through every category scrolled past.
-    let lockedUntil = 0
-
-    const jumpTo = (id: string) => {
-      const group = document.getElementById(id)
-      if (!group) return
-      const top = group.getBoundingClientRect().top + window.scrollY - coveredTop() - GAP
-      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      lockedUntil = Date.now() + (smooth ? 1200 : 0)
-      setActive(id)
-      window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' })
-      history.replaceState(null, '', `#${id}`)
-      // Move keyboard/screen-reader focus to the section too, without a
-      // second scroll.
-      group.focus({ preventScroll: true })
-    }
-
-    links.forEach((link) => {
-      link.addEventListener('click', (event) => {
-        event.preventDefault()
-        jumpTo(link.dataset.catalogLink!)
-      })
-    })
-
-    picker?.addEventListener('change', () => jumpTo(picker.value))
-
-    // Scroll-spy: the active category is the last one whose top has
-    // reached just below the covered area.
-    const spy = () => {
-      if (Date.now() < lockedUntil) return
-      const line = coveredTop() + GAP + 8
-      let current = groups[0]
-      for (const group of groups) {
-        if (group.getBoundingClientRect().top <= line) current = group
-      }
-      if (current) setActive(current.id)
-    }
-
-    let frame = 0
-    window.addEventListener(
-      'scroll',
-      () => {
-        cancelAnimationFrame(frame)
-        frame = requestAnimationFrame(spy)
-      },
-      { passive: true },
-    )
-    window.addEventListener('scrollend', () => {
-      lockedUntil = 0
-      spy()
-    })
-
-    // Arriving with a #category in the URL: re-run the jump once layout
-    // has settled (fonts/images), so it uses the same offset math.
-    const initialId = decodeURIComponent(location.hash.slice(1))
-    if (initialId && document.getElementById(initialId)?.hasAttribute('data-catalog-group')) {
-      window.addEventListener('load', () => {
-        const group = document.getElementById(initialId)!
-        const top = group.getBoundingClientRect().top + window.scrollY - coveredTop() - GAP
-        window.scrollTo({ top: Math.max(0, top), behavior: 'auto' })
-        setActive(initialId)
-      })
-    } else {
-      spy()
-    }
-  }
-</script>
