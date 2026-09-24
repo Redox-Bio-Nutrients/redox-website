@@ -75,6 +75,7 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
     }
   },
   crops,
+  tfiCertified,
   "relatedProducts": relatedProducts[]-> ${PRODUCT_CARD_FRAGMENT},
   // url resolves to whichever source the editor used; isUpload
   // lets the frontend build a forced-download variant for Sanity

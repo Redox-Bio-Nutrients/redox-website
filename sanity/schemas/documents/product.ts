@@ -172,6 +172,14 @@ export const product = defineType({
       options: { layout: 'tags' },
     }),
     defineField({
+      name: 'tfiCertified',
+      title: 'TFI Certified Biostimulant',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Tick for products certified under The Fertilizer Institute (TFI) Certified Biostimulant Program — shows the Certified Biostimulant badge in the product page sidebar.',
+    }),
+    defineField({
       name: 'relatedProducts',
       title: 'Related Products',
       type: 'array',
