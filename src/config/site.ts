@@ -82,6 +82,7 @@ export const legalNav = [
   { label: 'California Privacy Notice', href: '/california-privacy-policy' },
   { label: 'Cookie Policy', href: '/cookie-policy-eu' },
   { label: 'Do Not Sell or Share My Info', href: '/do-not-sell-my-info' },
+  { label: 'Accessibility', href: '/accessibility-statement' },
 ]
 
 // Utility navigation (header right-side)
