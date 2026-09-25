@@ -110,6 +110,15 @@ const { sections } = Astro.props
     padding-bottom: var(--space-24);
   }
 
+  /* A hero followed directly by a full-bleed callout band: two solid
+   * color surfaces back to back, so the inter-section gap would only
+   * show as a stray strip of page background between them (RAM
+   * Technology, flagged 2026-09-24). Butt them together instead.
+   * :global — both elements come from child components. */
+  .home-sections > :global(:is(.hero, .hero-carousel) + .callout) {
+    margin-top: calc(-1 * var(--space-24));
+  }
+
   .home-sections__constrain {
     max-width: var(--content-width);
     margin: 0 auto;
@@ -121,6 +130,10 @@ const { sections } = Astro.props
     .home-sections {
       gap: var(--space-16);
       padding-bottom: var(--space-16);
+    }
+
+    .home-sections > :global(:is(.hero, .hero-carousel) + .callout) {
+      margin-top: calc(-1 * var(--space-16));
     }
   }
 </style>

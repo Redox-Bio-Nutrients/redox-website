@@ -224,6 +224,24 @@ const documents = (product.documents ?? []).map((doc) => ({
         )}
       </figure>
 
+      {/* TFI Certified Biostimulant badge — driven by the product's own
+          "TFI Certified Biostimulant" checkbox in Studio. The logo is
+          full-color (green + orange), so it always sits on its own
+          white chip rather than the sidebar's surface, which is dark
+          in dark theme and on Turf products. */}
+      {product.tfiCertified && (
+        <div class="sidebar__cert">
+          <img
+            src="/logos/certified-biostimulant.svg"
+            alt="Certified Biostimulant"
+            width="1673"
+            height="675"
+            loading="lazy"
+          />
+          <p>Certified under The Fertilizer Institute's Certified Biostimulant Program</p>
+        </div>
+      )}
+
       <button
         type="button"
         class:list={[
@@ -331,7 +349,7 @@ const documents = (product.documents ?? []).map((doc) => ({
 
       <a
         class:list={[isTurf ? ['sidebar__cta', 'turf-cut'] : ['btn', 'btn--primary', 'sidebar__cta']]}
-        href="/contact-us#team-midwest"
+        href={isTurf ? '/contact-us#team-turf' : '/contact-us#team-midwest'}
         style={isTurf ? undefined : `--btn-to: ${accentColor ?? 'var(--color-purple)'};`}
       >
         Talk to an agronomist
@@ -844,6 +862,31 @@ const documents = (product.documents ?? []).map((doc) => ({
    * lives under .sidebar--turf below. */
   .sidebar__doc-request {
     width: 100%;
+  }
+
+  /* TFI Certified Biostimulant badge */
+  .sidebar__cert {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: #fff;
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .sidebar__cert img {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+  }
+
+  .sidebar__cert p {
+    margin: 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    /* Fixed dark text — the chip is always white, even in dark theme. */
+    color: #4A4A4A;
   }
 
   /* Crop tags */

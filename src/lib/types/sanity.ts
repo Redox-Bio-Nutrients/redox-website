@@ -157,6 +157,8 @@ export interface Product extends ProductCard {
   calloutBackgrounds?: SanityImage[]
   sections?: ProductSection[]
   crops?: string[]
+  /** TFI Certified Biostimulant Program — shows the badge in the sidebar */
+  tfiCertified?: boolean
   relatedProducts?: ProductCard[]
   documents?: { title?: string; url: string; isUpload?: boolean; filename?: string }[]
   technologies?: TechnologyCard[]
