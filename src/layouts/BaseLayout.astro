@@ -27,6 +27,9 @@ const { title, description, ogImage, seo } = Astro.props
 
 const metaTitle = seo?.metaTitle ?? title
 const metaDescription = seo?.metaDescription ?? description
+// A title that already names the brand (e.g. the homepage's) is used
+// as-is; everything else gets the " | Redox Bio-Nutrients" suffix.
+const documentTitle = metaTitle.includes(site.name) ? metaTitle : `${metaTitle} | ${site.name}`
 const metaOgImage = seo?.ogImage
   ? urlFor(seo.ogImage).width(1200).height(630).url()
   : (ogImage ?? new URL(site.defaultOgImage, site.url).href)
@@ -64,7 +67,7 @@ const darkWallpaperUrl = wallpaper?.darkImage
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
-    <title>{`${metaTitle} | ${site.name}`}</title>
+    <title>{documentTitle}</title>
     {metaDescription && <meta name="description" content={metaDescription} />}
     <link rel="canonical" href={canonicalUrl} />
     {seo?.noIndex && <meta name="robots" content="noindex" />}
@@ -79,6 +82,7 @@ const darkWallpaperUrl = wallpaper?.darkImage
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
