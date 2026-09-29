@@ -50,6 +50,35 @@ const darkWallpaperUrl = wallpaper?.darkImage
   <head>
     <meta charset="utf-8" />
     <script is:inline>
+      // Smooth arrival at a #section from another page (e.g. the footer's
+      // /contact-us#team-midwest). Browsers always snap to a URL's #target
+      // on load, so the hash is taken out of the URL here — before the
+      // target exists to snap to — and put back once the page has
+      // scrolled there smoothly. SectionNav claims its own section ids
+      // (window.__redoxPendingHash) so they use its header-offset math;
+      // anything else falls back to scrollIntoView + the element's own
+      // scroll-margin. Reduced-motion visitors still jump instantly.
+      ;(() => {
+        const hash = location.hash
+        if (hash.length < 2 || hash === '#main') return
+        window.__redoxPendingHash = hash
+        history.scrollRestoration = 'manual'
+        history.replaceState(history.state, '', location.pathname + location.search)
+        addEventListener('load', () => {
+          setTimeout(() => {
+            if (window.__redoxPendingHash !== hash) return
+            window.__redoxPendingHash = null
+            const target = document.getElementById(decodeURIComponent(hash.slice(1)))
+            if (target) {
+              const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches
+              target.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' })
+            }
+            history.replaceState(history.state, '', hash)
+          }, 120)
+        })
+      })()
+    </script>
+    <script is:inline>
       // Theme init — runs before paint to avoid a flash of the wrong
       // theme. Stored choice wins; otherwise follow the system.
       ;(() => {
