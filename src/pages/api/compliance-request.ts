@@ -21,6 +21,7 @@
 
 import type { APIRoute } from 'astro'
 import { sendMail } from '../../lib/graphMail'
+import { SPAM_TRAP_FIELDS, spamReason } from '../../lib/spamGuard'
 
 export const prerender = false
 
@@ -58,13 +59,20 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'Email is required.' }, 400)
   }
 
+  // Spam: answer like a success so bots learn nothing, but send no email.
+  const spam = spamReason(form, ['firstName', 'lastName', 'name', 'phone', 'city', 'state', 'zip'])
+  if (spam) {
+    console.warn(`[compliance-request] spam dropped (${type}): ${spam}`)
+    return json({ ok: true }, 200)
+  }
+
   // Every other submitted field goes straight into the email body,
   // labeled by its own field name — both forms' fields are already
   // named for exactly this (name/phone/address/city/state/zip for the
   // opt-out form, details for account deletion), so there's no
   // per-field mapping to maintain here as those forms evolve.
   const bodyLines = Array.from(form.entries())
-    .filter(([key]) => key !== 'type')
+    .filter(([key]) => key !== 'type' && !SPAM_TRAP_FIELDS.includes(key))
     .map(([key, value]) => `${key}: ${String(value) || '(not provided)'}`)
 
   try {
