@@ -168,13 +168,23 @@ const pickerId = `section-nav-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
       spy()
     })
 
-    // Arriving with one of our #ids in the URL: redo the jump once layout
-    // has settled (fonts/images), so it uses the same offset math.
-    const initial = targets.find((t) => t.id === decodeURIComponent(location.hash.slice(1)))
+    // Arriving from another page with one of our #ids: BaseLayout's head
+    // script has already pulled the hash out of the URL (so the browser
+    // didn't snap there) and parked it in window.__redoxPendingHash.
+    // Claim it, then glide there once layout has settled (fonts/images)
+    // using the same offset math as a click.
+    const pendingHash: string = (window as any).__redoxPendingHash ?? location.hash
+    const initial = targets.find((t) => t.id === decodeURIComponent(pendingHash.slice(1)))
     if (initial) {
+      ;(window as any).__redoxPendingHash = null
       window.addEventListener('load', () => {
-        scrollToTarget(initial, false)
-        setActive(initial.id)
+        setTimeout(() => {
+          const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          lockedUntil = Date.now() + (smooth ? 1500 : 0)
+          setActive(initial.id)
+          scrollToTarget(initial, smooth)
+          history.replaceState(null, '', `#${initial.id}`)
+        }, 120)
       })
     } else {
       spy()
