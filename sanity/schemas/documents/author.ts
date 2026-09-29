@@ -86,9 +86,11 @@ export const author = defineType({
       name: 'officeOrderRank',
       title: 'About Us Sort Order',
       type: 'number',
-      initialValue: 100,
+      // 400 = the shared "everyone else" tier; 100/200/300 are reserved
+      // for leadership, so a new person lands alphabetically after them.
+      initialValue: 400,
       description:
-        'Lower numbers show first (e.g. leadership at 100, spacing everyone else out — 200, 300…). Ties fall back to alphabetical by name.',
+        'Lower numbers show first. Leadership uses 100, 200 and 300; everyone else is 400, and ties are alphabetical by name.',
       fieldset: 'office',
       hidden: ({ document }) => !document?.isOfficeStaff,
     }),
