@@ -7,18 +7,25 @@
 
 import type { Author } from '../../lib/types/sanity'
 import EmployeeCard from './EmployeeCard.astro'
+import { teamPalette } from './teamPalettes'
 
 interface Props {
   team: Author[]
   emptyMessage?: string
+  /** Which team group this grid shows ('hq' or a region slug) — picks
+   * the cards' panel colors (see teamPalettes.ts). */
+  groupKey?: string
+  /** Group's position on the page, for regions without a named palette. */
+  groupIndex?: number
 }
 
-const { team, emptyMessage = 'No team members to show yet.' } = Astro.props
+const { team, emptyMessage = 'No team members to show yet.', groupKey = 'hq', groupIndex = 0 } = Astro.props
+const palette = teamPalette(groupKey, groupIndex)
 ---
 
 {team.length > 0 ? (
   <div class="grid">
-    {team.map((author, index) => <EmployeeCard author={author} index={index} />)}
+    {team.map((author, index) => <EmployeeCard author={author} index={index} palette={palette} />)}
   </div>
 ) : (
   <p class="empty">{emptyMessage}</p>

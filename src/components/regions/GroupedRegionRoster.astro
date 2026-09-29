@@ -52,7 +52,7 @@ const { regions, emptyMessage = 'Regions coming soon.' } = Astro.props
             </div>
             <hr class="roster__rule" />
           </div>
-          <EmployeeGrid team={region.team ?? []} />
+          <EmployeeGrid team={region.team ?? []} groupKey={region.slug} />
         </section>
       )
     })}

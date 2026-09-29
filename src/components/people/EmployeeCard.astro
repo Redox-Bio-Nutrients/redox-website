@@ -4,21 +4,26 @@
 // A single person tile — used for both a region's agronomist roster
 // and the About Us page's office staff grid (moved out of
 // components/regions/ 2026-09 once it needed to serve both — same
-// underlying Team Member document either way, see author.ts). The
-// photo fills the entire card (same leaf-corner surface as
-// AuthorBoxFooter.astro's blog byline card), with name/title/coverage/
-// contact floated over it on a bottom scrim, poster-card style rather
-// than a small circular avatar above a text block. No photo yet still
-// gets the full-bleed treatment — a brand-toned fill standing in for
-// the image, with the same big initial the old circular fallback
-// used, just scaled up to fill the frame — so a placeholder tile
-// reads as "photo coming soon," not a broken layout. Coverage areas
+// underlying Team Member document either way, see author.ts). Split
+// card: the photo sits in its own 4:5 frame on top, and name/title/
+// coverage/contact sit on a textured gradient panel underneath (the
+// shared texture-surface recipe, colored per team group — see
+// EmployeeGrid's `palette`). Replaced an earlier full-bleed poster
+// layout (2026-09-28) whose text overlay stacked up over people's faces
+// once coverage/contact were filled in; here the panel just grows and
+// the grid row stretches every card to match. No photo yet still gets
+// a brand-toned fill with the person's initial standing in for the
+// image, so a placeholder tile reads as "photo coming soon," not a
+// broken layout. Coverage areas
 // and email/phone are region-only fields on the underlying document
 // (see author.ts) — they simply don't render for an office-staff-only
 // person, no separate "mode" needed here.
 
 import { urlFor } from '../../lib/sanity'
+import { buildTextureVars } from '../../lib/texture'
 import type { Author } from '../../lib/types/sanity'
+import type { TeamPalette } from './teamPalettes'
+import '../../styles/texture-surface.css'
 
 interface Props {
   author: Author
@@ -27,9 +32,15 @@ interface Props {
    * caller renders through EmployeeGrid, which always has an index to
    * give. */
   index: number
+  /** The team group's panel colors (EmployeeGrid passes one per group). */
+  palette: TeamPalette
 }
 
-const { author, index } = Astro.props
+const { author, index, palette } = Astro.props
+
+// Seeded on the person, so each card's blooms land differently while
+// the whole group shares one palette.
+const panelVars = buildTextureVars(author._id, palette.color, palette.accent)
 
 const photoUrl = author.photo
   ? urlFor(author.photo).width(480).height(600).fit('crop').auto('format').quality(85).url()
@@ -88,9 +99,8 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
     ) : (
       <span class="employee__photo employee__photo--fallback" aria-hidden="true">{initial}</span>
     )}
-    <div class="employee__scrim" aria-hidden="true"></div>
   </div>
-  <div class="employee__body">
+  <div class="employee__body texture-fill" style={panelVars}>
     <p class="employee__name">{author.name}</p>
     {author.role && <p class="employee__role">{author.role}</p>}
     {(author.coverageLabel || (author.coverageAreas && author.coverageAreas.length > 0)) && (
@@ -157,10 +167,8 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
 <style>
   .employee {
     position: relative;
-    /* Poster-card aspect — tall enough for a portrait crop to read as
-     * a photo, not a banner. */
-    aspect-ratio: 4 / 5;
     display: flex;
+    flex-direction: column;
     /* No overflow:hidden here (moved to .employee__media below) — the
      * occasional leaf sprig is allowed to spill past the card's own
      * edge, same as CalloutSection's/AuthorBoxFooter's permanent ones. */
@@ -172,19 +180,21 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
   }
 
   .employee__media {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    /* Portrait frame — tall enough for a head-and-shoulders crop. */
+    aspect-ratio: 4 / 5;
     overflow: hidden;
-    /* Clips the photo/fallback to the card's own rounded corners —
-     * carried here (not just on .employee) now that .employee itself
-     * doesn't clip, so the photo still reads as a rounded poster tile. */
-    border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
+    /* Clips the photo/fallback to the card's top-right leaf corner —
+     * carried here (not on .employee) since .employee itself doesn't
+     * clip, so the hover sprig can spill past the edge. */
+    border-radius: 0 var(--radius-2xl) 0 0;
   }
 
   .employee__photo {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: 50% 20%;
   }
 
   /* No photo yet — a brand-toned fill stands in for the image so the
@@ -205,30 +215,36 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
     font-size: 96px;
   }
 
-  /* Bottom scrim — the info block sits on this, not directly on the
-   * photo, so contact links stay legible over any image. Strongest
-   * right behind the text, fading out toward the card's upper half so
-   * the photo itself still reads clearly above the fold. */
-  .employee__scrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to top,
-      rgb(10 12 9 / 0.92) 0%,
-      rgb(10 12 9 / 0.72) 32%,
-      rgb(10 12 9 / 0.12) 62%,
-      transparent 80%
-    );
-  }
-
+  /* Textured gradient panel (.texture-fill + the --texture-* vars set
+   * inline above). flex: 1 so every card in a grid row matches the
+   * tallest one's panel, with the contact buttons pinned to the bottom. */
   .employee__body {
     position: relative;
     z-index: 1;
-    margin-top: auto;
-    width: 100%;
-    padding: var(--space-6);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-5) var(--space-6) var(--space-6);
+    border-radius: 0 0 0 var(--radius-2xl);
     text-align: center;
     color: rgb(255 255 255 / 0.92);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  }
+
+  /* The texture's bright bloom lands at the top of the panel, right
+   * behind the name/title — a light shade over just that band keeps the
+   * white text readable on every group palette. */
+  .employee__body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to bottom, rgb(8 10 8 / 0.34) 0%, rgb(8 10 8 / 0.14) 45%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .employee__body > * {
+    position: relative;
   }
 
   .employee__name {
@@ -240,7 +256,7 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
   .employee__role {
     margin-top: calc(-1 * var(--space-1));
     font-size: var(--text-sm);
-    color: rgb(255 255 255 / 0.72);
+    color: rgb(255 255 255 / 0.85);
   }
 
   .employee__coverage {
@@ -269,7 +285,9 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-top: var(--space-4);
+    margin-top: auto;
+    padding-top: var(--space-4);
+    text-shadow: none;
   }
 
   .employee__contact:empty {
