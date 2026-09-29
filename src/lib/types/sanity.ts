@@ -245,6 +245,7 @@ export interface Testimonial {
   role?: string
   company?: string
   avatar?: SanityImage
+  photos?: SanityImage[]
   markets: Market[]
 }
 

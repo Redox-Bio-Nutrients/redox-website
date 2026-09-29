@@ -50,6 +50,20 @@ export const testimonial = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      name: 'photos',
+      title: 'Course / Field Photos',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+        },
+      ],
+      validation: (rule) => rule.max(4),
+      description: 'Up to 4 photos of their course or field, shown above the quote. The first one is the largest.',
+    }),
+    defineField({
       name: 'markets',
       title: 'Markets',
       type: 'array',
