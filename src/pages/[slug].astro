@@ -187,15 +187,15 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
           <div class="team__group" id="team-hq">
             <h3 class="team__group-heading">HQ</h3>
             <hr class="team__group-rule" />
-            <EmployeeGrid team={officeStaff} />
+            <EmployeeGrid team={officeStaff} groupKey="hq" />
           </div>
         )}
 
-        {regionTeams.map((region) => (
+        {regionTeams.map((region, regionIndex) => (
           <div class="team__group" id={`team-${region.slug}`} tabindex="-1">
             <h3 class="team__group-heading">{region.title} Agronomists</h3>
             <hr class="team__group-rule" />
-            <EmployeeGrid team={region.team ?? []} emptyMessage={`No ${region.title} agronomists assigned yet.`} />
+            <EmployeeGrid team={region.team ?? []} groupKey={region.slug} groupIndex={regionIndex} emptyMessage={`No ${region.title} agronomists assigned yet.`} />
           </div>
         ))}
         </div>
