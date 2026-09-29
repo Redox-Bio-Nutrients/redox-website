@@ -16,6 +16,7 @@
 // do-not-sell-my-info.astro.
 
 import BaseLayout from '../layouts/BaseLayout.astro'
+import SpamTrapFields from '../components/forms/SpamTrapFields.astro'
 ---
 
 <BaseLayout
@@ -32,6 +33,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 
     <form class="legal-form" id="account-deletion-form" action="/api/compliance-request" method="POST">
       <input type="hidden" name="type" value="account-deletion" />
+      <SpamTrapFields />
 
       <p class="legal-form__error" id="account-deletion-error" role="alert" hidden></p>
 

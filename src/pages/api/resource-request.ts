@@ -25,6 +25,7 @@
 import type { APIRoute } from 'astro'
 import { getFormSettings } from '../../lib/queries'
 import { sendMail } from '../../lib/graphMail'
+import { spamReason } from '../../lib/spamGuard'
 
 export const prerender = false
 
@@ -53,6 +54,13 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (!name || !email) {
     return json({ ok: false, error: 'Name and email are required.' }, 400)
+  }
+
+  // Spam: answer like a success so bots learn nothing, but send no email.
+  const spam = spamReason(form, ['name', 'state'])
+  if (spam) {
+    console.warn(`[resource-request] spam dropped: ${spam}`)
+    return json({ ok: true }, 200)
   }
 
   let recipient: string | undefined

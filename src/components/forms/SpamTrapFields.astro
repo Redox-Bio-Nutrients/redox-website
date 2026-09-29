@@ -1,0 +1,49 @@
+---
+// src/components/forms/SpamTrapFields.astro
+//
+// Drop inside any <form> that posts to an endpoint using spamReason()
+// (src/lib/spamGuard.ts). Renders the two invisible trap fields:
+//
+// - an off-screen honeypot text input people never see or tab to
+//   (moved off-screen rather than display:none, which some bots skip);
+// - a hidden input the script below fills with how long the form was
+//   open, measured in the visitor's own browser.
+//
+// The script listens for `submit` in the capture phase on the document,
+// so the value is filled in before each form's own submit handler
+// builds its FormData — no changes needed in those handlers.
+
+import { ELAPSED_FIELD, HONEYPOT_FIELD } from '../../lib/spamGuard'
+---
+
+<div class="spam-trap" aria-hidden="true">
+  <label>
+    Leave this field empty
+    <input type="text" name={HONEYPOT_FIELD} tabindex="-1" autocomplete="off" />
+  </label>
+</div>
+<input type="hidden" name={ELAPSED_FIELD} value="" data-form-elapsed />
+
+<script>
+  const openedAt = performance.now()
+  document.addEventListener(
+    'submit',
+    (event) => {
+      const form = event.target as HTMLFormElement | null
+      const field = form?.querySelector<HTMLInputElement>('input[data-form-elapsed]')
+      if (field) field.value = String(Math.round(performance.now() - openedAt))
+    },
+    true,
+  )
+</script>
+
+<style>
+  .spam-trap {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+</style>

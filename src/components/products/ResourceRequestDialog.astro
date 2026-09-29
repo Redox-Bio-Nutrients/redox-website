@@ -20,6 +20,8 @@
 // credentials are configured yet (the API route itself returns a
 // clear error in that case, shown inline below).
 
+import SpamTrapFields from '../forms/SpamTrapFields.astro'
+
 interface Props {
   productTitle: string
   color: string
@@ -58,6 +60,7 @@ const MATERIALS = ['Label', 'Brochure', 'SDS']
 
     <form class="resource-dialog__form" id="resource-request-form" action="/api/resource-request" method="POST">
       <input type="hidden" name="product" value={productTitle} />
+      <SpamTrapFields />
 
       <p class="resource-dialog__error" id="resource-dialog-error" role="alert" hidden></p>
 
