@@ -349,5 +349,6 @@ export const TESTIMONIAL_FRAGMENT = /* groq */ `{
   role,
   company,
   "avatar": avatar ${IMAGE_FRAGMENT},
+  "photos": photos[] ${IMAGE_FRAGMENT},
   markets
 }`
