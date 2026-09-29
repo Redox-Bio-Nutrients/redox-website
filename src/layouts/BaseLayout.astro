@@ -15,6 +15,7 @@ import Header from '../components/global/Header.astro'
 import Footer from '../components/global/Footer.astro'
 import CookieConsent from '../components/global/CookieConsent.astro'
 import Analytics from '../components/global/Analytics.astro'
+import VercelAnalytics from '@vercel/analytics/astro'
 
 interface Props {
   title: string
@@ -157,6 +158,11 @@ const darkWallpaperUrl = wallpaper?.darkImage
         toggle()
       }
     </script>
+    {/* Vercel Web Analytics — cookie-free page-view counts, so it runs for
+        every visitor without the consent banner (unlike the consent-gated
+        GA4 loader in <Analytics />). Dashboard: Vercel → project →
+        Analytics. Collects nothing on localhost. */}
+    <VercelAnalytics />
   </body>
 </html>
 
