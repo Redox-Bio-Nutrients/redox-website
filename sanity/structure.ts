@@ -8,8 +8,9 @@
 // thinks about the catalog.
 
 import type { StructureResolver } from 'sanity/structure'
+import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list'
 
-export const structure: StructureResolver = (S) =>
+export const structure: StructureResolver = (S, context) =>
   S.list()
     .title('Content')
     .items([
@@ -88,7 +89,10 @@ export const structure: StructureResolver = (S) =>
       // Catalog: it's not product content, and it's meant to be
       // reused across whichever pages want a testimonials section
       // (Turf's landing page first, Homepage next).
-      S.documentTypeListItem('testimonial').title('Testimonials'),
+      // Drag-and-drop list (@sanity/orderable-document-list) — the order
+      // editors set here is the order testimonials show on the site
+      // (sorted by testimonial.orderRank).
+      orderableDocumentListDeskItem({ type: 'testimonial', title: 'Testimonials', S, context }),
 
       // One canonical screen for every person at Redox — a Team
       // Member (author.ts) can be flagged as a blog author, a

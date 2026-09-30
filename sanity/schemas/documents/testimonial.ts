@@ -11,6 +11,7 @@
 // same field/values as product.ts and blogPost.ts.
 
 import { defineField, defineType } from 'sanity'
+import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list'
 
 export const testimonial = defineType({
   name: 'testimonial',
@@ -77,14 +78,12 @@ export const testimonial = defineType({
       description: 'Which page(s) this testimonial can show up on. Leave both checked if it applies to either.',
       validation: (rule) => rule.min(1),
     }),
-    defineField({
-      name: 'orderRank',
-      title: 'Sort Order',
-      type: 'number',
-      initialValue: 100,
-      description: 'Lower numbers show first within a market. Ties fall back to alphabetical by name.',
-    }),
+    // Hidden rank string managed by the drag-and-drop Testimonials list
+    // in Studio (@sanity/orderable-document-list). Replaced a numeric
+    // "Sort Order" field 2026-09-29; the site sorts by this ascending.
+    orderRankField({ type: 'testimonial' }),
   ],
+  orderings: [orderRankOrdering],
   preview: {
     select: { title: 'name', subtitle: 'company', media: 'avatar' },
   },

@@ -15,6 +15,7 @@
 
 import type { Testimonial } from '../../lib/types/sanity'
 import TestimonialCard from './TestimonialCard.astro'
+import Lightbox from '../ui/Lightbox.astro'
 
 interface Props {
   testimonials: Testimonial[]
@@ -61,6 +62,9 @@ const total = testimonials.length
     </div>
   </div>
 )}
+
+{/* Course photos on the cards open in this (see TestimonialCard.astro). */}
+{total > 0 && <Lightbox />}
 
 <script>
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches

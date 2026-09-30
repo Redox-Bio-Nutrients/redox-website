@@ -35,8 +35,11 @@ const photoTiles = photos.map((photo, index) => ({
     .auto('format')
     .quality(80)
     .url(),
+  // Full-size version for the lightbox (src/components/ui/Lightbox.astro).
+  large: urlFor(photo).width(1800).fit('max').auto('format').quality(85).url(),
   alt: photo.alt ?? '',
 }))
+const photoCaption = [testimonial.name, testimonial.company].filter(Boolean).join(' · ')
 
 // Quotes range from one line to a full paragraph; cards in a carousel
 // row stretch to the tallest, so short quotes get larger type to fill
@@ -49,8 +52,18 @@ const quoteSize = quoteLength < 180 ? 'short' : quoteLength < 420 ? 'medium' : '
 <figure class="card" data-has-photos={photoTiles.length > 0 ? '' : undefined}>
   {photoTiles.length > 0 && (
     <div class="card__photos" data-count={photoTiles.length}>
-      {photoTiles.map((tile) => (
-        <img class="card__photo" src={tile.url} alt={tile.alt} loading="lazy" decoding="async" />
+      {photoTiles.map((tile, index) => (
+        <button
+          type="button"
+          class="card__photo-btn"
+          data-lightbox-group={testimonial._id}
+          data-lightbox-src={tile.large}
+          data-lightbox-alt={tile.alt}
+          data-lightbox-caption={photoCaption}
+          aria-label={`View photo ${index + 1} of ${photoTiles.length} from ${testimonial.name}`}
+        >
+          <img class="card__photo" src={tile.url} alt={tile.alt} loading="lazy" decoding="async" />
+        </button>
       ))}
     </div>
   )}
@@ -143,20 +156,39 @@ const quoteSize = quoteLength < 180 ? 'short' : quoteLength < 420 ? 'medium' : '
     grid-template-columns: 2fr 1fr;
   }
 
-  .card__photos[data-count='3'] .card__photo:first-child {
+  .card__photos[data-count='3'] .card__photo-btn:first-child {
     grid-row: span 2;
   }
 
-  .card__photos[data-count='4'] .card__photo:first-child {
+  .card__photos[data-count='4'] .card__photo-btn:first-child {
     grid-row: span 3;
+  }
+
+  .card__photo-btn {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+
+  .card__photo-btn:focus-visible {
+    outline: 3px solid var(--color-green);
+    outline-offset: -3px;
   }
 
   .card__photo {
     width: 100%;
     height: 100%;
-    min-height: 0;
     object-fit: cover;
     display: block;
+    transition: transform 0.35s ease;
+  }
+
+  .card__photo-btn:hover .card__photo {
+    transform: scale(1.04);
   }
 
   /* With photos on top, the decorative quote mark moves down to sit
