@@ -1,0 +1,228 @@
+---
+// src/components/ui/Lightbox.astro
+//
+// Reusable photo lightbox. Render <Lightbox /> once on any page that
+// needs it, then mark each clickable thumbnail (a <button>) with:
+//
+//   data-lightbox-group   photos with the same value page through together
+//   data-lightbox-src     the large image URL to show
+//   data-lightbox-alt     alt text for the large image
+//   data-lightbox-caption optional caption under the photo
+//
+// Native <dialog> (same approach as ResourceRequestDialog.astro): the
+// browser handles the focus trap, Esc to close and the backdrop, and
+// focus returns to the thumbnail that opened it. Arrow keys and swipe
+// move between photos in the group; clicking the backdrop closes it.
+// First used by the testimonial course photos (TestimonialCard.astro).
+---
+
+<dialog class="lightbox" data-lightbox aria-label="Photo viewer">
+  <div class="lightbox__frame">
+    <img class="lightbox__img" data-lightbox-img alt="" />
+    <p class="lightbox__caption" data-lightbox-caption-text></p>
+    <p class="lightbox__count" data-lightbox-count aria-live="polite"></p>
+  </div>
+  <button type="button" class="lightbox__btn lightbox__close" data-lightbox-close aria-label="Close photo viewer">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+  </button>
+  <button type="button" class="lightbox__btn lightbox__prev" data-lightbox-prev aria-label="Previous photo">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+  </button>
+  <button type="button" class="lightbox__btn lightbox__next" data-lightbox-next aria-label="Next photo">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+  </button>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('dialog[data-lightbox]')
+  if (dialog) {
+    const img = dialog.querySelector<HTMLImageElement>('[data-lightbox-img]')!
+    const caption = dialog.querySelector<HTMLElement>('[data-lightbox-caption-text]')!
+    const count = dialog.querySelector<HTMLElement>('[data-lightbox-count]')!
+    const prevBtn = dialog.querySelector<HTMLButtonElement>('[data-lightbox-prev]')!
+    const nextBtn = dialog.querySelector<HTMLButtonElement>('[data-lightbox-next]')!
+
+    let items: HTMLElement[] = []
+    let index = 0
+
+    const show = (i: number) => {
+      index = (i + items.length) % items.length
+      const item = items[index]
+      img.src = item.dataset.lightboxSrc ?? ''
+      img.alt = item.dataset.lightboxAlt ?? ''
+      caption.textContent = item.dataset.lightboxCaption ?? ''
+      caption.hidden = !item.dataset.lightboxCaption
+      const multiple = items.length > 1
+      count.textContent = multiple ? `${index + 1} of ${items.length}` : ''
+      prevBtn.hidden = !multiple
+      nextBtn.hidden = !multiple
+    }
+
+    document.addEventListener('click', (event) => {
+      const trigger = (event.target as Element | null)?.closest<HTMLElement>('[data-lightbox-src]')
+      if (!trigger) return
+      event.preventDefault()
+      const group = trigger.dataset.lightboxGroup
+      items = group
+        ? [...document.querySelectorAll<HTMLElement>(`[data-lightbox-group="${CSS.escape(group)}"]`)]
+        : [trigger]
+      show(Math.max(0, items.indexOf(trigger)))
+      dialog.showModal()
+    })
+
+    prevBtn.addEventListener('click', () => show(index - 1))
+    nextBtn.addEventListener('click', () => show(index + 1))
+    dialog.querySelector('[data-lightbox-close]')!.addEventListener('click', () => dialog.close())
+
+    // A click on the dialog itself (not the photo or a button) is the backdrop.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog || (event.target as Element).classList.contains('lightbox__frame')) dialog.close()
+    })
+
+    dialog.addEventListener('keydown', (event) => {
+      if (items.length < 2) return
+      if (event.key === 'ArrowLeft') show(index - 1)
+      if (event.key === 'ArrowRight') show(index + 1)
+    })
+
+    let touchX: number | null = null
+    dialog.addEventListener('touchstart', (event) => { touchX = event.touches[0].clientX }, { passive: true })
+    dialog.addEventListener('touchend', (event) => {
+      if (touchX === null || items.length < 2) return
+      const dx = event.changedTouches[0].clientX - touchX
+      if (Math.abs(dx) > 40) show(index + (dx < 0 ? 1 : -1))
+      touchX = null
+    })
+
+    // Don't keep a large image decoding after close.
+    dialog.addEventListener('close', () => img.removeAttribute('src'))
+  }
+</script>
+
+<style>
+  .lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+  }
+
+  .lightbox::backdrop {
+    background: rgb(8 10 8 / 0.94);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+
+  .lightbox__frame {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-16) var(--space-20);
+  }
+
+  .lightbox__img {
+    max-width: 100%;
+    max-height: calc(100dvh - 12rem);
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.5);
+  }
+
+  .lightbox__caption,
+  .lightbox__count {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: rgb(255 255 255 / 0.85);
+    text-align: center;
+  }
+
+  .lightbox__count {
+    color: rgb(255 255 255 / 0.65);
+  }
+
+  .lightbox__btn {
+    position: fixed;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgb(255 255 255 / 0.25);
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .lightbox__btn:hover {
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  .lightbox__btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .lightbox__btn[hidden] {
+    display: none;
+  }
+
+  .lightbox__btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lightbox__close {
+    top: var(--space-4);
+    right: var(--space-4);
+  }
+
+  .lightbox__prev,
+  .lightbox__next {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .lightbox__prev {
+    left: var(--space-4);
+  }
+
+  .lightbox__next {
+    right: var(--space-4);
+  }
+
+  @media (max-width: 639px) {
+    .lightbox__frame {
+      padding: var(--space-16) var(--space-3) var(--space-20);
+    }
+
+    .lightbox__img {
+      max-height: calc(100dvh - 11rem);
+    }
+
+    /* Arrows move below the photo on phones so they don't cover it;
+     * swiping also works. */
+    .lightbox__prev,
+    .lightbox__next {
+      top: auto;
+      bottom: var(--space-5);
+      transform: none;
+    }
+
+    .lightbox__prev {
+      left: calc(50% - 56px);
+    }
+
+    .lightbox__next {
+      right: calc(50% - 56px);
+    }
+  }
+</style>
