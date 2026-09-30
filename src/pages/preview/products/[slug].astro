@@ -13,10 +13,12 @@ import BaseLayout from '../../../layouts/BaseLayout.astro'
 import ProductDetail from '../../../components/products/ProductDetail.astro'
 import PreviewBanner from '../../../components/preview/PreviewBanner.astro'
 import { getProductPreview } from '../../../lib/queries'
+import { PREVIEW_COOKIE, isValidPreviewToken } from '../../../lib/previewAuth'
 
 export const prerender = false
 
-const authed = Astro.cookies.get('sanity-preview')?.value === '1'
+// Signed, expiring token set by /api/preview (see src/lib/previewAuth.ts).
+const authed = isValidPreviewToken(Astro.cookies.get(PREVIEW_COOKIE)?.value)
 if (!authed) {
   return new Response(
     'Preview not authorized. Open this page via the preview link (see src/pages/api/preview.ts) rather than navigating here directly.',

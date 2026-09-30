@@ -5,7 +5,7 @@
 // locales array and creating the corresponding page tree and translation
 // file — no structural refactoring.
 
-import { defineConfig } from 'astro/config'
+import { defineConfig, passthroughImageService } from 'astro/config'
 import { loadEnv } from 'vite'
 import vercel from '@astrojs/vercel'
 import sitemap from '@astrojs/sitemap'
@@ -45,6 +45,8 @@ async function getSanityNoIndexPaths() {
   try {
     const res = await fetch(
       `https://${projectId}.apicdn.sanity.io/v${apiVersion}/data/query/${dataset}?query=${encodeURIComponent(query)}`,
+      // The dataset is private — same read-only token the site's client uses.
+      env.SANITY_API_TOKEN ? { headers: { Authorization: `Bearer ${env.SANITY_API_TOKEN}` } } : undefined,
     )
     const { result } = await res.json()
     return (result ?? [])
@@ -90,8 +92,15 @@ export default defineConfig({
     },
   },
 
-  // Image optimization
+  // Image handling. Every site image is already resized by Sanity's own
+  // CDN (urlFor(...).width()...), so Astro's /_image optimizer isn't used —
+  // it's switched to passthrough (no decoding/re-encoding of images), and
+  // limited to this project's own Sanity assets. Before 2026-09-30 it
+  // would fetch and process ANY cdn.sanity.io image, including other
+  // people's projects, which exposed Astro's image-processing advisories
+  // (see the 2026-09-30 security audit).
   image: {
-    domains: ['cdn.sanity.io'],
+    service: passthroughImageService(),
+    remotePatterns: [{ protocol: 'https', hostname: 'cdn.sanity.io', pathname: '/images/zym8k10b/**' }],
   },
 })
