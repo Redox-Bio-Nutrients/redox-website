@@ -226,14 +226,6 @@ const tabletColumns = intoColumns(tiles, 2)
     border-color: transparent;
   }
 
-  /* .masonry__item itself is scoped to BlogMasonryTile.astro, not this
-   * file -- Astro's per-component style scoping means a plain rule
-   * here would silently never match it, so this one rule has to
-   * escape scoping deliberately. */
-  :global(.masonry__item.is-filtered-out) {
-    display: none;
-  }
-
   .masonry-filter-empty {
     margin-top: var(--space-4);
   }
