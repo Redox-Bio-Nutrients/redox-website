@@ -93,6 +93,15 @@ const marketChips = markets.map((market) => ({
     transition: box-shadow 0.3s ease, transform 0.3s ease;
   }
 
+  /* Market filter (BlogMasonry.astro) toggles this class. It lives here,
+   * not in the parent, so it carries this component's scope attribute
+   * and outranks the display: block above. As a :global() rule in the
+   * parent it tied on specificity and lost whenever the bundler emitted
+   * this file's CSS after the parent's — which silently broke the filter. */
+  .masonry__item.is-filtered-out {
+    display: none;
+  }
+
   .masonry__item:hover {
     box-shadow: 0 22px 46px -16px color-mix(in srgb, var(--tile-accent) 55%, transparent);
     transform: translateY(-3px);
