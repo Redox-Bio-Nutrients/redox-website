@@ -8,5 +8,5 @@ import { sanityFetch } from '../sanity'
 import type { FormSettings } from '../types/sanity'
 
 export async function getFormSettings(): Promise<FormSettings | null> {
-  return sanityFetch(/* groq */ `*[_type == "formSettings"][0]{ resourceRequestRecipient }`)
+  return sanityFetch(/* groq */ `*[_id == "private.formSettings"][0]{ resourceRequestRecipient }`)
 }

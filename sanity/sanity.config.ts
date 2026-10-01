@@ -25,6 +25,16 @@ export default defineConfig({
     visionTool(),
   ],
 
+  // WHY: The private singletons only stay private at their fixed dotted
+  // IDs (see structure.ts / teamContacts.ts). Creating one from the
+  // global "+" menu would give it a random, publicly readable ID.
+  document: {
+    newDocumentOptions: (prev, { creationContext }) =>
+      creationContext.type === 'global'
+        ? prev.filter((item) => !['teamContacts', 'formSettings'].includes(item.templateId))
+        : prev,
+  },
+
   schema: {
     types: schemaTypes,
     // WHY: Parameterized template so the market-filtered product views

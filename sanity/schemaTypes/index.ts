@@ -45,6 +45,7 @@ import { homepage } from '../schemas/documents/homepage'
 import { podcastPage } from '../schemas/documents/podcastPage'
 import { technicalPodcastPage } from '../schemas/documents/technicalPodcastPage'
 import { formSettings } from '../schemas/documents/formSettings'
+import { teamContacts } from '../schemas/documents/teamContacts'
 import { siteWallpaper } from '../schemas/documents/siteWallpaper'
 
 export const schemaTypes = [
@@ -90,5 +91,6 @@ export const schemaTypes = [
   podcastPage,
   technicalPodcastPage,
   formSettings,
+  teamContacts,
   siteWallpaper,
 ]

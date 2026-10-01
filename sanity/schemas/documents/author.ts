@@ -31,10 +31,10 @@
 // either or both as needed — same person either way, never a
 // duplicate record.
 //
-// Office staff are added with name + title only, deliberately no
-// email/phone — those fields live in the 'region' fieldset and stay
-// hidden unless `region` is set, so there's no schema work needed to
-// keep them off an office-only person; just don't fill them in.
+// Email/phone are NOT on this document (moved 2026-10-01): the dataset
+// is public, so anything here is readable by anyone through Sanity's
+// API. They live in the private Team Contact Directory singleton
+// (teamContacts.ts) and are joined back on by AUTHOR_FRAGMENT.
 
 import { defineField, defineType } from 'sanity'
 
@@ -44,7 +44,12 @@ export const author = defineType({
   type: 'document',
   fieldsets: [
     { name: 'blog', title: 'Blog Author', options: { collapsible: true } },
-    { name: 'region', title: 'Regional Agronomist', options: { collapsible: true } },
+    {
+      name: 'region',
+      title: 'Regional Agronomist',
+      description: 'Email and phone are set in Team Contact Directory, not here, so they stay private.',
+      options: { collapsible: true },
+    },
     { name: 'office', title: 'Office Staff', options: { collapsible: true } },
   ],
   fields: [
@@ -125,21 +130,6 @@ export const author = defineType({
       initialValue: 100,
       description:
         'Lower numbers show first on the region roster (e.g. put the regional manager at 100, then space teammates out — 200, 300…). Ties fall back to alphabetical by name.',
-      fieldset: 'region',
-      hidden: ({ document }) => !document?.region,
-    }),
-    defineField({
-      name: 'email',
-      title: 'Email',
-      type: 'string',
-      validation: (rule) => rule.email(),
-      fieldset: 'region',
-      hidden: ({ document }) => !document?.region,
-    }),
-    defineField({
-      name: 'phone',
-      title: 'Phone',
-      type: 'string',
       fieldset: 'region',
       hidden: ({ document }) => !document?.region,
     }),

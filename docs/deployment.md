@@ -169,22 +169,37 @@ Studio publish → Sanity GROQ webhook → Vercel deploy hook → rebuild (~1 mi
 | Vercel Production Deploy | `production` | Production rebuild (`main`) |
 | Vercel Staging Deploy | `staging` | Staging rebuild (`dev`) |
 
-Both fire on create/update/delete of published documents, filtered to
-site content types only (`product`, `technology`, `region`, `rep`,
-`blogPost`, `category`, `author`, `podcastEpisode`,
-`universityResource`, `page`, `homepage`, `backgroundPool`,
-`siteWallpaper`) — drafts and system documents do not trigger builds.
+Both fire on create/update/delete of published documents (drafts don't
+trigger builds), filtered with
+`!(_type match "sanity.*") && !(_type match "system.*")` — i.e. **every**
+content type, so a new document type rebuilds the site without any
+webhook change. (Confirmed via the webhooks API 2026-10-01; this doc
+previously listed an older per-type filter.) Note both hooks are on the
+`production` dataset, so each publish rebuilds `main` *and* `dev`.
 
-**When adding a new Sanity document type, add it to this filter too.**
-It's not automatic — `homepage` and `backgroundPool` were both missing
-from the filter for a while after being created, so publishing them
-silently never rebuilt the site. Update via the Sanity webhook API
-(sanity.io/manage → API → Webhooks), not just this doc.
+`private.formSettings` triggers a rebuild too, but doesn't need one:
+it's read live at request time by a server-rendered API route (see
+**Product Information Request Email** above), not baked in at build.
 
-**Exception:** `formSettings` deliberately isn't in this filter. It's
-read live at request time by a server-rendered API route (see
-**Product Information Request Email** above), not baked in at build —
-so a rebuild wouldn't do anything for it anyway.
+### Private documents (team contacts, form recipient)
+
+The `production` dataset is **public** — private datasets need a paid
+Sanity plan — so any field on a normal document can be read by anyone
+through Sanity's anonymous API. Sensitive values live in two singletons
+with dotted IDs, which Sanity never serves to unauthenticated requests
+(the same rule that hides `drafts.*`):
+
+| Document ID | Studio item | Holds | Read by |
+|---|---|---|---|
+| `private.teamContacts` | Team Contact Directory | Team members' email + phone | `AUTHOR_FRAGMENT` at build time |
+| `private.formSettings` | Form Settings | Product Information Request recipient | `/api/resource-request` at request time |
+
+The site reads them with `SANITY_API_TOKEN` (a Viewer token), so that
+variable must be set in Vercel for **Production and Preview**, and the
+runtime form depends on it too. Without it the build still succeeds but
+Contact Us cards lose their Email/Call buttons, and the form answers
+"not fully configured". Don't put contact details back on `author`, and
+don't create these types any other way (they'd get a random public ID).
 
 The matching Vercel deploy hooks (`sanity-production`, `sanity-staging`)
 live in Vercel → Settings → Git → Deploy Hooks.
