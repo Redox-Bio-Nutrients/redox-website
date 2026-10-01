@@ -24,6 +24,16 @@ export const sanityClient = createClient({
   dataset: import.meta.env.PUBLIC_SANITY_DATASET ?? 'staging',
   apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION ?? '2024-01-01',
   useCdn: true,
+  // Read-only (viewer) token so builds can read a PRIVATE dataset — made
+  // private 2026-09-30 because the public API exposed team members'
+  // emails/phones. Only used server-side at build/render time; nothing
+  // in the browser queries Sanity, and SANITY_API_TOKEN has no PUBLIC_
+  // prefix, so it never reaches client code.
+  token: import.meta.env.SANITY_API_TOKEN,
+  // Required once a token is set: authenticated requests otherwise see
+  // drafts too (the API's 'raw' default), which would publish every
+  // unpublished draft onto the live site.
+  perspective: 'published',
 })
 
 export async function sanityFetch<T>(

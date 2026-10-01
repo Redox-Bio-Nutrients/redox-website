@@ -16,17 +16,16 @@
 // src/pages/preview/<type>/[slug].astro, following the same pattern.
 
 import type { APIRoute } from 'astro'
+import { PREVIEW_COOKIE, PREVIEW_MAX_AGE_SECONDS, createPreviewToken, isValidPreviewSecret } from '../../lib/previewAuth'
 
 export const prerender = false
-
-const PREVIEW_COOKIE = 'sanity-preview'
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const secret = url.searchParams.get('secret')
   const type = url.searchParams.get('type')
   const slug = url.searchParams.get('slug')
 
-  if (!secret || secret !== import.meta.env.SANITY_PREVIEW_SECRET) {
+  if (!isValidPreviewSecret(secret)) {
     return new Response('Invalid or missing preview secret.', { status: 401 })
   }
   if (!slug) {
@@ -34,8 +33,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   }
 
   const routesByType: Record<string, string> = {
-    product: `/preview/products/${slug}`,
-    blogPost: `/preview/blog/${slug}`,
+    product: `/preview/products/${encodeURIComponent(slug)}`,
+    blogPost: `/preview/blog/${encodeURIComponent(slug)}`,
   }
   const target = routesByType[type ?? 'product']
   if (!target) {
@@ -45,12 +44,13 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     )
   }
 
-  cookies.set(PREVIEW_COOKIE, '1', {
+  // Signed + expiring (src/lib/previewAuth.ts) — can't be forged by hand.
+  cookies.set(PREVIEW_COOKIE, createPreviewToken(), {
     httpOnly: true,
     secure: import.meta.env.PROD,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24, // 1 day
+    maxAge: PREVIEW_MAX_AGE_SECONDS,
   })
 
   return redirect(target)
