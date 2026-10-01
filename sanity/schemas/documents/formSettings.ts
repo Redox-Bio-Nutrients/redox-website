@@ -8,6 +8,10 @@
 // so it deliberately does NOT need to be added to the Vercel rebuild
 // webhook filter (see docs/deployment.md) — publishing a change here
 // takes effect on the next form submission, no rebuild required.
+//
+// Lives at the private ID `private.formSettings` (structure.ts) so the
+// recipient address isn't readable through Sanity's public API — see
+// teamContacts.ts for how dotted IDs stay private.
 
 import { defineField, defineType } from 'sanity'
 

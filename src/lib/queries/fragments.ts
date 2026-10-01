@@ -327,6 +327,12 @@ export const EPISODE_CARD_FRAGMENT = /* groq */ `{
 // set, a regional agronomist/contact card. Used by blog queries
 // (blog.ts) and the region team roster (regions.ts) alike so both
 // stay in sync with the schema automatically.
+//
+// `email`/`phone` aren't on the author document: they're joined in
+// from the private Team Contact Directory (`private.teamContacts`,
+// sanity/schemas/documents/teamContacts.ts), which only authenticated
+// requests can read. `^._id` is the author being projected. An
+// unauthenticated client gets null for both, never an error.
 export const AUTHOR_FRAGMENT = /* groq */ `{
   _id,
   name,
@@ -334,8 +340,8 @@ export const AUTHOR_FRAGMENT = /* groq */ `{
   role,
   "photo": photo ${IMAGE_FRAGMENT},
   bio,
-  email,
-  phone,
+  "email": *[_id == "private.teamContacts"][0].contacts[person._ref == ^._id][0].email,
+  "phone": *[_id == "private.teamContacts"][0].contacts[person._ref == ^._id][0].phone,
   coverageAreas,
   coverageLabel,
   zipPrefixes,

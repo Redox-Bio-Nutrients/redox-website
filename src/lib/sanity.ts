@@ -24,11 +24,14 @@ export const sanityClient = createClient({
   dataset: import.meta.env.PUBLIC_SANITY_DATASET ?? 'staging',
   apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION ?? '2024-01-01',
   useCdn: true,
-  // Read-only (viewer) token so builds can read a PRIVATE dataset — made
-  // private 2026-09-30 because the public API exposed team members'
-  // emails/phones. Only used server-side at build/render time; nothing
-  // in the browser queries Sanity, and SANITY_API_TOKEN has no PUBLIC_
-  // prefix, so it never reaches client code.
+  // Read-only (viewer) token so the site can read the private documents
+  // (`private.teamContacts`, `private.formSettings`). The dataset itself
+  // is public (private datasets need a paid plan), but Sanity hides any
+  // document with a dotted ID from unauthenticated requests — see
+  // sanity/schemas/documents/teamContacts.ts. Only used server-side at
+  // build/render time; nothing in the browser queries Sanity, and
+  // SANITY_API_TOKEN has no PUBLIC_ prefix, so it never reaches client
+  // code.
   token: import.meta.env.SANITY_API_TOKEN,
   // Required once a token is set: authenticated requests otherwise see
   // drafts too (the API's 'raw' default), which would publish every

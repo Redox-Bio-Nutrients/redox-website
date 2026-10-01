@@ -147,13 +147,23 @@ export const structure: StructureResolver = (S, context) =>
             .title('Turf Background Imagery'),
         ),
 
-      // Site-level singleton — one shared document, no list
+      // Private singletons — the dotted IDs keep them out of Sanity's
+      // public API (see teamContacts.ts). Both IDs are load-bearing: the
+      // site queries these exact IDs.
+      S.listItem()
+        .title('Team Contact Directory')
+        .child(
+          S.document()
+            .schemaType('teamContacts')
+            .documentId('private.teamContacts')
+            .title('Team Contact Directory'),
+        ),
       S.listItem()
         .title('Form Settings')
         .child(
           S.document()
             .schemaType('formSettings')
-            .documentId('formSettings')
+            .documentId('private.formSettings')
             .title('Form Settings'),
         ),
 
