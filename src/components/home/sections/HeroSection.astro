@@ -143,6 +143,14 @@ const centered = section.textAlign === 'center'
    * call. This div still needs .hero__bg's own inset/cover rules
    * above; .texture-fill only supplies the `background` itself. */
 
+  /* Photo pushed a little more vivid (2026-10-07) so it reads rich
+   * through the lighter wash below, not flat. Skips the no-media
+   * .texture-fill fallback, which is already its own brand color. */
+  .hero :global(.pool-bg__img),
+  .hero__bg:not(.texture-fill) {
+    filter: saturate(1.3) contrast(1.08);
+  }
+
   /* Flat dark wash over any uploaded image/video so centered text
    * stays legible regardless of what's underneath. The gradient
    * fallback (.texture-fill above) already has its own built-in
@@ -150,7 +158,12 @@ const centered = section.textAlign === 'center'
   .hero__overlay {
     position: absolute;
     inset: 0;
-    background: rgb(0 0 0 / 0.42);
+    /* Top band keeps the white nav legible now that the flat wash
+     * is lighter and the photo brighter — a bright sky behind the
+     * nav (Turf) washed out its links otherwise. */
+    background:
+      linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0) 200px),
+      rgb(0 0 0 / 0.26);
   }
 
   /* Brand-colored grain/bloom texture, layered *above* the dark wash
@@ -162,7 +175,12 @@ const centered = section.textAlign === 'center'
   .hero__texture {
     position: absolute;
     inset: 0;
-    opacity: 0.55;
+    opacity: 0.45;
+    /* Overlay-blended, not laid on top normally — a normal-blend
+     * translucent brand color read as a milky blue-gray film over
+     * the photo ("washed out", 2026-10-07). Overlay tints the photo
+     * instead, so its own color/contrast survive. */
+    mix-blend-mode: overlay;
   }
 
   /* Same column as the header bar and page content below it
@@ -203,6 +221,9 @@ const centered = section.textAlign === 'center'
     line-height: 1;
     letter-spacing: -0.02em;
     color: var(--color-white);
+    /* Carries legibility the lighter 26% wash no longer guarantees
+     * on its own over bright patches (sky, sunlit grass). */
+    text-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 4px 40px rgb(0 0 0 / 0.45);
   }
 
   .hero__meta {
