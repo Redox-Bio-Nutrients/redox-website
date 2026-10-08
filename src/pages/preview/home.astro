@@ -1,0 +1,35 @@
+---
+// src/pages/preview/home.astro
+//
+// Draft-aware mirror of src/pages/index.astro — same HomeSections
+// renderer, but SSR and fetched via the draft-perspective client so an
+// unpublished Homepage draft renders as visitors will see it once
+// published. Gated by the same "sanity-preview" cookie as the product/
+// blog preview routes (see src/pages/api/preview.ts, type=homepage).
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import HomeSections from '../../components/home/HomeSections.astro'
+import PreviewBanner from '../../components/preview/PreviewBanner.astro'
+import { getHomepagePreview } from '../../lib/queries'
+import { PREVIEW_COOKIE, isValidPreviewToken } from '../../lib/previewAuth'
+
+export const prerender = false
+
+const authed = isValidPreviewToken(Astro.cookies.get(PREVIEW_COOKIE)?.value)
+if (!authed) {
+  return new Response(
+    'Preview not authorized. Open this page via the preview link (see src/pages/api/preview.ts) rather than navigating here directly.',
+    { status: 401 },
+  )
+}
+
+const homepage = await getHomepagePreview()
+if (!homepage?.sections?.length) {
+  return new Response('No Homepage content found (checked drafts and published).', { status: 404 })
+}
+---
+
+<BaseLayout title="Home" seo={homepage.seo}>
+  <PreviewBanner />
+  <HomeSections sections={homepage.sections} />
+</BaseLayout>

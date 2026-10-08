@@ -81,6 +81,9 @@ export const structure: StructureResolver = (S, context) =>
                 ),
               S.divider(),
               S.documentTypeListItem('technology').title('Technologies'),
+              // Shared comparison blocks (e.g. RDX Nitrogen System) shown
+              // on each member product's page via productSystemSection.
+              S.documentTypeListItem('productSystem').title('Product Systems'),
             ]),
         ),
 

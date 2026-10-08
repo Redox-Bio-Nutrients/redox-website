@@ -488,3 +488,29 @@ export const videoSection = defineType({
     },
   },
 })
+
+// ── Product system (shared comparison) ───────────────────────────────
+// A pointer, not content: the copy lives on a `productSystem` document
+// (sanity/schemas/documents/productSystem.ts) so every member product
+// shows the same block without duplicating it per page.
+
+export const productSystemSection = defineType({
+  name: 'productSystemSection',
+  title: 'Product System',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'system',
+      title: 'System',
+      type: 'reference',
+      to: [{ type: 'productSystem' }],
+      validation: (rule) => rule.required(),
+    }),
+  ],
+  preview: {
+    select: { title: 'system.title' },
+    prepare({ title }) {
+      return { title: title || 'Product System', subtitle: 'Product System (shared)' }
+    },
+  },
+})

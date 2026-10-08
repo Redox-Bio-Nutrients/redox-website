@@ -16,6 +16,7 @@ import FaqSection from './sections/FaqSection.astro'
 import TestimonialSection from './sections/TestimonialSection.astro'
 import VideoSection from './sections/VideoSection.astro'
 import WarningSection from './sections/WarningSection.astro'
+import ProductSystemSection from './sections/ProductSystemSection.astro'
 
 interface Props {
   sections: ProductSection[]
@@ -26,9 +27,11 @@ interface Props {
   productAccentColor?: string
   /** background imagery pool — callout sections draw a random image */
   backgrounds?: SanityImage[]
+  /** the page's own product — its card in a Product System section is marked "You're here" */
+  productId?: string
 }
 
-const { sections, variant = 'agriculture', productColor, productAccentColor, backgrounds } = Astro.props
+const { sections, variant = 'agriculture', productColor, productAccentColor, backgrounds, productId } = Astro.props
 ---
 
 <div class="product-sections">
@@ -112,6 +115,8 @@ const { sections, variant = 'agriculture', productColor, productAccentColor, bac
           )
         case 'warningSection':
           return <WarningSection section={section} variant={variant} />
+        case 'productSystemSection':
+          return <ProductSystemSection section={section} currentProductId={productId} />
         default:
           return null
       }

@@ -28,13 +28,15 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   if (!isValidPreviewSecret(secret)) {
     return new Response('Invalid or missing preview secret.', { status: 401 })
   }
-  if (!slug) {
+  // The homepage is a singleton — no slug needed.
+  if (!slug && type !== 'homepage') {
     return new Response('Missing "slug" query param.', { status: 400 })
   }
 
   const routesByType: Record<string, string> = {
-    product: `/preview/products/${encodeURIComponent(slug)}`,
-    blogPost: `/preview/blog/${encodeURIComponent(slug)}`,
+    product: `/preview/products/${encodeURIComponent(slug ?? '')}`,
+    blogPost: `/preview/blog/${encodeURIComponent(slug ?? '')}`,
+    homepage: '/preview/home',
   }
   const target = routesByType[type ?? 'product']
   if (!target) {

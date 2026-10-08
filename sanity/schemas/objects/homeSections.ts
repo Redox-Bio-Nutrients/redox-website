@@ -478,6 +478,45 @@ export const homeFeaturedProductSection = defineType({
       description:
         'Its name, tagline, image, and brand color come from this product automatically. To change any of those, edit the product itself — this just picks which one to feature and links to its page.',
     }),
+    defineField({
+      name: 'secondaryLink',
+      title: 'Callout Link',
+      type: 'object',
+      description:
+        'Optional second link, shown as a highlighted callout beside "Explore [product]" — e.g. a specific section of the product page (/products/rdx-flex#nitrogen-system), a blog post, or a resource.',
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        defineField({
+          name: 'kicker',
+          title: 'Kicker',
+          type: 'string',
+          description: 'Optional tiny label in front, e.g. "New".',
+        }),
+        defineField({
+          name: 'label',
+          title: 'Label',
+          type: 'string',
+          description: 'e.g. "See how it fits the RDX Nitrogen System"',
+        }),
+        defineField({
+          name: 'href',
+          title: 'Link',
+          type: 'string',
+          description: 'Internal path (/products/rdx-flex#nitrogen-system) or full URL (https://…).',
+        }),
+        defineField({
+          name: 'external',
+          title: 'Open in new tab',
+          type: 'boolean',
+          initialValue: false,
+        }),
+      ],
+      validation: (rule) =>
+        rule.custom((val: { label?: string; href?: string } | undefined) => {
+          if (!val || (!val.label && !val.href)) return true
+          return (val.label && val.href) || 'Callout Link needs both a Label and a Link (or clear both).'
+        }),
+    }),
   ],
   preview: {
     select: { title: 'product.title', subtitle: 'eyebrow', media: 'product.image' },

@@ -161,6 +161,7 @@ export const product = defineType({
         { type: 'testimonialSection' },
         { type: 'videoSection' },
         { type: 'warningSection' },
+        { type: 'productSystemSection' },
       ],
     }),
     defineField({
