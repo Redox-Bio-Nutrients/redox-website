@@ -121,6 +121,44 @@ export interface WarningSection {
   steps?: string[]
 }
 
+export interface ProductSystemMember {
+  _key: string
+  analysis?: string
+  headline?: string
+  specs?: { _key: string; label: string; value: string }[]
+  summary?: string
+  notes?: { _key: string; label: string; text: string }[]
+  product: {
+    _id: string
+    title: string
+    slug: string
+    primaryColor?: string
+    accentColor?: string
+    image?: SanityImage
+  } | null
+}
+
+export interface ProductSystemSection {
+  _type: 'productSystemSection'
+  _key: string
+  /** null if the referenced productSystem doc is missing/unpublished */
+  system: {
+    _id: string
+    title: string
+    /** stable #id for deep links, e.g. "nitrogen-system" */
+    anchor?: string
+    heading?: string
+    intro?: PortableTextBlock[]
+    compareHeading?: string
+    compareIntro?: string
+    members?: ProductSystemMember[]
+    closingHeading?: string
+    closingBody?: PortableTextBlock[]
+    closingFootnote?: string
+    closingTakeaway?: string
+  } | null
+}
+
 export type ProductSection =
   | TextSection
   | CalloutSection
@@ -131,6 +169,7 @@ export type ProductSection =
   | TestimonialSection
   | VideoSection
   | WarningSection
+  | ProductSystemSection
 
 // ── Catalog ────────────────────────────────────────────────────────
 
@@ -455,6 +494,8 @@ export interface HomeFeaturedProductSection {
   _type: 'homeFeaturedProductSection'
   _key: string
   eyebrow?: string
+  /** optional callout link beside "Explore [product]" */
+  secondaryLink?: { kicker?: string; label?: string; href?: string; external?: boolean } | null
   product: {
     title: string
     slug: string

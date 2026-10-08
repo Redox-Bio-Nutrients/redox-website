@@ -17,6 +17,7 @@ import {
   textSection,
   videoSection,
   warningSection,
+  productSystemSection,
 } from '../schemas/objects/productSections'
 import {
   homeHeroSection,
@@ -31,6 +32,7 @@ import {
 // Documents
 import { product } from '../schemas/documents/product'
 import { technology } from '../schemas/documents/technology'
+import { productSystem } from '../schemas/documents/productSystem'
 import { region } from '../schemas/documents/region'
 import { blogPost } from '../schemas/documents/blogPost'
 import { category } from '../schemas/documents/category'
@@ -62,6 +64,7 @@ export const schemaTypes = [
   testimonialSection,
   videoSection,
   warningSection,
+  productSystemSection,
   homeHeroSection,
   homeHeroCarouselSection,
   homeColumnSection,
@@ -73,6 +76,7 @@ export const schemaTypes = [
   product,
   technology,
   collection,
+  productSystem,
   // regions
   region,
   // editorial (author doubles as regional team member — see author.ts)

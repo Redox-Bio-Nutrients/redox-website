@@ -72,6 +72,40 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
         ...,
         ${blockContentField('answer')}
       }
+    },
+    // Shared comparison block — the copy lives on the referenced
+    // productSystem doc; each card's name/color/image/link comes live
+    // from its member product (see sanity/schemas/documents/productSystem.ts).
+    _type == "productSystemSection" => {
+      "system": system->{
+        _id,
+        title,
+        "anchor": anchor.current,
+        heading,
+        ${blockContentField('intro')},
+        compareHeading,
+        compareIntro,
+        "members": members[]{
+          _key,
+          analysis,
+          headline,
+          specs[]{ _key, label, value },
+          summary,
+          notes[]{ _key, label, text },
+          "product": product->{
+            _id,
+            title,
+            "slug": slug.current,
+            primaryColor,
+            accentColor,
+            "image": image ${IMAGE_FRAGMENT}
+          }
+        },
+        closingHeading,
+        ${blockContentField('closingBody')},
+        closingFootnote,
+        closingTakeaway
+      }
     }
   },
   crops,

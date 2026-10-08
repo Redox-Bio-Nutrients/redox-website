@@ -200,6 +200,9 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   "backgroundImage": backgroundImage ${IMAGE_FRAGMENT},
   "backgroundVideoUrl": backgroundVideo.asset->url,
   cta,
+  // homeFeaturedProductSection only — optional callout link beside the
+  // "Explore [product]" link.
+  secondaryLink,
   // homeHeroSection fields (Hero only, not Carousel slides)
   textAlign,
   useBackgroundPool,
