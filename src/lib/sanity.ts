@@ -21,7 +21,7 @@ import { createImageUrlBuilder, type SanityImageSource } from '@sanity/image-url
 
 export const sanityClient = createClient({
   projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
-  dataset: import.meta.env.PUBLIC_SANITY_DATASET ?? 'staging',
+  dataset: import.meta.env.PUBLIC_SANITY_DATASET ?? 'production',
   apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION ?? '2024-01-01',
   useCdn: true,
   // Read-only (viewer) token so the site can read the private documents
@@ -48,7 +48,7 @@ export async function sanityFetch<T>(
 
 export const previewClient = createClient({
   projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
-  dataset: import.meta.env.PUBLIC_SANITY_DATASET ?? 'staging',
+  dataset: import.meta.env.PUBLIC_SANITY_DATASET ?? 'production',
   apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION ?? '2024-01-01',
   useCdn: false,
   token: import.meta.env.SANITY_API_TOKEN,

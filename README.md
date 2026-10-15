@@ -6,9 +6,9 @@ Marketing and content site for [Redox Bio-Nutrients](https://redoxgrows.com) —
 
 | Layer | Technology |
 |---|---|
-| Frontend | [Astro 6](https://astro.build) — static output, scoped component styles, design tokens in CSS custom properties |
+| Frontend | [Astro 7](https://astro.build) — static output, scoped component styles, design tokens in CSS custom properties |
 | CMS | [Sanity](https://www.sanity.io) — Studio lives in [`sanity/`](sanity/), content fetched via GROQ at build time |
-| Hosting | [Vercel](https://vercel.com) — `main` → production, `dev` → staging preview |
+| Hosting | [Vercel](https://vercel.com) — `main` → production ([redoxgrows.com](https://redoxgrows.com)), every other branch → its own Preview URL |
 | Fonts | DM Sans / DM Serif Display (Google Fonts) |
 
 Content publishes trigger automatic rebuilds via Sanity → Vercel webhooks, so editors go live without a code push. See [docs/deployment.md](docs/deployment.md) for environments, env vars, and deploy flow.
@@ -28,7 +28,7 @@ npm run dev            # site at http://localhost:4321
 `.env` values for local dev:
 
 - `PUBLIC_SANITY_PROJECT_ID=zym8k10b`
-- `PUBLIC_SANITY_DATASET=staging` — always use staging locally
+- `PUBLIC_SANITY_DATASET=production` — the only dataset (builds only read published content)
 - `PUBLIC_SANITY_API_VERSION=2024-01-01`
 - `PUBLIC_SITE_URL=http://localhost:4321`
 - `SANITY_API_TOKEN` — your personal read token from [sanity.io/manage](https://www.sanity.io/manage/project/zym8k10b)
@@ -43,7 +43,7 @@ npm install
 npm run dev            # Studio at http://localhost:3333
 ```
 
-Locally the Studio defaults to the **staging** dataset (`SANITY_STUDIO_DATASET` overrides), so you can't accidentally edit production content.
+Studio edits the live **production** dataset (the only one; `SANITY_STUDIO_DATASET` overrides) — publishing rebuilds the live site, so work in drafts until ready.
 
 ## Project Structure
 
@@ -89,7 +89,7 @@ All from the repo root (Studio commands from `sanity/`):
 ## Branching & Deploys
 
 ```text
-feature/* ─► dev (staging preview) ─► PR ─► main (production)
+feature/* (own Preview URL) ─► PR ─► main (production)
 ```
 
 Direct pushes to `main` are blocked — production deploys via reviewed PR only. Full details in [docs/deployment.md](docs/deployment.md).

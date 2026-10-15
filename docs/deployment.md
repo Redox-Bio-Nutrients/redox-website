@@ -1,55 +1,73 @@
 # Deployment Guide
 
-**Version:** 1.2  
-**Last updated:** 2026-06-09  
+**Version:** 1.3  
+**Last updated:** 2026-10-15  
 
 ## Environments
 
 | Environment | Branch | URL | Sanity Dataset |
 |---|---|---|---|
-| Production | `main` | redoxgrows.com (TBD — domain not yet connected) | `production` |
-| Staging | `dev` | https://redox-website-git-dev-redox-bio-nutrients-projects.vercel.app | `staging` |
+| Production | `main` | **https://redoxgrows.com** (live since 2026-09-28) | `production` |
+| Preview | any non-`main` branch | `https://redox-website-git-<branch>-redox-bio-nutrients-projects.vercel.app` | `production` |
+
+- `redoxgrows.com` (apex) is the canonical host — `PUBLIC_SITE_URL`,
+  canonical tags and the sitemap all use it.
+- **`www.redoxgrows.com` also serves Production** (Vercel → Domains →
+  "Connect to an environment: Production"), *not* a redirect to the apex.
+  A www → apex redirect was tried at launch and caused
+  `ERR_TOO_MANY_REDIRECTS` for returning visitors whose browsers had
+  cached the old WP Engine apex → www 301 indefinitely. **Don't re-add
+  the redirect.**
+- The original production URL
+  (`https://redox-website-redox-bio-nutrients-projects.vercel.app`) still
+  works and serves the same deployment.
+- The `dev` branch is stale and no longer used as a staging channel —
+  every feature branch / PR gets its own Preview URL instead.
 
 ## Infrastructure
 
 | Service | Account | Purpose |
 |---|---|---|
-| GitHub | github.com/redoxbionutrients | Source control |
-| Vercel | Redox Bio-Nutrients (Hobby) | Hosting + deploys |
+| GitHub | github.com/Redox-Bio-Nutrients | Source control |
+| Vercel | Redox Bio-Nutrients (**Pro**, since 2026-09-28) | Hosting + deploys |
 | Sanity | curtis.richins@redoxgrows.com | CMS + content API |
+
+DNS for `redoxgrows.com` is managed at Squarespace. Only the apex `@`
+A record (→ `216.150.1.1`) and the `www` CNAME point at Vercel; every
+other record (MX/SPF for Microsoft 365 + HubSpot, and the `dashboard.` /
+`clients.` subdomains, etc.) is unrelated to this site — leave them alone.
 
 ## Sanity Project
 
 - **Project ID:** `zym8k10b`
-- **Datasets:** `production` (live content), `staging` (dev/preview content)
-- **Studio location:** `/sanity` in repo root
-- **Dataset control:** `SANITY_STUDIO_DATASET` env var — defaults to `staging`
+- **Dataset:** a single `production` dataset, used by Production,
+  Preview builds and local development alike. (An old `staging`
+  dataset from August is no longer used by anything and is pending
+  deletion.)
+- **Studio:** hosted at https://redox-bio-nutrients.sanity.studio/
+  (source in `/sanity`). `sanity.config.ts` defaults to `production`;
+  `SANITY_STUDIO_DATASET` overrides it.
 
 ## Branching Model
+
+```
 main  ──► Vercel Production  (redoxgrows.com)
-↑
-└── PR merge only — direct pushes blocked by branch protection
-dev   ──► Vercel Preview/Staging
-↑
-└── feature/, fix/, content/* branches merged here first
+ ↑
+ └── PR merge only — feature branches open PRs straight against main
+     (each branch gets its own Vercel Preview URL to review first)
+```
 
 ## Deploy Process
 
-### Deploying to staging
-```bash
-git checkout dev
-git pull origin dev
-# make changes
-git add .
-git commit -m "your message"
-git push origin dev
-# Vercel auto-deploys to staging preview URL
-```
-
 ### Deploying to production
-1. Open a PR from `dev` → `main` on GitHub
-2. Review changes on the staging preview URL
-3. Merge PR — Vercel auto-deploys to production
+1. Branch from an up-to-date `origin/main`, commit, push.
+2. Review the branch's Vercel Preview URL.
+3. Open a PR against `main` and merge it — Vercel auto-deploys to
+   production.
+
+Content-only changes don't need a deploy at all — publishing in Sanity
+Studio rebuilds production automatically (see **Content Rebuild
+Webhooks** below).
 
 ### Emergency rollback
 Vercel dashboard → Deployments → find last good deploy → **Instant Rollback**
@@ -59,15 +77,24 @@ Vercel dashboard → Deployments → find last good deploy → **Instant Rollbac
 | Variable | Production | Preview |
 |---|---|---|
 | `PUBLIC_SANITY_PROJECT_ID` | `zym8k10b` | `zym8k10b` |
-| `PUBLIC_SANITY_DATASET` | `production` | `staging` |
+| `PUBLIC_SANITY_DATASET` | `production` | not set (code defaults to `production`) |
 | `PUBLIC_SANITY_API_VERSION` | `2024-01-01` | `2024-01-01` |
-| `PUBLIC_SITE_URL` | `https://redoxgrows.com` | Vercel preview URL |
-| `SANITY_API_TOKEN` | ✅ set | ✅ set |
+| `PUBLIC_SITE_URL` | `https://redoxgrows.com` (no `www`, no trailing slash) | Vercel preview URL |
+| `SANITY_API_TOKEN` | ✅ set (Viewer token) | ✅ set |
+| `SANITY_PREVIEW_SECRET` | ✅ set | unverified |
 | `SANITY_WEBHOOK_SECRET` | placeholder | placeholder |
-| `MS365_TENANT_ID` | ⬜ not yet set | ⬜ not yet set |
-| `MS365_CLIENT_ID` | ⬜ not yet set | ⬜ not yet set |
-| `MS365_CLIENT_SECRET` | ⬜ not yet set | ⬜ not yet set |
+| `MS365_TENANT_ID` | ✅ set | unverified |
+| `MS365_CLIENT_ID` | ✅ set | unverified |
+| `MS365_CLIENT_SECRET` | ✅ set | unverified |
 | `MS365_SENDER_EMAIL` | optional, defaults to `notifications@redoxgrows.com` | same |
+
+**Dataset fallback:** `PUBLIC_SANITY_DATASET` is only set for Production.
+`src/lib/sanity.ts` (and Studio's `sanity.config.ts`) default to
+`'production'` when it's unset, so Preview builds read the same content
+as Production. (Until 2026-10-15 the fallback was `'staging'`, which
+meant Preview builds read the stale `staging` dataset.) Adding
+`PUBLIC_SANITY_DATASET=production` to the Preview environment in Vercel
+is optional — it just makes the setting explicit.
 
 The three `MS365_*` secrets power `src/pages/api/resource-request.ts`
 (the "Product Information Request" email on product pages) — see
@@ -111,8 +138,8 @@ reusable from WordPress's).
    - `MS365_TENANT_ID` = the Directory (tenant) ID from step 2
    - `MS365_CLIENT_ID` = the Application (client) ID from step 2
    - `MS365_CLIENT_SECRET` = the secret value from step 3
-   - Apply to both Production and Preview so staging can send test
-     requests too.
+   - Apply to both Production and Preview so Preview deployments can
+     send test requests too.
 7. **In Sanity Studio → Form Settings** (bottom of the content list):
    set **Product Information Request Recipient** to the single inbox
    that should receive every one of these leads. This is read live at
@@ -151,7 +178,9 @@ cp .env.example .env
 ```
 
 Local `.env` values:
-- `PUBLIC_SANITY_DATASET=staging` — always use staging locally
+- `PUBLIC_SANITY_DATASET=production` — the only dataset (local builds
+  only ever read published content; drafts are only visible through
+  the `/api/preview` flow)
 - `PUBLIC_SITE_URL=http://localhost:4321`
 - `SANITY_API_TOKEN` — your personal Sanity API token
 
@@ -167,7 +196,7 @@ Studio publish → Sanity GROQ webhook → Vercel deploy hook → rebuild (~1 mi
 | Webhook (sanity.io/manage → API → Webhooks) | Dataset | Triggers |
 |---|---|---|
 | Vercel Production Deploy | `production` | Production rebuild (`main`) |
-| Vercel Staging Deploy | `staging` | Staging rebuild (`dev`) |
+| Vercel Staging Deploy | `production` | Rebuild of the stale `dev` branch (can be removed) |
 
 Both fire on create/update/delete of published documents (drafts don't
 trigger builds), filtered with
@@ -208,14 +237,21 @@ Note: `SANITY_WEBHOOK_SECRET` is currently unused — it's reserved for
 future *inbound* webhooks to the site (e.g. on-demand ISR). The
 Sanity→Vercel deploy-hook flow above doesn't need it.
 
-## Pre-Launch Checklist
+## Post-Launch Status
 
-Things to revisit before this site is considered launch-ready. Not urgent individually, but each should be a deliberate decision, not an oversight.
+The site went live on redoxgrows.com on 2026-09-28. The old pre-launch
+checklist is resolved:
 
-- [ ] Connect custom domain (redoxgrows.com) in Vercel
-- [ ] Add `PUBLIC_HUBSPOT_PORTAL_ID` when HubSpot integration begins
-- [ ] Add `PUBLIC_BUZZSPROUT_PODCAST_ID` when podcast is configured
-- [x] **Deploy Sanity Studio** — done. Hosted at https://redox-bio-nutrients.sanity.studio/ (gated by Sanity project login), so editors no longer need to run it locally at `:3333`.
-- [ ] **Re-enable Vercel Deployment Protection** (or decide it should stay off). It was turned off 2026-07-15 to share a public demo link — currently both the staging and production `.vercel.app` URLs are open to anyone with the link, with no password/login gate. Fine pre-launch; worth a deliberate decision once the real domain goes live.
-- [ ] **Complete the Microsoft 365 app registration** for the Product Information Request email (`MS365_TENANT_ID`/`MS365_CLIENT_ID`/`MS365_CLIENT_SECRET` — see **Product Information Request Email** above) and set the recipient in Sanity Studio → Form Settings. Until both are done, the form still works but returns a "not fully configured yet" error instead of sending.
-- [ ] **Replace the placeholder Contact page content** (`contact@example.com` / `(555) 123-4567`, created 2026-08-06) with real contact info in Sanity Studio → Pages → Contact.
+- [x] Custom domain connected (apex + `www`, both serving Production).
+- [x] Vercel upgraded to Pro.
+- [x] Sanity Studio deployed — https://redox-bio-nutrients.sanity.studio/
+- [x] Microsoft 365 app registration done; Product Information Request
+  emails send from `notifications@redoxgrows.com` to the recipient set
+  in Studio → Form Settings.
+- [x] Real contact details on Contact Us (per-person Email/Call buttons
+  read from `private.teamContacts`).
+- [x] Vercel Deployment Protection left **off** at launch by decision —
+  Standard Protection would gate the production `.vercel.app` URL. Revisit
+  if Preview URLs should be private.
+- [ ] Delete the unused `staging` Sanity dataset — safe once this
+  dataset-fallback change is deployed (nothing reads `staging` after that).

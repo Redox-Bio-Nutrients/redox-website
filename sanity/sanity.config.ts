@@ -1,9 +1,9 @@
 // sanity/sanity.config.ts
 //
-// WHY: The dataset is read from an environment variable so the same
-// Studio config works against both the production and staging datasets.
-// Locally, SANITY_STUDIO_DATASET defaults to 'staging' so developers
-// never accidentally edit production content from their machine.
+// WHY: The dataset is read from an environment variable
+// (SANITY_STUDIO_DATASET) so Studio can point at another dataset if one
+// is ever added. The project has a single `production` dataset, so that's
+// the default — the old `staging` dataset is retired.
 
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
@@ -16,7 +16,7 @@ export default defineConfig({
   title: 'Redox Bio-Nutrients',
 
   projectId: 'zym8k10b',
-  dataset: process.env.SANITY_STUDIO_DATASET ?? 'staging',
+  dataset: process.env.SANITY_STUDIO_DATASET ?? 'production',
 
   plugins: [
     structureTool({ structure }),
