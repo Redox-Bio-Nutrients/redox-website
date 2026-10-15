@@ -70,6 +70,19 @@ export default defineConfig({
   // false` run as Vercel functions.
   adapter: vercel(),
 
+  // Astro 7 changed the default to 'jsx', which can drop the space
+  // between inline elements. Keep the Astro 6 behavior.
+  compressHTML: true,
+
+  // Vite 8 (Astro 7) minifies CSS with Lightning CSS by default, which
+  // collapses every `backdrop-filter` + `-webkit-backdrop-filter` pair
+  // down to just the prefixed one — so Chrome/Firefox lost the frosted
+  // glass blur on buttons, the footer panel and back-to-top. Use
+  // esbuild, the minifier Astro 6 used, so the CSS ships as written.
+  vite: {
+    build: { cssMinify: 'esbuild' },
+  },
+
   // /sitemap-index.xml (+ /sitemap-0.xml), built from every prerendered
   // page against `site` above. Referenced from src/pages/robots.txt.ts.
   integrations: [
