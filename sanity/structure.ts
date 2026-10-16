@@ -154,7 +154,9 @@ export const structure: StructureResolver = (S, context) =>
       // regional imagery is managed beside the Ag/Turf pools — the
       // States + images live in each region's Location Imagery
       // fieldset (sanity/schemas/documents/region.ts).
-      S.documentTypeListItem('region').title('Regional Background Imagery'),
+      // Needs its own id — the default is the type name, which the
+      // "Regions" item already uses, and duplicate ids break the Studio.
+      S.documentTypeListItem('region').id('regionalBackgroundImagery').title('Regional Background Imagery'),
 
       // Private singletons — the dotted IDs keep them out of Sanity's
       // public API (see teamContacts.ts). Both IDs are load-bearing: the
