@@ -77,6 +77,20 @@ export const BG_POOL_FRAGMENT = /* groq */ `select(
   ${MARKET_POOL_SELECT}
 )`
 
+// Location-matched replacements for BG_POOL_FRAGMENT, projected inside
+// a product. Null unless the product's Enable Regional Imagery switch
+// is on; picked regions without both States and images are dropped so
+// components never have to check. Images come from the Region doc
+// (region.ts → Location Imagery), shared by every opted-in product.
+// Each picker swaps to one client-side — src/lib/regionalPool.ts.
+export const REGIONAL_POOLS_FRAGMENT = /* groq */ `select(
+  regionalHeadersEnabled == true => regionalImageRegions[]->{
+    "states": states,
+    "images": images[defined(asset)] ${IMAGE_FRAGMENT}
+  }[count(states) > 0 && count(images) > 0],
+  null
+)`
+
 // Only fetched when the post has no cover image of its own — a
 // deterministic pick from it (seeded on _id) stands in instead, both
 // on the detail page hero and the masonry grid card. See
@@ -126,6 +140,7 @@ export const PRODUCT_CARD_FRAGMENT = /* groq */ `{
   primaryColor,
   accentColor,
   "backgrounds": ${BG_POOL_FRAGMENT},
+  "regionalPools": ${REGIONAL_POOLS_FRAGMENT},
   "collections": collections[]-> ${COLLECTION_FRAGMENT}
 }`
 
@@ -184,6 +199,7 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
     // FRAGMENT's own comment. In practice this is almost never empty,
     // since the shared-pool fallback always has something.
     "backgrounds": ${BG_POOL_FRAGMENT},
+    "regionalPools": ${REGIONAL_POOLS_FRAGMENT},
     // A short excerpt pulled from the product's own page content, not
     // typed in here — same "no copy to keep in sync" reasoning as the
     // rest of this section. textSection's intro paragraph first; most

@@ -23,6 +23,7 @@
 import { urlFor } from '../../lib/sanity'
 import { getProductVariant } from '../../lib/productVariant'
 import { deriveCalloutPalette } from '../../lib/color'
+import { buildRegionalPools, regionalPoolsAttr } from '../../lib/regionalPool'
 import '../../styles/turf-livery.css'
 import type { ProductCard } from '../../lib/types/sanity'
 
@@ -54,10 +55,13 @@ const logoUrl = product.logo
   ? urlFor(product.logo).width(400).fit('max').auto('format').url()
   : null
 
-const bgPool = (product.backgrounds ?? []).map((img) => ({
+const toCardEntry = (img: NonNullable<ProductCard['backgrounds']>[number]) => ({
   url: urlFor(img).width(1000).height(1200).fit('crop').auto('format').quality(75).url(),
   lqip: img.lqip ?? null,
-}))
+})
+const bgPool = (product.backgrounds ?? []).map(toCardEntry)
+// Location-matched swap — see src/lib/regionalPool.ts
+const regionalPools = buildRegionalPools(product.regionalPools, toCardEntry)
 ---
 
 <a
@@ -76,6 +80,7 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
       <div
         class="card__bg"
         data-bg-pool={JSON.stringify(bgPool)}
+        data-regional-pools={regionalPoolsAttr(regionalPools)}
         style={bgPool[0].lqip ? `background-image: url(${bgPool[0].lqip})` : undefined}
         aria-hidden="true"
       >
@@ -105,17 +110,14 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   // The container paints the pick's blurred LQIP instantly; the full
   // image fades in over it. Bundled scripts are deduped by Astro —
   // this runs once per page.
-  interface PoolEntry {
-    url: string
-    lqip: string | null
-  }
+  import { pickPoolEntry, type PoolEntry } from '../../lib/regionalPool'
 
   document.querySelectorAll<HTMLElement>('.card__bg[data-bg-pool]').forEach((el) => {
     const pool: PoolEntry[] = JSON.parse(el.dataset.bgPool || '[]')
     const img = el.querySelector<HTMLImageElement>('.card__bg-img')
     if (!img || pool.length === 0) return
-    if (pool.length > 1) {
-      const pick = pool[Math.floor(Math.random() * pool.length)]
+    const pick = pickPoolEntry(pool, el.dataset.regionalPools)
+    if (pick) {
       if (pick.lqip) el.style.backgroundImage = `url(${pick.lqip})`
       img.src = pick.url
     }

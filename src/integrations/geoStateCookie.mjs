@@ -1,18 +1,20 @@
 // src/integrations/geoStateCookie.mjs
 //
-// WHY: Regional product header images (product.ts → regionalHeaders)
-// need the visitor's US state *before* the hero paints, but product
-// pages are prerendered static files — the same HTML for everyone.
-// Vercel attaches IP geolocation to every request as headers
-// (x-vercel-ip-country / x-vercel-ip-country-region), so a tiny edge
-// function in front of the product routes copies the state into a
-// cookie that ProductDetail.astro's inline hero script reads
-// synchronously. The page itself stays static and CDN-cached.
+// WHY: Regional imagery (region.ts → Location Imagery, opted into per
+// product — see src/lib/regionalPool.ts) needs the visitor's US state
+// *before* the product hero paints, but pages are prerendered static
+// files — the same HTML for everyone. Vercel attaches IP geolocation
+// to every request as headers (x-vercel-ip-country /
+// x-vercel-ip-country-region), so a tiny edge function in front of
+// every page copies the state into a cookie the image pickers read
+// synchronously. Every page, not just /products/*: product cards and
+// the Featured Product card also appear on catalogs, blog posts,
+// Technology pages and the homepage. Pages stay static and CDN-cached.
 //
 // Why not Astro middleware with the adapter's `middlewareMode: 'edge'`:
 // @astrojs/vercel only routes non-prerendered pages through it, and
-// its next() forwards to the SSR function — static product pages
-// would never hit it. So this writes a Build Output API middleware
+// its next() forwards to the SSR function — static pages would
+// never hit it. So this writes a Build Output API middleware
 // directly (a route with `middlewarePath` + `continue`, ahead of the
 // filesystem handler), which Vercel runs before serving static files.
 //
@@ -24,8 +26,9 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const FUNCTION_NAME = '_geo-state'
 export const GEO_COOKIE = 'rdx_geo_state'
-// Published product pages + the SSR draft preview of them.
-const MATCH = '^/(?:preview/)?products/[^/]+/?$'
+// Page routes only: no file extension (skips robots.txt, sitemaps,
+// images, fonts) and not Astro's asset/image/API/island routes.
+const MATCH = '^/(?!_astro/|_image|_server-islands/|api/)[^.]*$'
 
 const EDGE_SOURCE = `export default function middleware(request) {
   const country = request.headers.get('x-vercel-ip-country')

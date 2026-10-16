@@ -118,53 +118,23 @@ export const product = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      // Field name predates the feature covering more than the header.
       name: 'regionalHeadersEnabled',
-      title: 'Enable Regional Header Images',
+      title: 'Enable Regional Imagery',
       type: 'boolean',
       initialValue: false,
       description:
-        "When on, visitors located (by their internet connection) in one of a region's States see that region's images behind this product's page header instead of the normal Background Imagery. Turning it off keeps the images saved but stops using them. Product page header only, not catalog cards or callouts.",
+        "When on, visitors located (by their internet connection) in a picked region's States see that region's Regional Background Imagery instead of this product's normal background images — on its page header, its page's callouts, its product cards, and the homepage Featured Product card. Regions and their images are managed under Regional Background Imagery. Turning this off keeps the picks saved but stops using them.",
     }),
     defineField({
-      name: 'regionalHeaders',
-      title: 'Regional Header Images',
+      name: 'regionalImageRegions',
+      title: 'Regions',
       type: 'array',
       hidden: ({ document }) => !document?.regionalHeadersEnabled,
-      of: [
-        {
-          type: 'object',
-          name: 'regionalHeader',
-          fields: [
-            defineField({
-              name: 'region',
-              title: 'Region',
-              type: 'reference',
-              to: [{ type: 'region' }],
-              description: 'Matched by the States set on the Region document.',
-              validation: (rule) => rule.required(),
-            }),
-            defineField({
-              name: 'images',
-              title: 'Images',
-              type: 'array',
-              of: [
-                {
-                  type: 'image',
-                  options: { hotspot: true },
-                  fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
-                },
-              ],
-              description: 'One is picked at random on each page load, same as Background Imagery.',
-              components: { input: BulkImageInput },
-              validation: (rule) => rule.required().min(1),
-            }),
-          ],
-          preview: {
-            select: { title: 'region.title', media: 'images.0' },
-            prepare: ({ title, media }) => ({ title: title ?? 'No region picked', media }),
-          },
-        },
-      ],
+      of: [{ type: 'reference', to: [{ type: 'region' }] }],
+      description:
+        "Which regions' imagery to use. A region only takes effect once it has both States and images set. If a state is in more than one picked region, the first one in this list wins.",
+      validation: (rule) => rule.unique(),
     }),
     defineField({
       name: 'primaryColor',

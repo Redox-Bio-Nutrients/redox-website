@@ -19,6 +19,7 @@
 import ProductSections from './ProductSections.astro'
 import ResourceRequestDialog from './ResourceRequestDialog.astro'
 import { urlFor } from '../../lib/sanity'
+import { buildRegionalPools, regionalPoolsAttr } from '../../lib/regionalPool'
 import { getProductVariant } from '../../lib/productVariant'
 import { deriveCalloutPalette, ensureReadableOnDark } from '../../lib/color'
 import '../../styles/turf-livery.css'
@@ -69,17 +70,12 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   lqip: img.lqip ?? null,
 }))
 const heroImage = bgPool[0] ?? null
-// Location-matched pools (product.ts → regionalHeaders, already
-// filtered to toggle-on + non-empty in the query). The inline script
-// below swaps to one when the visitor's state cookie — set by the edge
-// middleware in src/integrations/geoStateCookie.mjs — is in a region's
-// States; first matching region wins. Server render is unchanged.
-const regionalPools = (product.regionalHeaders ?? []).map((r) => ({
-  states: r.states,
-  pool: r.images.map((img) => ({
-    url: urlFor(img).width(2400).height(1400).fit('crop').auto('format').quality(75).url(),
-    lqip: img.lqip ?? null,
-  })),
+// Location-matched imagery (src/lib/regionalPool.ts) — the inline
+// hero script below has its own copy of the match, since it must run
+// before first paint and can't import.
+const regionalPools = buildRegionalPools(product.regionalPools, (img) => ({
+  url: urlFor(img).width(2400).height(1400).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
 }))
 // Points at the catalog pages, not the /agriculture and /turf
 // landing pages — this is a product page, so "Agriculture"/"Turf"
@@ -148,7 +144,7 @@ const documents = (product.documents ?? []).map((doc) => ({
         alt={product.heroImage?.alt ?? ''}
         loading="eager"
         data-bg-pool={JSON.stringify(bgPool)}
-        data-regional-pools={regionalPools.length ? JSON.stringify(regionalPools) : undefined}
+        data-regional-pools={regionalPoolsAttr(regionalPools)}
       />
     </>
   ) : (
@@ -170,8 +166,9 @@ const documents = (product.documents ?? []).map((doc) => ({
       const img = document.getElementById('hero-bg')
       if (!img) return
       let pool = JSON.parse(img.dataset.bgPool || '[]')
-      // Regional pool replaces the normal one, even if it's a single
-      // image (the server-rendered first image isn't from it).
+      // Inline copy of chooseRegionalPool/pickPoolEntry in
+      // src/lib/regionalPool.ts — keep the two in step. A regional pool
+      // replaces the normal one, even with a single image.
       let regional = false
       const state = (document.cookie.match(/(?:^|; )rdx_geo_state=([A-Z]{2})/) || [])[1]
       if (state && img.dataset.regionalPools) {
@@ -226,6 +223,7 @@ const documents = (product.documents ?? []).map((doc) => ({
             ? product.calloutBackgrounds
             : product.backgrounds
         }
+        regionalPools={product.regionalPools}
       />
     )}
   </div>
