@@ -84,10 +84,13 @@ export const BG_POOL_FRAGMENT = /* groq */ `select(
 // (region.ts → Location Imagery), shared by every opted-in product.
 // Each picker swaps to one client-side — src/lib/regionalPool.ts.
 export const REGIONAL_POOLS_FRAGMENT = /* groq */ `select(
-  regionalHeadersEnabled == true => regionalImageRegions[]->{
+  // The parentheses are load-bearing: without them the trailing
+  // [filter] applies to each region object inside the []-> traversal,
+  // turning every one into null instead of filtering the list.
+  regionalHeadersEnabled == true => (regionalImageRegions[]->{
     "states": states,
     "images": images[defined(asset)] ${IMAGE_FRAGMENT}
-  }[count(states) > 0 && count(images) > 0],
+  })[count(states) > 0 && count(images) > 0],
   null
 )`
 

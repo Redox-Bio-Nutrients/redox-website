@@ -31,7 +31,11 @@ export function buildRegionalPools(
   regionalPools: RegionalImagePool[] | null | undefined,
   toEntry: (img: SanityImage) => PoolEntry,
 ): RegionalPoolEntries[] {
-  return (regionalPools ?? []).map((r) => ({ states: r.states, pool: r.images.map(toEntry) }))
+  // Defensive: a null entry here once failed a whole build (see
+  // REGIONAL_POOLS_FRAGMENT's comment) — skip anything malformed.
+  return (regionalPools ?? [])
+    .filter((r) => r?.states?.length && r.images?.length)
+    .map((r) => ({ states: r.states, pool: r.images.map(toEntry) }))
 }
 
 /** Value for a `data-regional-pools` attribute — omitted when there's nothing to match. */
