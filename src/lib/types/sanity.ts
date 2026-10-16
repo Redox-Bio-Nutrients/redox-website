@@ -194,6 +194,9 @@ export interface Product extends ProductCard {
   heroImage?: SanityImage
   /** optional dedicated pool for callout sections; falls back to backgrounds */
   calloutBackgrounds?: SanityImage[]
+  /** Per-region hero pools — null unless the product's toggle is on.
+   *  `states` are two-letter codes from the region's States field. */
+  regionalHeaders?: { states: string[]; images: SanityImage[] }[] | null
   sections?: ProductSection[]
   crops?: string[]
   /** TFI Certified Biostimulant Program — shows the badge in the sidebar */

@@ -50,6 +50,16 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
   "heroImage": heroImage ${IMAGE_FRAGMENT},
   "backgrounds": ${BG_POOL_FRAGMENT},
   "calloutBackgrounds": calloutBackgrounds[] ${IMAGE_FRAGMENT},
+  // Location-matched hero pools (ProductDetail.astro + src/middleware.ts).
+  // Off switch wins; entries whose region has no States, or with no
+  // images, are dropped here so the page never has to check.
+  "regionalHeaders": select(
+    regionalHeadersEnabled == true => regionalHeaders[count(region->states) > 0 && count(images) > 0]{
+      "states": region->states,
+      "images": images[defined(asset)] ${IMAGE_FRAGMENT}
+    },
+    null
+  ),
   primaryColor,
   accentColor,
   // sections is a discriminated union — spread everything and let the

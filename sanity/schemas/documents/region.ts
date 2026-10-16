@@ -8,9 +8,15 @@
 // query. The specific states/counties someone actually covers live on
 // that person (author.ts's coverageAreas), not here — two agronomists
 // in the same region typically split it, so a states list at the
-// region level was the wrong granularity.
+// region level was the wrong granularity for team cards.
+//
+// The region's own `states` field below is a different thing: the
+// geographic footprint used to match a visitor's IP-located state for
+// regional product header images (product.ts → regionalHeaders,
+// src/middleware.ts). It's never shown on the site.
 
 import { defineField, defineType } from 'sanity'
+import { US_STATES } from '../../lib/usStates'
 
 export const region = defineType({
   name: 'region',
@@ -41,6 +47,15 @@ export const region = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+    }),
+    defineField({
+      name: 'states',
+      title: 'States',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: { list: US_STATES, layout: 'grid' },
+      description:
+        "Which states count as this region for location-based imagery: a visitor whose browser is located in one of these states sees the product's regional header images for this region (see a product's Regional Header Images). Not shown anywhere on the site. Leave empty for a region that isn't a place (e.g. Turf).",
     }),
     defineField({
       name: 'orderRank',

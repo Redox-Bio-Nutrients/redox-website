@@ -118,6 +118,55 @@ export const product = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      name: 'regionalHeadersEnabled',
+      title: 'Enable Regional Header Images',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        "When on, visitors located (by their internet connection) in one of a region's States see that region's images behind this product's page header instead of the normal Background Imagery. Turning it off keeps the images saved but stops using them. Product page header only, not catalog cards or callouts.",
+    }),
+    defineField({
+      name: 'regionalHeaders',
+      title: 'Regional Header Images',
+      type: 'array',
+      hidden: ({ document }) => !document?.regionalHeadersEnabled,
+      of: [
+        {
+          type: 'object',
+          name: 'regionalHeader',
+          fields: [
+            defineField({
+              name: 'region',
+              title: 'Region',
+              type: 'reference',
+              to: [{ type: 'region' }],
+              description: 'Matched by the States set on the Region document.',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'images',
+              title: 'Images',
+              type: 'array',
+              of: [
+                {
+                  type: 'image',
+                  options: { hotspot: true },
+                  fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
+                },
+              ],
+              description: 'One is picked at random on each page load, same as Background Imagery.',
+              components: { input: BulkImageInput },
+              validation: (rule) => rule.required().min(1),
+            }),
+          ],
+          preview: {
+            select: { title: 'region.title', media: 'images.0' },
+            prepare: ({ title, media }) => ({ title: title ?? 'No region picked', media }),
+          },
+        },
+      ],
+    }),
+    defineField({
       name: 'primaryColor',
       title: 'Primary Color',
       type: 'string',
