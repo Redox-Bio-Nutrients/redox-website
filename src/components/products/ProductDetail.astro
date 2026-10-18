@@ -19,6 +19,7 @@
 import ProductSections from './ProductSections.astro'
 import ResourceRequestDialog from './ResourceRequestDialog.astro'
 import { urlFor } from '../../lib/sanity'
+import { buildRegionalPools, regionalPoolsAttr } from '../../lib/regionalPool'
 import { getProductVariant } from '../../lib/productVariant'
 import { deriveCalloutPalette, ensureReadableOnDark } from '../../lib/color'
 import '../../styles/turf-livery.css'
@@ -69,6 +70,13 @@ const bgPool = (product.backgrounds ?? []).map((img) => ({
   lqip: img.lqip ?? null,
 }))
 const heroImage = bgPool[0] ?? null
+// Location-matched imagery (src/lib/regionalPool.ts) — the inline
+// hero script below has its own copy of the match, since it must run
+// before first paint and can't import.
+const regionalPools = buildRegionalPools(product.regionalPools, (img) => ({
+  url: urlFor(img).width(2400).height(1400).fit('crop').auto('format').quality(75).url(),
+  lqip: img.lqip ?? null,
+}))
 // Points at the catalog pages, not the /agriculture and /turf
 // landing pages — this is a product page, so "Agriculture"/"Turf"
 // here means "back to the catalog you came from."
@@ -136,6 +144,7 @@ const documents = (product.documents ?? []).map((doc) => ({
         alt={product.heroImage?.alt ?? ''}
         loading="eager"
         data-bg-pool={JSON.stringify(bgPool)}
+        data-regional-pools={regionalPoolsAttr(regionalPools)}
       />
     </>
   ) : (
@@ -156,8 +165,17 @@ const documents = (product.documents ?? []).map((doc) => ({
     ;(() => {
       const img = document.getElementById('hero-bg')
       if (!img) return
-      const pool = JSON.parse(img.dataset.bgPool || '[]')
-      if (pool.length > 1) {
+      let pool = JSON.parse(img.dataset.bgPool || '[]')
+      // Inline copy of chooseRegionalPool/pickPoolEntry in
+      // src/lib/regionalPool.ts — keep the two in step. A regional pool
+      // replaces the normal one, even with a single image.
+      let regional = false
+      const state = (document.cookie.match(/(?:^|; )rdx_geo_state=([A-Z]{2})/) || [])[1]
+      if (state && img.dataset.regionalPools) {
+        const match = JSON.parse(img.dataset.regionalPools).find((r) => r.states.includes(state))
+        if (match) (pool = match.pool), (regional = true)
+      }
+      if (pool.length > 1 || regional) {
         const pick = pool[Math.floor(Math.random() * pool.length)]
         img.src = pick.url
         const lqip = document.getElementById('hero-lqip')
@@ -205,6 +223,7 @@ const documents = (product.documents ?? []).map((doc) => ({
             ? product.calloutBackgrounds
             : product.backgrounds
         }
+        regionalPools={product.regionalPools}
       />
     )}
   </div>

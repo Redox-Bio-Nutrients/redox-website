@@ -5,24 +5,27 @@
 // position:relative container and pass a pool of {url, lqip} entries —
 // it paints the pick's blurred LQIP instantly, fades the full image in,
 // and re-randomizes on every page load. Used by product callouts;
-// built for reuse on future sections/pages.
+// built for reuse on future sections/pages. Pass `regionalPools` when
+// the imagery belongs to a product, so its location-matched imagery
+// can take over — see src/lib/regionalPool.ts.
 
-export interface PoolEntry {
-  url: string
-  lqip: string | null
-}
+import { regionalPoolsAttr, type PoolEntry, type RegionalPoolEntries } from '../../lib/regionalPool'
+
+export type { PoolEntry }
 
 interface Props {
   pool: PoolEntry[]
+  regionalPools?: RegionalPoolEntries[]
 }
 
-const { pool } = Astro.props
+const { pool, regionalPools = [] } = Astro.props
 ---
 
 {pool.length > 0 && (
   <div
     class="pool-bg"
     data-bg-pool={JSON.stringify(pool)}
+    data-regional-pools={regionalPoolsAttr(regionalPools)}
     style={pool[0].lqip ? `background-image: url(${pool[0].lqip})` : undefined}
     aria-hidden="true"
   >
@@ -31,17 +34,14 @@ const { pool } = Astro.props
 )}
 
 <script>
-  interface PoolEntry {
-    url: string
-    lqip: string | null
-  }
+  import { pickPoolEntry, type PoolEntry } from '../../lib/regionalPool'
 
   document.querySelectorAll<HTMLElement>('.pool-bg[data-bg-pool]').forEach((el) => {
     const pool: PoolEntry[] = JSON.parse(el.dataset.bgPool || '[]')
     const img = el.querySelector<HTMLImageElement>('.pool-bg__img')
     if (!img || pool.length === 0) return
-    if (pool.length > 1) {
-      const pick = pool[Math.floor(Math.random() * pool.length)]
+    const pick = pickPoolEntry(pool, el.dataset.regionalPools)
+    if (pick) {
       if (pick.lqip) el.style.backgroundImage = `url(${pick.lqip})`
       img.src = pick.url
     }

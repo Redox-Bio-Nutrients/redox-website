@@ -6,6 +6,7 @@ import {
   BG_POOL_FRAGMENT,
   COLLECTION_FRAGMENT,
   IMAGE_FRAGMENT,
+  REGIONAL_POOLS_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,
   SEO_FRAGMENT,
   TECHNOLOGY_CARD_FRAGMENT,
@@ -50,6 +51,7 @@ const PRODUCT_QUERY = /* groq */ `*[_type == "product" && slug.current == $slug]
   "heroImage": heroImage ${IMAGE_FRAGMENT},
   "backgrounds": ${BG_POOL_FRAGMENT},
   "calloutBackgrounds": calloutBackgrounds[] ${IMAGE_FRAGMENT},
+  "regionalPools": ${REGIONAL_POOLS_FRAGMENT},
   primaryColor,
   accentColor,
   // sections is a discriminated union — spread everything and let the

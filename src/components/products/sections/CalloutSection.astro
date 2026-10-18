@@ -20,7 +20,8 @@ import { buildTextureVars } from '../../../lib/texture'
 import { onMissingPortableTextComponent, portableTextComponents } from '../../../lib/portableTextComponents'
 import '../../../styles/turf-livery.css'
 import '../../../styles/texture-surface.css'
-import type { CalloutSection, SanityImage } from '../../../lib/types/sanity'
+import type { CalloutSection, RegionalImagePool, SanityImage } from '../../../lib/types/sanity'
+import { buildRegionalPools } from '../../../lib/regionalPool'
 import type { ProductVariant } from '../../../lib/productVariant'
 import PoolBackground from '../../ui/PoolBackground.astro'
 
@@ -31,6 +32,8 @@ interface Props {
   /** optional second brand color — see deriveCalloutPalette() in src/lib/color.ts */
   productAccentColor?: string
   backgrounds?: SanityImage[]
+  /** the page's product's location-matched imagery (product pages only) — see src/lib/regionalPool.ts */
+  regionalPools?: RegionalImagePool[] | null
   /** Homepage/Technology only (HomeSections.astro passes this; a
    * product page's own callouts never do) — spans the true viewport
    * edge instead of sitting inside the page-builder's normal
@@ -40,7 +43,7 @@ interface Props {
   fullBleed?: boolean
 }
 
-const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds, fullBleed = false } =
+const { section, variant = 'agriculture', productColor, productAccentColor, backgrounds, regionalPools, fullBleed = false } =
   Astro.props
 // A section-level color override (schema field, optional) wins over
 // the inherited product/page color — set on product pages too, not
@@ -56,10 +59,12 @@ const hasBody = section.body?.some(
   (b: any) => b.children?.some((c: any) => c.text?.trim()),
 )
 
-const pool = (backgrounds ?? []).map((img) => ({
+const toEntry = (img: SanityImage) => ({
   url: urlFor(img).width(1800).height(900).fit('crop').auto('format').quality(75).url(),
   lqip: img.lqip ?? null,
-}))
+})
+const pool = (backgrounds ?? []).map(toEntry)
+const regional = buildRegionalPools(regionalPools, toEntry)
 const hasBg = pool.length > 0
 
 // Homepage/Technology only (see the schema field's own comment) — a
@@ -88,7 +93,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
     class:list={['t-callout', 'turf-cut', { 't-callout--has-image': productImageUrl, 't-callout--full-bleed': fullBleed }]}
     style={`--turf-cut: var(--turf-cut-lg); --t-callout-primary: ${palette.base}; --t-callout-accent: ${palette.complement};`}
   >
-    {hasBg && <PoolBackground pool={pool} />}
+    {hasBg && <PoolBackground pool={pool} regionalPools={regional} />}
     <div class="t-callout__wash" aria-hidden="true"></div>
     {productImageUrl && (
       <img class="t-callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
@@ -127,7 +132,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
     style={textureVars}
   >
     {hasBg ? (
-      <PoolBackground pool={pool} />
+      <PoolBackground pool={pool} regionalPools={regional} />
     ) : (
       !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}

@@ -187,7 +187,17 @@ export interface ProductCard {
   accentColor?: string
   /** heroImage + backgrounds pool — pick one at random per load */
   backgrounds?: SanityImage[]
+  /** location-matched replacements for `backgrounds` — see src/lib/regionalPool.ts */
+  regionalPools?: RegionalImagePool[] | null
   collections?: Collection[]
+}
+
+/** One opted-in region's imagery (REGIONAL_POOLS_FRAGMENT). `states`
+ *  are two-letter codes; never empty — the query drops regions
+ *  without both states and images. */
+export interface RegionalImagePool {
+  states: string[]
+  images: SanityImage[]
 }
 
 export interface Product extends ProductCard {
@@ -507,6 +517,7 @@ export interface HomeFeaturedProductSection {
     accentColor?: string
     /** priority-chain pool (own gallery -> hero -> shared market pool) — see BG_POOL_FRAGMENT's own comment in fragments.ts */
     backgrounds?: SanityImage[]
+    regionalPools?: RegionalImagePool[] | null
     /** plain-text excerpt from the product's own page content — see the query's own comment in fragments.ts */
     excerpt?: string
   }

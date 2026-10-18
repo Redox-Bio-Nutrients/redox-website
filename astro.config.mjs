@@ -9,6 +9,7 @@ import { defineConfig, passthroughImageService } from 'astro/config'
 import { loadEnv } from 'vite'
 import vercel from '@astrojs/vercel'
 import sitemap from '@astrojs/sitemap'
+import withGeoStateCookie from './src/integrations/geoStateCookie.mjs'
 
 // ── Sitemap exclusions ──────────────────────────────────────────────
 // @astrojs/sitemap already skips server-rendered routes (/api/*,
@@ -68,7 +69,9 @@ export default defineConfig({
   // default) so every other page is still prerendered exactly as
   // before; only routes that opt out with `export const prerender =
   // false` run as Vercel functions.
-  adapter: vercel(),
+  // + an edge middleware that copies the visitor's US state into a
+  // cookie for regional product header images — see that file's header.
+  adapter: withGeoStateCookie(vercel()),
 
   // Astro 7 changed the default to 'jsx', which can drop the space
   // between inline elements. Keep the Astro 6 behavior.

@@ -30,7 +30,8 @@ import { urlFor } from '../../../lib/sanity'
 import { deriveCalloutPalette, ensureReadableOnDark } from '../../../lib/color'
 import { buildTextureVars } from '../../../lib/texture'
 import { getProductVariant } from '../../../lib/productVariant'
-import type { HomeFeaturedProductSection } from '../../../lib/types/sanity'
+import type { HomeFeaturedProductSection, SanityImage } from '../../../lib/types/sanity'
+import { buildRegionalPools } from '../../../lib/regionalPool'
 import PoolBackground from '../../ui/PoolBackground.astro'
 import '../../../styles/turf-livery.css'
 import '../../../styles/texture-surface.css'
@@ -55,10 +56,13 @@ const textureVars = buildTextureVars(section._key, color, product?.accentColor)
 // already use. Wide crop (not the portrait one CalloutSection's own
 // product-page pool uses) — this photo spans the full two-column
 // card, not a narrow sidebar.
-const pool = (product?.backgrounds ?? []).map((img) => ({
+const toEntry = (img: SanityImage) => ({
   url: urlFor(img).width(1800).height(900).fit('crop').auto('format').quality(75).url(),
   lqip: img.lqip ?? null,
-}))
+})
+const pool = (product?.backgrounds ?? []).map(toEntry)
+// The featured product's location-matched imagery — src/lib/regionalPool.ts
+const regionalPools = buildRegionalPools(product?.regionalPools, toEntry)
 const hasBg = pool.length > 0
 
 const imageUrl = product?.image
@@ -107,7 +111,7 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
          CalloutSection's solid tone uses; texture-fill above is only
          the no-photo fallback (agriculture) — turf's wash reads fine
          directly over a photo, no separate fallback needed. */}
-      {hasBg && <PoolBackground pool={pool} />}
+      {hasBg && <PoolBackground pool={pool} regionalPools={regionalPools} />}
       {/* Whole-card click target — keeps the old "entire card is the
          link" behavior now that the card holds two links. Hidden from
          assistive tech/tab order; the real "Explore" link below is

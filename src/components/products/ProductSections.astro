@@ -5,7 +5,7 @@
 // section kind: add the schema object, the type, a component, and a
 // case here.
 
-import type { ProductSection, SanityImage } from '../../lib/types/sanity'
+import type { ProductSection, RegionalImagePool, SanityImage } from '../../lib/types/sanity'
 import type { ProductVariant } from '../../lib/productVariant'
 import TextSection from './sections/TextSection.astro'
 import CalloutSection from './sections/CalloutSection.astro'
@@ -27,11 +27,14 @@ interface Props {
   productAccentColor?: string
   /** background imagery pool — callout sections draw a random image */
   backgrounds?: SanityImage[]
+  /** the product's location-matched imagery — callouts swap to it, see src/lib/regionalPool.ts */
+  regionalPools?: RegionalImagePool[] | null
   /** the page's own product — its card in a Product System section is marked "You're here" */
   productId?: string
 }
 
-const { sections, variant = 'agriculture', productColor, productAccentColor, backgrounds, productId } = Astro.props
+const { sections, variant = 'agriculture', productColor, productAccentColor, backgrounds, regionalPools, productId } =
+  Astro.props
 ---
 
 <div class="product-sections">
@@ -57,6 +60,7 @@ const { sections, variant = 'agriculture', productColor, productAccentColor, bac
               productColor={productColor}
               productAccentColor={productAccentColor}
               backgrounds={backgrounds}
+              regionalPools={regionalPools}
             />
           )
         case 'bulletSection':

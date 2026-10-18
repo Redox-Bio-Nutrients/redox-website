@@ -118,6 +118,25 @@ export const product = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      // Field name predates the feature covering more than the header.
+      name: 'regionalHeadersEnabled',
+      title: 'Enable Regional Imagery',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        "When on, visitors located (by their internet connection) in a picked region's States see that region's Regional Background Imagery instead of this product's normal background images — on its page header, its page's callouts, its product cards, and the homepage Featured Product card. Regions and their images are managed under Regional Background Imagery. Turning this off keeps the picks saved but stops using them.",
+    }),
+    defineField({
+      name: 'regionalImageRegions',
+      title: 'Regions',
+      type: 'array',
+      hidden: ({ document }) => !document?.regionalHeadersEnabled,
+      of: [{ type: 'reference', to: [{ type: 'region' }] }],
+      description:
+        "Which regions' imagery to use. A region only takes effect once it has both States and images set. If a state is in more than one picked region, the first one in this list wins.",
+      validation: (rule) => rule.unique(),
+    }),
+    defineField({
       name: 'primaryColor',
       title: 'Primary Color',
       type: 'string',
