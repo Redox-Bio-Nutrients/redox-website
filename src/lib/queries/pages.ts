@@ -18,6 +18,7 @@ export async function getPage(slug: string): Promise<Page | null> {
       heroSubheading,
       "heroImage": heroImage ${IMAGE_FRAGMENT},
       heroCta,
+      heroTextAlign,
       ${blockContentField('body')},
       ${HOME_SECTIONS_FRAGMENT},
       ${SEO_FRAGMENT}

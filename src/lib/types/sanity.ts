@@ -393,6 +393,8 @@ export interface Page {
   heroSubheading?: string
   heroImage?: SanityImage
   heroCta?: Cta
+  /** unset = centered with a heroImage, left without one */
+  heroTextAlign?: 'left' | 'center'
   body?: PortableTextBlock[]
   /** Optional page-builder modules — same shapes as Homepage. */
   sections?: HomeSection[]

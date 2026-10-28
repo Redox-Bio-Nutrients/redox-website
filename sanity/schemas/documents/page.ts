@@ -43,6 +43,21 @@ export const page = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      name: 'heroTextAlign',
+      title: 'Hero Text Alignment',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Left', value: 'left' },
+          { title: 'Center', value: 'center' },
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      description:
+        'Alignment of the heading, subheading and button. Leave unset for the default: centered over a Hero Image, left-aligned without one.',
+    }),
+    defineField({
       name: 'heroCta',
       title: 'Hero CTA',
       type: 'cta',
