@@ -10,6 +10,7 @@ import type { ProductVariant } from '../../lib/productVariant'
 import TextSection from './sections/TextSection.astro'
 import CalloutSection from './sections/CalloutSection.astro'
 import BulletSection from './sections/BulletSection.astro'
+import KeyBenefitsSection from './sections/KeyBenefitsSection.astro'
 import AnalysisSection from './sections/AnalysisSection.astro'
 import ChartSection from './sections/ChartSection.astro'
 import FaqSection from './sections/FaqSection.astro'
@@ -66,6 +67,15 @@ const { sections, variant = 'agriculture', productColor, productAccentColor, bac
         case 'bulletSection':
           return (
             <BulletSection
+              section={section}
+              variant={variant}
+              productColor={productColor}
+              productAccentColor={productAccentColor}
+            />
+          )
+        case 'keyBenefitsSection':
+          return (
+            <KeyBenefitsSection
               section={section}
               variant={variant}
               productColor={productColor}

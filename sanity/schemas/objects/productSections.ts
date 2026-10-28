@@ -6,7 +6,10 @@
 // component. Adding a new section kind = add an object here, add it to
 // the product's sections array, add a renderer component.
 
+import { createElement } from 'react'
 import { defineField, defineType } from 'sanity'
+import { BenefitIconInput } from '../../components/BenefitIconInput'
+import { BENEFIT_ICONS, getBenefitIconSvg } from '../../../src/lib/benefitIcons'
 
 // ── Header + paragraph ─────────────────────────────────────────────
 
@@ -161,6 +164,91 @@ export const bulletSection = defineType({
       return {
         title: title || 'Bullet Points',
         subtitle: `Bullets — ${count} item${count === 1 ? '' : 's'}, ${columns ?? 1} col`,
+      }
+    },
+  },
+})
+
+// ── Key benefits (icon + short name + one line) ────────────────────
+//
+// The product slides' "four benefits" block. Icons come from the shared
+// Redox benefit set (src/lib/benefitIcons.ts); the stored value is the
+// icon's name, so recolouring or redrawing an icon never needs content
+// changes.
+
+export const keyBenefitsSection = defineType({
+  name: 'keyBenefitsSection',
+  title: 'Key Benefits',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+      description: 'Leave empty for "Key Benefits".',
+    }),
+    defineField({
+      name: 'items',
+      title: 'Benefits',
+      type: 'array',
+      description: 'Two to four. Four reads best, matching the product slides.',
+      of: [
+        {
+          type: 'object',
+          name: 'benefit',
+          fields: [
+            defineField({
+              name: 'icon',
+              title: 'Icon',
+              type: 'string',
+              options: { list: BENEFIT_ICONS.map((icon) => ({ title: icon.label, value: icon.name })) },
+              components: { input: BenefitIconInput },
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'title',
+              title: 'Benefit',
+              type: 'string',
+              description: 'Two or three words, Title Case, e.g. "Stress Resilience".',
+              validation: (rule) => rule.required().max(40),
+            }),
+            defineField({
+              name: 'text',
+              title: 'One line',
+              type: 'text',
+              rows: 2,
+              description: 'One plain sentence on what it does for the grower.',
+              validation: (rule) => rule.required().max(160),
+            }),
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'text', icon: 'icon' },
+            prepare({ title, subtitle, icon }) {
+              const svg = getBenefitIconSvg(icon)
+              return {
+                title: title || 'Untitled benefit',
+                subtitle,
+                media: svg
+                  ? createElement('span', {
+                      style: { display: 'block', width: '100%', height: '100%', color: '#2E6B3E' },
+                      dangerouslySetInnerHTML: { __html: svg.replace('<svg ', '<svg width="100%" height="100%" ') },
+                    })
+                  : undefined,
+              }
+            },
+          },
+        },
+      ],
+      validation: (rule) => rule.required().min(2).max(4),
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', items: 'items' },
+    prepare({ title, items }) {
+      const count = items?.length ?? 0
+      return {
+        title: title || 'Key Benefits',
+        subtitle: `Key Benefits — ${count} benefit${count === 1 ? '' : 's'}`,
       }
     },
   },
