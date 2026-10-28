@@ -21,6 +21,7 @@ import CalloutSection from '../products/sections/CalloutSection.astro'
 import BulletSection from '../products/sections/BulletSection.astro'
 import FeaturedProductSection from './sections/FeaturedProductSection.astro'
 import BlogShowcaseSection from './sections/BlogShowcaseSection.astro'
+import DownloadSection from './sections/DownloadSection.astro'
 
 interface Props {
   sections: HomeSection[]
@@ -88,6 +89,8 @@ const { sections } = Astro.props
             <BulletSection section={section} />
           </div>
         )
+      case 'homeDownloadSection':
+        return <DownloadSection section={section} />
       default:
         return null
     }

@@ -28,6 +28,7 @@ import {
   homeCtaSection,
   homeFeaturedProductSection,
   homeBlogShowcaseSection,
+  homeDownloadSection,
 } from '../schemas/objects/homeSections'
 
 // Documents
@@ -74,6 +75,7 @@ export const schemaTypes = [
   homeCtaSection,
   homeFeaturedProductSection,
   homeBlogShowcaseSection,
+  homeDownloadSection,
   // catalog
   product,
   technology,
