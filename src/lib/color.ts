@@ -133,6 +133,29 @@ export function ensureReadableOnDark(hex: string, minLightness = 58): string {
   return hslToHex(h, Math.max(s, 45), minLightness)
 }
 
+function relativeLuminance(hex: string): number {
+  const channel = (i: number) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5)
+}
+
+/** WCAG contrast ratio between two #rrggbb colors (1–21). */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+/** The product color when it reaches `min` contrast on `ground`, else
+ * undefined so the caller falls back to a brand token. For foreground
+ * graphics (benefit icons: 3:1, WCAG 1.4.11) on light tiles, where a
+ * pale product color would otherwise wash out. */
+export function readableOn(hex: string | undefined, ground: string, min = 3): string | undefined {
+  if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return undefined
+  return contrastRatio(hex, ground) >= min ? hex : undefined
+}
+
 // Fixed, deliberate colors for the two Markets — unlike a category's
 // pill (deriveCalloutPalette(groundedAccent(slug)), an arbitrary but
 // consistent random pick since categories are an open taxonomy),

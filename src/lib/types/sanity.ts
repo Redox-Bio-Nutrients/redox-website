@@ -71,6 +71,19 @@ export interface BulletSection {
   columns: 1 | 2 | 3
 }
 
+export interface KeyBenefitsSection {
+  _type: 'keyBenefitsSection'
+  _key: string
+  heading?: string
+  items: {
+    _key: string
+    /** a name from src/lib/benefitIcons.ts, e.g. "stress-resilience" */
+    icon?: string
+    title: string
+    text?: string
+  }[]
+}
+
 export interface AnalysisSection {
   _type: 'analysisSection'
   _key: string
@@ -163,6 +176,7 @@ export type ProductSection =
   | TextSection
   | CalloutSection
   | BulletSection
+  | KeyBenefitsSection
   | AnalysisSection
   | ChartSection
   | FaqSection

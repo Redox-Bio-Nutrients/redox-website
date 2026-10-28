@@ -10,6 +10,7 @@ import { cta } from '../schemas/objects/cta'
 import {
   analysisSection,
   bulletSection,
+  keyBenefitsSection,
   calloutSection,
   chartSection,
   faqSection,
@@ -58,6 +59,7 @@ export const schemaTypes = [
   textSection,
   calloutSection,
   bulletSection,
+  keyBenefitsSection,
   analysisSection,
   chartSection,
   faqSection,

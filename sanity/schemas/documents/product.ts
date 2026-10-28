@@ -174,6 +174,7 @@ export const product = defineType({
         { type: 'textSection' },
         { type: 'calloutSection' },
         { type: 'bulletSection' },
+        { type: 'keyBenefitsSection' },
         { type: 'analysisSection' },
         { type: 'chartSection' },
         { type: 'faqSection' },

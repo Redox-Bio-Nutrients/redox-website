@@ -1,0 +1,196 @@
+---
+// src/components/products/sections/KeyBenefitsSection.astro
+//
+// WHY: The product slides' "four benefits" block, in the website's
+// dress: an icon from the shared benefit set, a two- or three-word
+// Title Case name and one plain line each. Different from
+// BulletSection on purpose — those are free-form sentences with no
+// icon; these are short, scannable and icon-led.
+//
+// Icon colour follows the Redox design system's rules (Website
+// section): on a light tile, the product colour when it reaches 3:1
+// (a graphic, WCAG 1.4.11), else --color-green-dark; on a dark ground
+// (site dark theme) --color-brand-lime. Turf renders on the fixed
+// --turf-ink slab, so its icons take the turf accent, lifted to stay
+// readable on dark — same treatment as BulletSection's turf marks.
+
+import '../../../styles/turf-livery.css'
+import BenefitIcon from '../../ui/BenefitIcon.astro'
+import { deriveCalloutPalette, ensureReadableOnDark, readableOn } from '../../../lib/color'
+import type { KeyBenefitsSection } from '../../../lib/types/sanity'
+import type { ProductVariant } from '../../../lib/productVariant'
+
+interface Props {
+  section: KeyBenefitsSection
+  variant?: ProductVariant
+  productColor?: string
+  productAccentColor?: string
+}
+
+const { section, variant = 'agriculture', productColor, productAccentColor } = Astro.props
+const items = (section.items ?? []).filter((item) => item.title)
+const heading = section.heading || 'Key Benefits'
+// Light-theme tile ground is --color-cream (#F7F4EF).
+const iconColor = readableOn(productColor, '#F7F4EF') ?? 'var(--color-green-dark)'
+const turfAccent = ensureReadableOnDark(
+  deriveCalloutPalette(productColor ?? '#2E6B3E', productAccentColor).complement,
+)
+---
+
+{items.length > 0 && (
+  variant === 'turf' ? (
+    <section class="t-benefits" style={`--t-benefits-accent: ${turfAccent};`}>
+      <h2>{heading}</h2>
+      <ul class="t-benefits__list" style={`--count: ${items.length}`}>
+        {items.map((item) => (
+          <li class="t-benefits__item turf-cut" style="--turf-cut: var(--turf-cut-sm);">
+            <BenefitIcon name={item.icon} class="t-benefits__icon" />
+            <h3>{item.title}</h3>
+            {item.text && <p>{item.text}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : (
+    <section class="benefits" style={`--benefits-icon: ${iconColor};`}>
+      <h2>{heading}</h2>
+      <ul class="benefits__list" style={`--count: ${items.length}`}>
+        {items.map((item) => (
+          <li class="benefits__item">
+            <BenefitIcon name={item.icon} class="benefits__icon" />
+            <h3>{item.title}</h3>
+            {item.text && <p>{item.text}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+)}
+
+<style>
+  .benefits h2 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-display-sm);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+  }
+
+  .benefits__list,
+  .t-benefits__list {
+    display: grid;
+    grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+    gap: var(--space-4);
+    list-style: none;
+  }
+
+  .benefits__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-8) var(--space-6);
+    background: var(--color-cream);
+    border-radius: var(--radius-2xl);
+  }
+
+  .benefits__item :global(.benefits__icon) {
+    --benefit-icon-size: 64px;
+    color: var(--benefits-icon);
+    margin-bottom: var(--space-2);
+  }
+
+  :global([data-theme='dark']) .benefits__item :global(.benefits__icon) {
+    color: var(--color-brand-lime);
+  }
+
+  .benefits__item h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semi);
+    line-height: var(--leading-snug);
+    color: var(--color-text-primary);
+  }
+
+  .benefits__item p,
+  .t-benefits__item p {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  /* Four across is too tight below desktop: two, then one. */
+  @media (max-width: 1023px) {
+    .benefits__list,
+    .t-benefits__list {
+      grid-template-columns: repeat(min(var(--count), 2), minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 639px) {
+    .benefits h2 {
+      margin-bottom: var(--space-6);
+    }
+
+    .benefits__list,
+    .t-benefits__list {
+      grid-template-columns: 1fr;
+      gap: var(--space-3);
+    }
+
+    /* Single column: icon beside the text, not stacked over it. */
+    .benefits__item,
+    .t-benefits__item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: var(--space-4);
+      row-gap: var(--space-1);
+      padding: var(--space-5);
+    }
+
+    .benefits__item :global(.benefit-icon),
+    .t-benefits__item :global(.benefit-icon) {
+      --benefit-icon-size: 48px;
+      grid-row: span 2;
+      margin-bottom: 0;
+    }
+  }
+
+  /* ── Turf variant ─────────────────────────────────────────────── */
+  .t-benefits h2 {
+    font-family: var(--turf-font-display);
+    font-style: italic;
+    font-weight: 700;
+    font-size: var(--text-2xl);
+    color: var(--t-benefits-accent);
+    margin-bottom: var(--space-6);
+  }
+
+  .t-benefits__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    background: var(--turf-ink);
+  }
+
+  .t-benefits__item :global(.t-benefits__icon) {
+    --benefit-icon-size: 56px;
+    color: var(--t-benefits-accent);
+    margin-bottom: var(--space-1);
+  }
+
+  .t-benefits__item h3 {
+    font-family: var(--turf-font-display);
+    font-weight: 700;
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+  }
+
+  .t-benefits__item p {
+    color: rgb(255 255 255 / 0.78);
+  }
+</style>
