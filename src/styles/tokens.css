@@ -28,6 +28,14 @@
    * like green's. */
   --color-purple:       #6B3FA0;
 
+  /* The Redox design system's shared core (2026-10-27), the same values
+   * the dashboard uses: one bright green and one forest for every surface.
+   * brand-lime is a highlight on dark grounds only (a mark or a short
+   * label, never text on white or over the green glows, where it drops to
+   * 2.6:1); brand-forest is the deep end of the footer. Same in both themes. */
+  --color-brand-lime:   #7CC242;
+  --color-brand-forest: #253A2A;
+
   --color-text-primary:  #1A1A1A;
   --color-text-secondary:#4A4A4A;
   --color-text-muted:    #6B6B6B;   /* was #767676 — 4.14:1 on cream, now ≥4.5:1 (WCAG 1.4.3) */
@@ -52,7 +60,7 @@
   --border-subtle: rgb(0 0 0 / 0.07);
 
   --footer-bg:    #2E6B3E;
-  --footer-bg-end: #163620;  /* dark forest green the footer's gradient flows down into */
+  --footer-bg-end: var(--color-brand-forest);  /* the forest green the footer's gradient flows down into */
   --footer-text:  #F7F4EF;
   --footer-muted: #D6E4CF;   /* was #C8D8C0 — 4.26:1 on footer green, now ≥4.5:1 */
 
