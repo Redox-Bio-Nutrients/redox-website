@@ -590,3 +590,57 @@ export const homeBlogShowcaseSection = defineType({
     },
   },
 })
+
+// ── File Download — a card with copy and a download button ─────────
+//
+// WHY: the Credit Application page (2026-10-28) needed a downloadable
+// PDF its editors can swap each year without a code change. The file
+// is uploaded here, into Sanity, and the button points straight at it;
+// the file type and size beside the button are read from the upload,
+// so they can't go stale when the file is replaced.
+
+export const homeDownloadSection = defineType({
+  name: 'homeDownloadSection',
+  title: 'File Download',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Heading',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'fileDetails',
+      title: 'Details',
+      type: 'string',
+      description: 'Optional short line under the heading, e.g. "2027 · Fillable". The file type and size are added automatically.',
+    }),
+    defineField({
+      name: 'body',
+      title: 'Body',
+      type: 'blockContent',
+      description: 'Optional — instructions, an email link, a phone number.',
+    }),
+    defineField({
+      name: 'file',
+      title: 'File',
+      type: 'file',
+      description: 'Upload a new file here to replace the download — the button always serves whatever is uploaded.',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'buttonLabel',
+      title: 'Button Label',
+      type: 'string',
+      initialValue: 'Download PDF',
+      validation: (rule) => rule.required(),
+    }),
+  ],
+  preview: {
+    select: { title: 'heading', filename: 'file.asset.originalFilename' },
+    prepare({ title, filename }) {
+      return { title: title || 'File Download', subtitle: filename ? `File Download — ${filename}` : 'File Download — no file yet' }
+    },
+  },
+})

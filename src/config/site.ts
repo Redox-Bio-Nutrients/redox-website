@@ -126,7 +126,8 @@ export const footerNav: { heading: string; links: FooterLink[] }[] = [
   {
     heading: 'Company',
     links: [
-      { label: 'Contact Us',      href: '/contact-us' },
+      { label: 'Contact Us',         href: '/contact-us'         },
+      { label: 'Credit Application', href: '/credit-application' },
       primaryNav.find((item) => item.label === 'Swag Store') as FooterLink,
       utilityNav.dashboard,
     ],

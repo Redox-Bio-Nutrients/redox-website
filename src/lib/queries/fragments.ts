@@ -323,7 +323,13 @@ export const HOME_SECTIONS_FRAGMENT = /* groq */ `sections[]{
   // under the subheading. No other section type uses these field
   // names, so a bare passthrough is fine, no select() needed.
   quote,
-  quoteAttribution
+  quoteAttribution,
+  // homeDownloadSection only — the uploaded file itself, plus the
+  // editor-typed details line and button label. Unique field names,
+  // so bare passthroughs.
+  "file": file.asset->{ url, originalFilename, size, extension },
+  fileDetails,
+  buttonLabel
 }`
 
 export const TECHNOLOGY_CARD_FRAGMENT = /* groq */ `{

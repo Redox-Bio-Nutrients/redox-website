@@ -510,6 +510,17 @@ export interface HomeCtaSection {
   buttons: Cta[]
 }
 
+/** A downloadable file card — see homeSections.ts's homeDownloadSection. */
+export interface HomeDownloadSection {
+  _type: 'homeDownloadSection'
+  _key: string
+  heading: string
+  fileDetails?: string
+  body?: PortableTextBlock[]
+  file?: { url: string; originalFilename?: string; size?: number; extension?: string } | null
+  buttonLabel?: string
+}
+
 /** A single product, referenced (not copied in) — see the schema
  * field's own comment in homeSections.ts for why. Deliberately a
  * standalone shape, not a reuse of ProductCard — this only needs a
@@ -564,6 +575,7 @@ export type HomeSection =
   | ChartSection
   | CalloutSection
   | BulletSection
+  | HomeDownloadSection
 
 export interface Homepage {
   _id: string

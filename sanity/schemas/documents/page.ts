@@ -65,6 +65,7 @@ export const page = defineType({
         { type: 'chartSection' },
         { type: 'calloutSection' },
         { type: 'bulletSection' },
+        { type: 'homeDownloadSection' },
       ],
       description:
         'Optional page-builder modules rendered after the Body copy above — same building blocks as the Homepage. A brand new page can use these instead of (or alongside) Hero/Body.',
