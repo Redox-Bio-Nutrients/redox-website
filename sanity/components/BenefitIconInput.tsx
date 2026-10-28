@@ -3,22 +3,24 @@
 // WHY: keyBenefitsSection's icon is stored as a plain name string
 // ("stress-resilience"), but 55 names in a dropdown are unpickable by
 // eye. This shows the icons themselves as a filterable grid, drawn from
-// the same registry the website renders from (src/lib/benefitIcons.ts),
+// the same SVG folder the website renders from (sanity/lib/benefitIcons.ts),
 // so the Studio can't offer an icon the site doesn't have.
 
 import { useMemo, useState } from 'react'
 import { Box, Button, Card, Flex, Grid, Stack, Text, TextInput } from '@sanity/ui'
 import { set, unset } from 'sanity'
 import type { StringInputProps } from 'sanity'
-import { BENEFIT_ICONS } from '../../src/lib/benefitIcons'
+import { BENEFIT_ICON_OPTIONS, useBenefitIconSvg } from '../lib/benefitIcons'
 
-function IconSvg({ svg, size }: { svg: string; size: number }) {
+/** One icon, loaded lazily; an empty box of the same size until then. */
+export function BenefitIconPreview({ name, size }: { name?: string; size: number | string }) {
+  const svg = useBenefitIconSvg(name)
   return (
     <span
       aria-hidden
       style={{ display: 'block', width: size, height: size, color: '#2E6B3E' }}
       // Repo-owned SVGs (src/assets/benefit-icons), not user content.
-      dangerouslySetInnerHTML={{ __html: svg.replace('<svg ', '<svg width="100%" height="100%" ') }}
+      dangerouslySetInnerHTML={svg ? { __html: svg.replace('<svg ', '<svg width="100%" height="100%" ') } : undefined}
     />
   )
 }
@@ -26,17 +28,17 @@ function IconSvg({ svg, size }: { svg: string; size: number }) {
 export function BenefitIconInput(props: StringInputProps) {
   const { value, onChange, readOnly } = props
   const [query, setQuery] = useState('')
-  const current = BENEFIT_ICONS.find((icon) => icon.name === value)
+  const current = BENEFIT_ICON_OPTIONS.find((icon) => icon.name === value)
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return q ? BENEFIT_ICONS.filter((icon) => icon.label.toLowerCase().includes(q)) : BENEFIT_ICONS
+    return q ? BENEFIT_ICON_OPTIONS.filter((icon) => icon.label.toLowerCase().includes(q)) : BENEFIT_ICON_OPTIONS
   }, [query])
 
   return (
     <Stack space={3}>
       <Card padding={3} radius={2} border tone={current ? 'positive' : 'default'}>
         <Flex align="center" gap={3}>
-          {current ? <IconSvg svg={current.svg} size={40} /> : null}
+          {current ? <BenefitIconPreview name={current.name} size={40} /> : null}
           <Box flex={1}>
             <Text size={1} weight="semibold">
               {current ? current.label : 'No icon chosen'}
@@ -66,7 +68,7 @@ export function BenefitIconInput(props: StringInputProps) {
           >
             <Stack space={2}>
               <Flex justify="center">
-                <IconSvg svg={icon.svg} size={44} />
+                <BenefitIconPreview name={icon.name} size={44} />
               </Flex>
               <Text size={0} align="center" textOverflow="ellipsis">
                 {icon.label}
