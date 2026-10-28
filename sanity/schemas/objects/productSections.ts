@@ -8,8 +8,8 @@
 
 import { createElement } from 'react'
 import { defineField, defineType } from 'sanity'
-import { BenefitIconInput } from '../../components/BenefitIconInput'
-import { BENEFIT_ICONS, getBenefitIconSvg } from '../../../src/lib/benefitIcons'
+import { BenefitIconInput, BenefitIconPreview } from '../../components/BenefitIconInput'
+import { BENEFIT_ICON_OPTIONS } from '../../lib/benefitIcons'
 
 // ── Header + paragraph ─────────────────────────────────────────────
 
@@ -201,7 +201,7 @@ export const keyBenefitsSection = defineType({
               name: 'icon',
               title: 'Icon',
               type: 'string',
-              options: { list: BENEFIT_ICONS.map((icon) => ({ title: icon.label, value: icon.name })) },
+              options: { list: BENEFIT_ICON_OPTIONS.map((icon) => ({ title: icon.label, value: icon.name })) },
               components: { input: BenefitIconInput },
               validation: (rule) => rule.required(),
             }),
@@ -224,16 +224,10 @@ export const keyBenefitsSection = defineType({
           preview: {
             select: { title: 'title', subtitle: 'text', icon: 'icon' },
             prepare({ title, subtitle, icon }) {
-              const svg = getBenefitIconSvg(icon)
               return {
                 title: title || 'Untitled benefit',
                 subtitle,
-                media: svg
-                  ? createElement('span', {
-                      style: { display: 'block', width: '100%', height: '100%', color: '#2E6B3E' },
-                      dangerouslySetInnerHTML: { __html: svg.replace('<svg ', '<svg width="100%" height="100%" ') },
-                    })
-                  : undefined,
+                media: icon ? createElement(BenefitIconPreview, { name: icon, size: '100%' }) : undefined,
               }
             },
           },
