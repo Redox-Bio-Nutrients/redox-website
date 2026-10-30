@@ -2,6 +2,8 @@
 
 **Status:** Living document, generated from the shipped codebase (not aspirational). Update this file whenever a token or pattern changes — it should always be traceable back to `src/styles/tokens.css` and the components it describes.
 
+**Shared design system (2026-10-28):** the Redox design language shared with the dashboard (tokens, logos, crop icons, component notes, the website and presentation registers) lives in `../Design System/` at the top of `_git`. This file describes how the website implements it; use the shared folder for logos and crop icons rather than copying them in.
+
 **Stack:** Astro 6, scoped component `<style>` blocks, CSS custom properties for every design decision. No CSS framework, no component library. Sanity CMS supplies content and per-product theming (color, imagery).
 
 ---
