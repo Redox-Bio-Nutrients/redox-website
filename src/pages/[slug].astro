@@ -383,6 +383,21 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
     margin-top: var(--space-6);
   }
 
+  /* No body copy: the page-builder sections follow the header
+   * directly, and HomeSections' own gap only applies *between* its
+   * sections, so the first one would sit flush against the hero.
+   * Same rhythm as that gap. :global — .home-sections is a child
+   * component's root. */
+  :is(.hero, .page-header) + :global(.home-sections) {
+    padding-top: var(--space-24);
+  }
+
+  @media (max-width: 767px) {
+    :is(.hero, .page-header) + :global(.home-sections) {
+      padding-top: var(--space-16);
+    }
+  }
+
   /* ── Body prose ───────────────────────────────────────────────── */
   .body {
     --prose-width: 54rem;
