@@ -67,7 +67,6 @@ export const primaryNav: PrimaryNavItem[] = [
     ],
   },
   { label: 'Contact Us', href: '/contact-us' },
-  { label: 'Swag Store', href: 'https://stores.inksoft.com/redoxgrows/shop/home', external: true },
 ]
 
 // Legal/compliance footer links — deliberately separate from
@@ -128,7 +127,6 @@ export const footerNav: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Contact Us',         href: '/contact-us'         },
       { label: 'Credit Application', href: '/credit-application' },
-      primaryNav.find((item) => item.label === 'Swag Store') as FooterLink,
       utilityNav.dashboard,
     ],
   },
