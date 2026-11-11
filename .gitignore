@@ -31,3 +31,9 @@ npm-debug.log*
 
 # Vercel adapter build output
 .vercel/
+
+# Local analytics exports (scripts/analytics-export.mjs)
+analytics-exports/
+
+# macOS installers dropped in the repo root
+*.dmg
