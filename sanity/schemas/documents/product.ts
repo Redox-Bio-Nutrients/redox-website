@@ -70,6 +70,45 @@ export const product = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
     defineField({
+      // Written by scripts/sync-product-images.mjs, which copies the
+      // product's current packaging image from the Redox Asset Library
+      // into `image` whenever the library's copy changes.
+      name: 'imageSync',
+      title: 'Product Image Sync',
+      type: 'object',
+      description:
+        'The Product Image above is kept in step with the Redox Asset Library automatically (checked daily). Matching is by product name.',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({
+          name: 'paused',
+          title: 'Pause syncing',
+          type: 'boolean',
+          initialValue: false,
+          description: 'Tick to keep the current Product Image and stop the daily sync from replacing it.',
+        }),
+        defineField({
+          name: 'libraryName',
+          title: 'Asset Library image name',
+          type: 'string',
+          description:
+            'Only if the library names this product\'s image differently, e.g. "Supreme (combined)". Leave empty to match by product name.',
+        }),
+        defineField({
+          name: 'blobId',
+          title: 'Last synced library image',
+          type: 'string',
+          readOnly: true,
+        }),
+        defineField({
+          name: 'syncedAt',
+          title: 'Last synced',
+          type: 'datetime',
+          readOnly: true,
+        }),
+      ],
+    }),
+    defineField({
       name: 'logo',
       title: 'Product Logo',
       type: 'image',
