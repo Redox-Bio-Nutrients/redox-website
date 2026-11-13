@@ -10,12 +10,14 @@
 // screens in Studio. Array order = display order.
 
 import { defineField, defineType } from 'sanity'
+import { pageUrlField } from '../../lib/pageUrlField'
 
 export const technicalPodcastPage = defineType({
   name: 'technicalPodcastPage',
   title: 'Technical Podcast Page',
   type: 'document',
   fields: [
+    pageUrlField(),
     defineField({
       name: 'sections',
       title: 'Sections',
