@@ -1,15 +1,15 @@
 // sanity/components/PageUrlInput.tsx
 //
-// WHY: Editors need to know where a product page lives (or will live)
-// on the website without guessing the route. This input is display
-// only: it never writes a value. It reads the slug from the open form
-// (the draft, if there is one) and compares it with the published
+// WHY: Editors need to know where a page lives (or will live) on the
+// website without guessing the route. This input is display only: it
+// never writes a value. It reads the slug from the open form (the
+// draft, if there is one) and compares it with the published
 // document's slug, so it can say "live at X", "will be at X once
 // published", or "live at X, moves to Y when you publish".
 //
-// Routes come from src/pages/products/[slug].astro and
-// src/pages/blog/[slug].astro. Update PATH_PREFIX here if a route moves
-// or another document type gets this field.
+// Added to a schema via pageUrlField() in sanity/lib/pageUrlField.ts.
+// Routes below mirror src/pages/ — update them if a route moves, and
+// add an entry before giving another document type this field.
 
 import { Badge, Box, Button, Card, Flex, Stack, Text } from '@sanity/ui'
 import { CopyIcon, LaunchIcon } from '@sanity/icons'
@@ -18,12 +18,23 @@ import { useEditState, useFormValue } from 'sanity'
 import type { StringInputProps } from 'sanity'
 
 const SITE_URL = 'https://redoxgrows.com'
+// Slug-based routes: the URL is prefix + slug.
 const PATH_PREFIX: Record<string, string> = {
-  product: '/products/',
-  blogPost: '/blog/',
+  product: '/products/', // src/pages/products/[slug].astro
+  blogPost: '/blog/', // src/pages/blog/[slug].astro
+  technology: '/technologies/', // src/pages/technologies/[slug].astro
+  page: '/', // src/pages/[slug].astro
+}
+
+// Singletons with a fixed route and no slug.
+const FIXED_PATH: Record<string, string> = {
+  homepage: '/', // src/pages/index.astro
+  podcastPage: '/podcast', // src/pages/podcast/index.astro
+  technicalPodcastPage: '/tech-podcast', // src/pages/tech-podcast/index.astro
 }
 
 function urlFor(type: string, slug?: string) {
+  if (type in FIXED_PATH) return `${SITE_URL}${FIXED_PATH[type]}`
   return slug ? `${SITE_URL}${PATH_PREFIX[type] ?? '/'}${slug}` : undefined
 }
 
@@ -78,7 +89,8 @@ export function PageUrlInput(_props: StringInputProps) {
   const { published } = useEditState(id ?? '', type)
   const publishedSlug = (published?.slug as { current?: string } | undefined)?.current
 
-  const liveUrl = urlFor(type, publishedSlug)
+  // Fixed-path singletons are live as soon as a published copy exists.
+  const liveUrl = published ? urlFor(type, publishedSlug) : undefined
   const nextUrl = urlFor(type, formSlug)
 
   if (!nextUrl && !liveUrl) {

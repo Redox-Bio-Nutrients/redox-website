@@ -6,8 +6,8 @@
 // are references so the relationship stays queryable in both directions.
 
 import { defineField, defineType } from 'sanity'
+import { pageUrlField } from '../../lib/pageUrlField'
 import { BulkImageInput } from '../../components/BulkImageInput'
-import { PageUrlInput } from '../../components/PageUrlInput'
 
 export const product = defineType({
   name: 'product',
@@ -27,15 +27,7 @@ export const product = defineType({
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
     }),
-    // Display only — PageUrlInput never writes a value. Shows the
-    // product's website URL, live or not-yet-published.
-    defineField({
-      name: 'pageUrl',
-      title: 'Page URL',
-      type: 'string',
-      readOnly: true,
-      components: { input: PageUrlInput },
-    }),
+    pageUrlField(),
     defineField({
       name: 'markets',
       title: 'Markets',

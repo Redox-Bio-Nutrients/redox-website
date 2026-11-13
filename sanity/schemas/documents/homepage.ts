@@ -5,12 +5,14 @@
 // from a hero plus any number of reorderable 1-3 column sections.
 
 import { defineField, defineType } from 'sanity'
+import { pageUrlField } from '../../lib/pageUrlField'
 
 export const homepage = defineType({
   name: 'homepage',
   title: 'Homepage',
   type: 'document',
   fields: [
+    pageUrlField(),
     defineField({
       name: 'sections',
       title: 'Sections',

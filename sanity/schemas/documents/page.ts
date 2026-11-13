@@ -5,6 +5,7 @@
 // Keeps editors out of the codebase for copy changes.
 
 import { defineField, defineType } from 'sanity'
+import { pageUrlField } from '../../lib/pageUrlField'
 
 export const page = defineType({
   name: 'page',
@@ -24,6 +25,7 @@ export const page = defineType({
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
     }),
+    pageUrlField(),
     defineField({
       name: 'heroHeading',
       title: 'Hero Heading',

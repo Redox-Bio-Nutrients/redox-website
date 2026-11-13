@@ -9,12 +9,14 @@
 // Buzzsprout, not something this document models.
 
 import { defineField, defineType } from 'sanity'
+import { pageUrlField } from '../../lib/pageUrlField'
 
 export const podcastPage = defineType({
   name: 'podcastPage',
   title: 'Podcast Page',
   type: 'document',
   fields: [
+    pageUrlField(),
     defineField({
       name: 'sections',
       title: 'Sections',

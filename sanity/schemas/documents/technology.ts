@@ -9,6 +9,7 @@
 // catalog card and cross-references, independent of page content.
 
 import { defineField, defineType } from 'sanity'
+import { pageUrlField } from '../../lib/pageUrlField'
 
 export const technology = defineType({
   name: 'technology',
@@ -28,6 +29,7 @@ export const technology = defineType({
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
     }),
+    pageUrlField(),
     defineField({
       name: 'tagline',
       title: 'Tagline',
