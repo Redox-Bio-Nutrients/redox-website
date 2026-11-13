@@ -7,8 +7,9 @@
 // document's slug, so it can say "live at X", "will be at X once
 // published", or "live at X, moves to Y when you publish".
 //
-// The route comes from src/pages/products/[slug].astro. Change
-// PATH_PREFIX here if that route ever moves.
+// Routes come from src/pages/products/[slug].astro and
+// src/pages/blog/[slug].astro. Update PATH_PREFIX here if a route moves
+// or another document type gets this field.
 
 import { Badge, Box, Button, Card, Flex, Stack, Text } from '@sanity/ui'
 import { CopyIcon, LaunchIcon } from '@sanity/icons'
@@ -17,10 +18,13 @@ import { useEditState, useFormValue } from 'sanity'
 import type { StringInputProps } from 'sanity'
 
 const SITE_URL = 'https://redoxgrows.com'
-const PATH_PREFIX = '/products/'
+const PATH_PREFIX: Record<string, string> = {
+  product: '/products/',
+  blogPost: '/blog/',
+}
 
-function urlFor(slug?: string) {
-  return slug ? `${SITE_URL}${PATH_PREFIX}${slug}` : undefined
+function urlFor(type: string, slug?: string) {
+  return slug ? `${SITE_URL}${PATH_PREFIX[type] ?? '/'}${slug}` : undefined
 }
 
 function UrlRow({ url, live }: { url: string; live: boolean }) {
@@ -74,13 +78,13 @@ export function PageUrlInput(_props: StringInputProps) {
   const { published } = useEditState(id ?? '', type)
   const publishedSlug = (published?.slug as { current?: string } | undefined)?.current
 
-  const liveUrl = urlFor(publishedSlug)
-  const nextUrl = urlFor(formSlug)
+  const liveUrl = urlFor(type, publishedSlug)
+  const nextUrl = urlFor(type, formSlug)
 
   if (!nextUrl && !liveUrl) {
     return (
       <Card padding={3} radius={2} tone="caution" border>
-        <Text size={1}>Generate a slug above to see this product's page URL.</Text>
+        <Text size={1}>Generate a slug above to see this page's URL.</Text>
       </Card>
     )
   }

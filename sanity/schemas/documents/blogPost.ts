@@ -1,6 +1,7 @@
 // sanity/schemas/documents/blogPost.ts
 
 import { defineField, defineType } from 'sanity'
+import { PageUrlInput } from '../../components/PageUrlInput'
 
 export const blogPost = defineType({
   name: 'blogPost',
@@ -19,6 +20,15 @@ export const blogPost = defineType({
       type: 'slug',
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
+    }),
+    // Display only — PageUrlInput never writes a value. Shows the
+    // post's website URL, live or not-yet-published.
+    defineField({
+      name: 'pageUrl',
+      title: 'Page URL',
+      type: 'string',
+      readOnly: true,
+      components: { input: PageUrlInput },
     }),
     defineField({
       name: 'publishedAt',
