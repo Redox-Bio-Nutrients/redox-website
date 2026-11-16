@@ -14,7 +14,7 @@
 import { Badge, Box, Button, Card, Flex, Stack, Text } from '@sanity/ui'
 import { CopyIcon, LaunchIcon } from '@sanity/icons'
 import { useState } from 'react'
-import { useEditState, useFormValue } from 'sanity'
+import { getPublishedId, useEditState, useFormValue } from 'sanity'
 import type { StringInputProps } from 'sanity'
 
 const SITE_URL = 'https://redoxgrows.com'
@@ -83,7 +83,11 @@ function UrlRow({ url, live }: { url: string; live: boolean }) {
 }
 
 export function PageUrlInput(_props: StringInputProps) {
-  const id = (useFormValue(['_id']) as string | undefined)?.replace(/^drafts\./, '')
+  // getPublishedId strips both `drafts.` and `versions.<release>.` —
+  // a scheduled publish opens the doc as a release version, and
+  // useEditState throws on a version id.
+  const rawId = useFormValue(['_id']) as string | undefined
+  const id = rawId ? getPublishedId(rawId) : undefined
   const type = (useFormValue(['_type']) as string | undefined) ?? 'product'
   const formSlug = (useFormValue(['slug']) as { current?: string } | undefined)?.current
   const { published } = useEditState(id ?? '', type)
