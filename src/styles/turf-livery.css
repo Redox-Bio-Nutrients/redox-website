@@ -64,11 +64,17 @@
  * border color happened to be very dark (blended into an
  * already-dark card), glaringly obvious once that color was
  * brightened for a text-contrast fix — same underlying bug, just a
- * different symptom. A plain `border` has one real trade-off: it
- * won't trace the diagonal cut itself (CSS borders are straight
- * per-side, so the cut corner shows as a clean stroke-less edge
- * where the polygon slices through) — a minor, common look for
- * cut-corner UI, not a bug. */
+ * different symptom. A plain `border` won't trace the diagonal cut
+ * itself (CSS borders are straight per-side), so the ::after below
+ * draws that one missing stroke: a --turf-cut square pinned to the
+ * border-box's top-right corner, painted with a hard-stop gradient
+ * band whose edge sits exactly on the diagonal. The clip-path slices
+ * off the outer half, leaving a --turf-cut-b-thick line on the inside
+ * that meets the top and right borders. It's a positive-z child (on
+ * top of content, pointer-events off) — the opposite of the old
+ * negative-z ::before bug above — and only covers the corner square.
+ * Added 2026-11-16 after the stroke-less corner was flagged on the
+ * live Turf cards/pages. */
 .turf-cut-bordered {
   --turf-cut: var(--turf-cut-md);
   --turf-cut-b: 1.5px;
@@ -76,6 +82,30 @@
   position: relative;
   clip-path: polygon(0 0, calc(100% - var(--turf-cut)) 0, 100% var(--turf-cut), 100% 100%, 0 100%);
   border: var(--turf-cut-b) solid var(--turf-cut-border-color);
+}
+
+.turf-cut-bordered::after {
+  content: '';
+  position: absolute;
+  /* Offset by the border so the square lines up with the border-box
+   * corner (abs. children are placed against the padding box). */
+  top: calc(-1 * var(--turf-cut-b));
+  right: calc(-1 * var(--turf-cut-b));
+  width: var(--turf-cut);
+  height: var(--turf-cut);
+  /* "to top right" on a square puts the 50% isoline on the
+   * top-left→bottom-right diagonal — exactly the cut line. The band
+   * runs inward (toward bottom-left) by --turf-cut-b; the 1px past 50%
+   * gets clipped and just avoids an anti-aliased seam on the edge. */
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - var(--turf-cut-b)),
+    var(--turf-cut-border-color) calc(50% - var(--turf-cut-b)),
+    var(--turf-cut-border-color) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* Small diagonal "speed line" hash accent — matches the catalog's

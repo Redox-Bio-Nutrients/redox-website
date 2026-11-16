@@ -265,7 +265,7 @@ const documents = (product.documents ?? []).map((doc) => ({
       <button
         type="button"
         class:list={[
-          isTurf ? ['sidebar__doc-request', 'turf-cut'] : ['btn', 'btn--ghost', 'btn--sm', 'sidebar__doc-request'],
+          isTurf ? ['sidebar__doc-request', 'turf-cut-bordered'] : ['btn', 'btn--ghost', 'btn--sm', 'sidebar__doc-request'],
         ]}
         data-dialog-open="resource-request-dialog"
       >
@@ -278,7 +278,7 @@ const documents = (product.documents ?? []).map((doc) => ({
             type="button"
             class:list={[
               isTurf
-                ? ['sidebar__support-toggle', 'turf-cut']
+                ? ['sidebar__support-toggle', 'turf-cut-bordered']
                 : ['btn', 'btn--ghost', 'btn--sm', 'sidebar__support-toggle'],
             ]}
             aria-expanded="false"
@@ -1165,6 +1165,9 @@ const documents = (product.documents ?? []).map((doc) => ({
    * comes from buttons.css here. */
   .sidebar--turf .sidebar__doc-request,
   .sidebar--turf .sidebar__support-toggle {
+    /* turf-cut-bordered (not plain turf-cut) so the shared ::after
+     * draws the stroke along the diagonal cut too. */
+    --turf-cut-border-color: var(--product-accent-color);
     padding: var(--space-3) var(--space-4);
     background: transparent;
     border: 1.5px solid var(--product-accent-color);
