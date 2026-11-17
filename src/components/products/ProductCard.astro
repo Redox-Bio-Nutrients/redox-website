@@ -25,6 +25,8 @@ import { getProductVariant } from '../../lib/productVariant'
 import { deriveCalloutPalette } from '../../lib/color'
 import { buildRegionalPools, regionalPoolsAttr } from '../../lib/regionalPool'
 import '../../styles/turf-livery.css'
+import TopoBackground from '../ui/TopoBackground.astro'
+import { TOPO_BACKGROUNDS } from '../../lib/designFlags'
 import type { ProductCard } from '../../lib/types/sanity'
 
 interface Props {
@@ -62,6 +64,10 @@ const toCardEntry = (img: NonNullable<ProductCard['backgrounds']>[number]) => ({
 const bgPool = (product.backgrounds ?? []).map(toCardEntry)
 // Location-matched swap — see src/lib/regionalPool.ts
 const regionalPools = buildRegionalPools(product.regionalPools, toCardEntry)
+// TOPO_BACKGROUNDS: the random crop photo becomes the product's own topo
+// map (seeded by slug, accent rings + glow in its label colour), peak
+// behind the packaging shot — same rule as the product page hero.
+const useTopo = TOPO_BACKGROUNDS
 ---
 
 <a
@@ -76,7 +82,9 @@ const regionalPools = buildRegionalPools(product.regionalPools, toCardEntry)
   }
 >
   <div class="card__media">
-    {bgPool.length > 0 && (
+    {useTopo ? (
+      <TopoBackground seed={product.slug} accent={product.primaryColor ?? undefined} peakX={0.5} peakY={0.42} />
+    ) : bgPool.length > 0 && (
       <div
         class="card__bg"
         data-bg-pool={JSON.stringify(bgPool)}
