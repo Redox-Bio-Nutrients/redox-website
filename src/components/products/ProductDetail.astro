@@ -1077,9 +1077,12 @@ const documents = (product.documents ?? []).map((doc) => ({
     background: linear-gradient(180deg, rgb(0 0 0 / 0.55) 0%, transparent 100%);
   }
 
+  /* The hero is pulled up behind the fixed nav, so offset by
+   * --header-space or the hash mark lands on the hamburger (mobile)
+   * and the Dashboard Login button (desktop). */
   .hero--turf .hero__turf-stripes {
     position: absolute;
-    top: var(--space-6);
+    top: calc(var(--header-space) + var(--space-6));
     right: var(--space-8);
     width: 64px;
     height: 14px;
