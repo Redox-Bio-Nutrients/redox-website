@@ -24,6 +24,7 @@ import type { CalloutSection, RegionalImagePool, SanityImage } from '../../../li
 import { buildRegionalPools } from '../../../lib/regionalPool'
 import type { ProductVariant } from '../../../lib/productVariant'
 import PoolBackground from '../../ui/PoolBackground.astro'
+import { TOPO_BACKGROUNDS } from '../../../lib/designFlags'
 
 interface Props {
   section: CalloutSection
@@ -66,6 +67,10 @@ const toEntry = (img: SanityImage) => ({
 const pool = (backgrounds ?? []).map(toEntry)
 const regional = buildRegionalPools(regionalPools, toEntry)
 const hasBg = pool.length > 0
+// Topo accent line (TOPO_BACKGROUNDS exploration) = the product's
+// label colour; a CSS-var fallback colour isn't a hex, so it falls back
+// to TopoBackground's default amber.
+const topoAccent = typeof color === 'string' && color.startsWith('#') ? color : undefined
 
 // Homepage/Technology only (see the schema field's own comment) — a
 // contained product shot (bottle/label PNG, object-fit: contain, same
@@ -93,7 +98,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
     class:list={['t-callout', 'turf-cut', { 't-callout--has-image': productImageUrl, 't-callout--full-bleed': fullBleed }]}
     style={`--turf-cut: var(--turf-cut-lg); --t-callout-primary: ${palette.base}; --t-callout-accent: ${palette.complement};`}
   >
-    {hasBg && <PoolBackground pool={pool} regionalPools={regional} />}
+    {hasBg && <PoolBackground pool={pool} regionalPools={regional} topoSeed={section._key} topoAccent={topoAccent} />}
     <div class="t-callout__wash" aria-hidden="true"></div>
     {productImageUrl && (
       <img class="t-callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
@@ -132,11 +137,11 @@ const textureVars = buildTextureVars(section._key, color, accent)
     style={textureVars}
   >
     {hasBg ? (
-      <PoolBackground pool={pool} regionalPools={regional} />
+      <PoolBackground pool={pool} regionalPools={regional} topoSeed={section._key} topoAccent={topoAccent} />
     ) : (
       !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}
-    {hasBg && solid && <div class="callout__overlay texture-wash" aria-hidden="true"></div>}
+    {hasBg && solid && !TOPO_BACKGROUNDS && <div class="callout__overlay texture-wash" aria-hidden="true"></div>}
 
     {/* Inert wrapper by default (no position/width of its own, so the
        product image's absolute positioning still resolves against

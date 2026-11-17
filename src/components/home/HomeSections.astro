@@ -6,7 +6,7 @@
 // type, a component, and a case here — same pattern as ProductSections.
 
 import type { HomeSection } from '../../lib/types/sanity'
-import HeroSection from './sections/HeroSection.astro'
+import HeroSection, { type HeroTopoOptions } from './sections/HeroSection.astro'
 import HeroCarouselSection from './sections/HeroCarouselSection.astro'
 import ColumnSection from './sections/ColumnSection.astro'
 import StatsSection from './sections/StatsSection.astro'
@@ -25,16 +25,19 @@ import DownloadSection from './sections/DownloadSection.astro'
 
 interface Props {
   sections: HomeSection[]
+  /** EXPLORATION (TOPO_BACKGROUNDS): page-specific topo hero options,
+   * passed straight to HeroSection — homepage spectrum, podcast audio. */
+  heroTopo?: HeroTopoOptions
 }
 
-const { sections } = Astro.props
+const { sections, heroTopo } = Astro.props
 ---
 
 <div class="home-sections">
   {sections.map((section, index) => {
     switch (section._type) {
       case 'homeHeroSection':
-        return <HeroSection section={section} />
+        return <HeroSection section={section} topo={heroTopo} />
       case 'homeHeroCarouselSection':
         return <HeroCarouselSection section={section} />
       case 'homeColumnSection': {

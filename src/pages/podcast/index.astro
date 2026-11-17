@@ -68,7 +68,7 @@ for (const ep of episodes) {
   description="The Redox Grows Podcast — conversations with growers, agronomists, and industry leaders about what it takes to grow better."
 >
   {firstSection ? (
-    <HomeSections sections={[firstSection]} />
+    <HomeSections sections={[firstSection]} heroTopo={{ treatment: 'audio' }} />
   ) : (
     <div class="fallback">
       <h1>Podcast</h1>

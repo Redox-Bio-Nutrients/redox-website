@@ -7,10 +7,15 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro'
 import HomeSections from '../components/home/HomeSections.astro'
-import { getHomepage } from '../lib/queries'
+import { getAllProducts, getHomepage } from '../lib/queries'
+import { productSpectrum } from '../lib/topo'
 import { site } from '../config/site'
 
-const homepage = await getHomepage()
+const [homepage, products] = await Promise.all([getHomepage(), getAllProducts()])
+// TOPO_BACKGROUNDS exploration: the homepage hero's accent rings take
+// every product's label colour (hue-sorted, de-duplicated) — an homage
+// to the whole line. See productSpectrum() in src/lib/topo.ts.
+const spectrum = productSpectrum(products.map((p) => p.primaryColor))
 const hasSections = (homepage?.sections?.length ?? 0) > 0
 ---
 
@@ -20,7 +25,10 @@ const hasSections = (homepage?.sections?.length ?? 0) > 0
   seo={homepage?.seo}
 >
   {hasSections ? (
-    <HomeSections sections={homepage!.sections!} />
+    <HomeSections
+      sections={homepage!.sections!}
+      heroTopo={{ accents: spectrum, accentEvery: 3 }}
+    />
   ) : (
     <section class="hero-fallback">
       <h1>{site.name}</h1>
