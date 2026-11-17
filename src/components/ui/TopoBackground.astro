@@ -17,8 +17,7 @@
 // Variants: `accents` (array) cycles the accent rings through several
 // colours — the homepage uses every product's label colour, by hue.
 // `treatment="audio"` drops the contours for a centred seeded waveform
-// + faint dot grid — the podcast heroes. `ground="charcoal"` swaps the
-// forest ground for dark grey — the homepage Featured Product.
+// + faint dot grid — the podcast heroes.
 //
 // The accent line + glow colour is PER PRODUCT: it's the product's
 // label colour (product.primaryColor — KaPstone's orange label → orange
@@ -47,10 +46,6 @@ interface Props {
   /** 'audio' (podcast heroes): NO contour lines — a vertically centred
    * waveform band + faint tech dot grid over the ground and glow */
   treatment?: 'audio'
-  /** 'charcoal': neutral dark grey ground + grey contours instead of
-   * forest green — homepage Featured Product, so it reads apart from the
-   * hero's map */
-  ground?: 'forest' | 'charcoal'
   /** 'eager' for heroes (above the fold); callouts default to lazy */
   loading?: 'eager' | 'lazy'
   class?: string
@@ -67,7 +62,6 @@ const {
   accentEvery,
   accents,
   treatment,
-  ground = 'forest',
   loading = 'lazy',
   class: className,
 } = Astro.props
@@ -93,7 +87,6 @@ const topoUrl = audio
       warp,
       accentEvery,
       colors: ringColors.length ? ringColors : [DEFAULT_ACCENT],
-      ground,
     })
 // Own 2400×300 strip, vertically centred in the container by CSS (not
 // part of the topo viewBox) so it stays put at any aspect ratio.
@@ -101,7 +94,7 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
 ---
 
 <div
-  class:list={['topo-bg', { 'topo-bg--audio': audio, 'topo-bg--charcoal': ground === 'charcoal' }, className]}
+  class:list={['topo-bg', { 'topo-bg--audio': audio }, className]}
   style={`--topo-accent: ${accentColor}; --topo-peak-x: ${peakX * 100}%; --topo-peak-y: ${peakY * 100}%;`}
   aria-hidden="true"
 >
@@ -182,12 +175,6 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
     stroke-opacity: 0.5;
   }
 
-  /* ── charcoal ground (homepage Featured Product) ── */
-  .topo-bg--charcoal {
-    background:
-      radial-gradient(140% 90% at 50% 120%, rgb(0 0 0 / 0.45), transparent 60%),
-      linear-gradient(180deg, #2a2c2e 0%, #232527 55%, #1b1c1e 100%);
-  }
 
   /* Faint tech dot grid, fading out toward the edges */
   .topo-bg__grid {

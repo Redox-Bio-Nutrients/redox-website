@@ -64,7 +64,14 @@ const toEntry = (img: SanityImage) => ({
 const pool = (product?.backgrounds ?? []).map(toEntry)
 // The featured product's location-matched imagery — src/lib/regionalPool.ts
 const regionalPools = buildRegionalPools(product?.regionalPools, toEntry)
-const hasBg = pool.length > 0
+// TOPO_BACKGROUNDS: no photo and no topo map here (Curtis 2026-11-17 —
+// the map didn't work in this box). Instead a charcoal ground with a
+// glow in the featured product's label colour (.featured-product__glow).
+// The plain texture-fill fallback was tried and dropped: a light label
+// colour (RDX-Flex teal) washed out the white text and logo.
+const hasBg = !TOPO_BACKGROUNDS && pool.length > 0
+const glow = TOPO_BACKGROUNDS && !isTurf
+const glowColor = ensureReadableOnDark(color)
 
 const imageUrl = product?.image
   ? urlFor(product.image).width(800).fit('max').auto('format').quality(85).url()
@@ -101,7 +108,7 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
     <div
       class:list={[
         'featured-product__card',
-        isTurf ? ['featured-product__card--turf', 'turf-cut'] : { 'texture-fill': !hasBg },
+        isTurf ? ['featured-product__card--turf', 'turf-cut'] : { 'texture-fill': !hasBg && !glow },
       ]}
       style={isTurf ? `--turf-cut: var(--turf-cut-lg); --fp-turf-primary: ${color}; --fp-turf-accent: ${turfAccent};` : textureVars}
     >
@@ -112,13 +119,10 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
          CalloutSection's solid tone uses; texture-fill above is only
          the no-photo fallback (agriculture) — turf's wash reads fine
          directly over a photo, no separate fallback needed. */}
-      {hasBg && <PoolBackground
-        pool={pool}
-        regionalPools={regionalPools}
-        topoSeed={product?.slug}
-        topoAccent={product?.primaryColor ?? undefined}
-        topoGround="charcoal"
-      />}
+      {hasBg && <PoolBackground pool={pool} regionalPools={regionalPools} />}
+      {glow && (
+        <div class="featured-product__glow" style={`--fp-glow: ${glowColor};`} aria-hidden="true"></div>
+      )}
       {/* Whole-card click target — keeps the old "entire card is the
          link" behavior now that the card holds two links. Hidden from
          assistive tech/tab order; the real "Explore" link below is
@@ -127,7 +131,7 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
       {isTurf ? (
         <div class="featured-product__turf-wash" aria-hidden="true"></div>
       ) : (
-        hasBg && !TOPO_BACKGROUNDS && <div class="featured-product__overlay texture-wash" style={textureVars} aria-hidden="true"></div>
+        hasBg && <div class="featured-product__overlay texture-wash" style={textureVars} aria-hidden="true"></div>
       )}
       <div class="featured-product__inner">
         <div class="featured-product__media">
@@ -175,6 +179,17 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
    * (the background/wash layer) is a direct child of .featured-product
    * with nothing constraining it, so it spans the true viewport edge.
    * Same reasoning CalloutSection's own fullBleed comment documents. */
+  /* TOPO_BACKGROUNDS: charcoal ground + label-colour glow, always dark
+   * (both themes) so it reads apart from the green hero above. */
+  .featured-product__glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(42% 70% at 78% 40%, color-mix(in oklab, var(--fp-glow) 38%, transparent), color-mix(in oklab, var(--fp-glow) 10%, transparent) 55%, transparent 80%),
+      radial-gradient(140% 90% at 50% 120%, rgb(0 0 0 / 0.45), transparent 60%),
+      linear-gradient(180deg, #2a2c2e 0%, #232527 55%, #1b1c1e 100%);
+  }
+
   .featured-product__card {
     position: relative;
     display: block;
