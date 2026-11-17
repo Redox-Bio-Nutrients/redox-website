@@ -8,20 +8,41 @@
 // built for reuse on future sections/pages. Pass `regionalPools` when
 // the imagery belongs to a product, so its location-matched imagery
 // can take over — see src/lib/regionalPool.ts.
+//
+// EXPLORATION 2026-11-17: with TOPO_BACKGROUNDS on (src/lib/
+// designFlags.ts) this renders a TopoBackground instead of a photo —
+// pass `topoSeed` (section _key / product slug) and `topoAccent` (the
+// product label colour) so each box gets its own terrain and colour.
 
 import { regionalPoolsAttr, type PoolEntry, type RegionalPoolEntries } from '../../lib/regionalPool'
+import { TOPO_BACKGROUNDS } from '../../lib/designFlags'
+import TopoBackground from './TopoBackground.astro'
 
 export type { PoolEntry }
 
 interface Props {
   pool: PoolEntry[]
   regionalPools?: RegionalPoolEntries[]
+  topoSeed?: string
+  topoAccent?: string
+  topoPeakX?: number
+  topoPeakY?: number
+  topoGround?: 'forest' | 'charcoal'
 }
 
-const { pool, regionalPools = [] } = Astro.props
+const { pool, regionalPools = [], topoSeed, topoAccent, topoPeakX = 0.78, topoPeakY = 0.4, topoGround } = Astro.props
+const topo = TOPO_BACKGROUNDS
 ---
 
-{pool.length > 0 && (
+{topo ? (
+  <TopoBackground
+    seed={topoSeed ?? 'redox'}
+    accent={topoAccent}
+    peakX={topoPeakX}
+    peakY={topoPeakY}
+    ground={topoGround}
+  />
+) : pool.length > 0 && (
   <div
     class="pool-bg"
     data-bg-pool={JSON.stringify(pool)}

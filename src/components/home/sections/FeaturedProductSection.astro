@@ -33,6 +33,7 @@ import { getProductVariant } from '../../../lib/productVariant'
 import type { HomeFeaturedProductSection, SanityImage } from '../../../lib/types/sanity'
 import { buildRegionalPools } from '../../../lib/regionalPool'
 import PoolBackground from '../../ui/PoolBackground.astro'
+import { TOPO_BACKGROUNDS } from '../../../lib/designFlags'
 import '../../../styles/turf-livery.css'
 import '../../../styles/texture-surface.css'
 
@@ -111,7 +112,13 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
          CalloutSection's solid tone uses; texture-fill above is only
          the no-photo fallback (agriculture) — turf's wash reads fine
          directly over a photo, no separate fallback needed. */}
-      {hasBg && <PoolBackground pool={pool} regionalPools={regionalPools} />}
+      {hasBg && <PoolBackground
+        pool={pool}
+        regionalPools={regionalPools}
+        topoSeed={product?.slug}
+        topoAccent={product?.primaryColor ?? undefined}
+        topoGround="charcoal"
+      />}
       {/* Whole-card click target — keeps the old "entire card is the
          link" behavior now that the card holds two links. Hidden from
          assistive tech/tab order; the real "Explore" link below is
@@ -120,7 +127,7 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
       {isTurf ? (
         <div class="featured-product__turf-wash" aria-hidden="true"></div>
       ) : (
-        hasBg && <div class="featured-product__overlay texture-wash" style={textureVars} aria-hidden="true"></div>
+        hasBg && !TOPO_BACKGROUNDS && <div class="featured-product__overlay texture-wash" style={textureVars} aria-hidden="true"></div>
       )}
       <div class="featured-product__inner">
         <div class="featured-product__media">

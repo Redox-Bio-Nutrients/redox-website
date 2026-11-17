@@ -12,14 +12,25 @@ import { urlFor } from '../../../lib/sanity'
 import { buildTextureVars } from '../../../lib/texture'
 import type { HomeHeroSection } from '../../../lib/types/sanity'
 import PoolBackground from '../../ui/PoolBackground.astro'
+import TopoBackground from '../../ui/TopoBackground.astro'
+import { TOPO_BACKGROUNDS } from '../../../lib/designFlags'
 import ScrollIndicator from '../../ui/ScrollIndicator.astro'
 import '../../../styles/texture-surface.css'
 
-interface Props {
-  section: HomeHeroSection
+export interface HeroTopoOptions {
+  /** multi-colour accent rings (homepage: every product's label colour) */
+  accents?: string[]
+  accentEvery?: number
+  /** 'audio' = waveform band + dot grid (podcast pages) */
+  treatment?: 'audio'
 }
 
-const { section } = Astro.props
+interface Props {
+  section: HomeHeroSection
+  topo?: HeroTopoOptions
+}
+
+const { section, topo } = Astro.props
 // Same grain + hue-shifted-bloom + diagonal-sweep treatment the
 // product callout boxes use (src/lib/texture.ts, extracted from
 // CalloutSection.astro) — seeded per-section so it varies page to
@@ -50,6 +61,9 @@ const imageUrl = !usePool && section.backgroundImage?.asset
 const videoUrl = section.backgroundVideoUrl ?? null
 const hasMedia = Boolean(videoUrl || imageUrl || usePool)
 const centered = section.textAlign === 'center'
+// TOPO_BACKGROUNDS exploration: the crop photo (fixed or pool) becomes
+// a topo map; a background video is left alone.
+const useTopo = TOPO_BACKGROUNDS && !videoUrl && (usePool || Boolean(imageUrl))
 ---
 
 <header class:list={['hero', { 'hero--center': centered }]} data-header-theme="light">
@@ -63,6 +77,15 @@ const centered = section.textAlign === 'center'
       loop
       playsinline
     />
+  ) : useTopo ? (
+    <TopoBackground
+      seed={section._key}
+      peakX={centered ? 0.5 : 0.72}
+      peakY={0.42}
+      accents={topo?.accents}
+      accentEvery={topo?.accentEvery}
+      treatment={topo?.treatment}
+    />
   ) : usePool ? (
     <PoolBackground pool={pool} />
   ) : imageUrl ? (
@@ -70,8 +93,8 @@ const centered = section.textAlign === 'center'
   ) : (
     <div class="hero__bg texture-fill" style={textureVars} aria-hidden="true"></div>
   )}
-  {hasMedia && <div class="hero__overlay" aria-hidden="true"></div>}
-  {hasMedia && <div class="hero__texture texture-wash" style={textureVars} aria-hidden="true"></div>}
+  {hasMedia && <div class:list={['hero__overlay', { 'hero__overlay--topo': useTopo }]} aria-hidden="true"></div>}
+  {hasMedia && !useTopo && <div class="hero__texture texture-wash" style={textureVars} aria-hidden="true"></div>}
 
   <div class:list={['hero__content', { 'hero__content--has-quote': section.quote }]}>
     <h1 class="hero__title">{section.heading}</h1>
@@ -164,6 +187,11 @@ const centered = section.textAlign === 'center'
     background:
       linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0) 200px),
       rgb(0 0 0 / 0.26);
+  }
+
+  /* Topo ground is already dark — keep only the nav band. */
+  .hero__overlay--topo {
+    background: linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0) 200px);
   }
 
   /* Brand-colored grain/bloom texture, layered *above* the dark wash

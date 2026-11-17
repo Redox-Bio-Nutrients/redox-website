@@ -25,11 +25,20 @@ import { deriveCalloutPalette, ensureReadableOnDark } from '../../lib/color'
 import '../../styles/turf-livery.css'
 import type { Product } from '../../lib/types/sanity'
 
+import TopoBackground from '../ui/TopoBackground.astro'
+import { TOPO_BACKGROUNDS } from '../../lib/designFlags'
+
 interface Props {
   product: Product
+  /** EXPLORATION 2026-11-17: 'topo' swaps ONLY the random crop photo for
+   * the generated topographic background (accent = product label
+   * colour); the rest of the hero is unchanged. Defaults to 'topo' while
+   * TOPO_BACKGROUNDS (src/lib/designFlags.ts) is on. */
+  heroStyle?: 'photo' | 'topo'
 }
 
-const { product } = Astro.props
+const { product, heroStyle = TOPO_BACKGROUNDS ? 'topo' : 'photo' } = Astro.props
+const isTopo = heroStyle === 'topo'
 
 const color = product.primaryColor ?? '#2E6B3E'
 const accentColor = product.accentColor
@@ -124,11 +133,13 @@ const documents = (product.documents ?? []).map((doc) => ({
 ---
 
 <header
-  class:list={['hero', { 'hero--turf': isTurf }]}
+  class:list={['hero', { 'hero--turf': isTurf, 'hero--topo': isTopo }]}
   data-header-theme="light"
   style={`--product-color: ${color}; --product-accent-color: ${turfAccent};`}
 >
-  {heroImage ? (
+  {isTopo ? (
+    <TopoBackground seed={product.slug} accent={color} peakX={0.72} peakY={0.42} />
+  ) : heroImage ? (
     <>
       <div
         id="hero-lqip"

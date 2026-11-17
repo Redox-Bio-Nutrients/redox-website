@@ -53,7 +53,7 @@ const textureVarsById = new Map(
   description="The Redox Technical Podcast — a closer look at the science behind Redox Bio-Nutrients technologies, straight from the team building them."
 >
   {firstSection ? (
-    <HomeSections sections={[firstSection]} />
+    <HomeSections sections={[firstSection]} heroTopo={{ treatment: 'audio' }} />
   ) : (
     <div class="fallback">
       <h1>Technical Podcast</h1>

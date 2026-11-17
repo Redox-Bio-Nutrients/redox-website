@@ -228,7 +228,7 @@ const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duo
     {bgImageUrl && (
       <img class="columns__bg" src={bgImageUrl} alt="" aria-hidden="true" loading="lazy" />
     )}
-    {bgType === 'pool' && pool.length > 0 && <PoolBackground pool={pool} />}
+    {bgType === 'pool' && pool.length > 0 && <PoolBackground pool={pool} topoSeed={section._key} />}
     {(bgType === 'image' || (bgType === 'pool' && pool.length > 0)) && (
       <div class="columns__scrim" aria-hidden="true"></div>
     )}

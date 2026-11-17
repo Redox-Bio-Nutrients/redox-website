@@ -1,0 +1,207 @@
+---
+// src/components/ui/TopoBackground.astro
+//
+// EXPLORATION (2026-11-17) — topographic background from the Nov 2026
+// social posts, as a stand-in for PoolBackground's random crop photos.
+// Drop inside any position:relative container (fills it, like
+// PoolBackground).
+//
+// Layers: forest→teal ground · warm glow at the peak · faint sage
+// contour lines · accent contour lines (each level its own seeded
+// stroke width, 1.6–4.2px — only the colour lines vary).
+//
+// Variants: `accents` (array) cycles the accent rings through several
+// colours — the homepage uses every product's label colour, by hue.
+// `treatment="audio"` drops the contours for a centred seeded waveform
+// + faint dot grid — the podcast heroes. `ground="charcoal"` swaps the
+// forest ground for dark grey — the homepage Featured Product.
+//
+// The accent line + glow colour is PER PRODUCT: it's the product's
+// label colour (product.primaryColor — KaPstone's orange label → orange
+// lines), not a fixed brand amber. Pass it as `accent`. Dark label
+// colours are lifted (ensureReadableOnDark) so the line still reads on
+// the dark ground. Non-product pages fall back to the posts' amber.
+
+import { generateTopo, generateWaveform } from '../../lib/topo'
+import { ensureReadableOnDark } from '../../lib/color'
+
+interface Props {
+  /** terrain seed — use the page/product slug so each page differs */
+  seed: string
+  /** product label colour; defaults to the social posts' amber */
+  accent?: string
+  /** where the glow/peak sits, 0–1 */
+  peakX?: number
+  peakY?: number
+  spacing?: number
+  warp?: number
+  /** every Nth contour level is an accent line (default 7) */
+  accentEvery?: number
+  /** several colours: accent rings cycle through them, in order from
+   * the peak outward (homepage — one per product colour) */
+  accents?: string[]
+  /** 'audio' (podcast heroes): NO contour lines — a vertically centred
+   * waveform band + faint tech dot grid over the ground and glow */
+  treatment?: 'audio'
+  /** 'charcoal': neutral dark grey ground + grey contours instead of
+   * forest green — homepage Featured Product, so it reads apart from the
+   * hero's map */
+  ground?: 'forest' | 'charcoal'
+  class?: string
+}
+
+const DEFAULT_ACCENT = '#C9862F'
+const {
+  seed,
+  accent = DEFAULT_ACCENT,
+  peakX = 0.5,
+  peakY = 0.5,
+  spacing,
+  warp,
+  accentEvery,
+  accents,
+  treatment,
+  ground = 'forest',
+  class: className,
+} = Astro.props
+
+const accentColor = ensureReadableOnDark(accent)
+const ringColors = accents?.length ? accents.map((c) => ensureReadableOnDark(c)) : null
+// Neighbouring rings step ~0.38 of the way round the hue-sorted palette
+// (golden-ratio stride), so adjacent rings contrast (orange next to blue
+// next to green) and every visible part of the hero shows a mix of the
+// product line — a smooth rainbow outward left the blues/purples in the
+// off-screen corners.
+const ringColor = (i: number) => {
+  const n = ringColors!.length
+  const stride = Math.max(1, Math.round(n * 0.382))
+  return ringColors![(i * stride) % n]
+}
+const audio = treatment === 'audio'
+// Audio skips the contour map entirely (Curtis 2026-11-17).
+const topo = audio ? null : generateTopo({ seed, peakX, peakY, spacing, warp, accentEvery })
+// Own 2400×300 strip, vertically centred in the container by CSS (not
+// part of the topo viewBox) so it stays put at any aspect ratio.
+const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peakX, maxAmp: 0.46 }) : null
+---
+
+<div
+  class:list={['topo-bg', { 'topo-bg--audio': audio, 'topo-bg--charcoal': ground === 'charcoal' }, className]}
+  style={`--topo-accent: ${accentColor}; --topo-peak-x: ${peakX * 100}%; --topo-peak-y: ${peakY * 100}%;`}
+  aria-hidden="true"
+>
+  <div class="topo-bg__glow"></div>
+  {topo && (
+  <svg
+    class="topo-bg__lines"
+    viewBox={`0 0 ${topo.width} ${topo.height}`}
+    preserveAspectRatio="xMidYMid slice"
+  >
+    <path class="topo-bg__base" d={topo.base} />
+    {topo.accent.map((a, i) => (
+      <path
+        class="topo-bg__accent"
+        d={a.d}
+        style={`stroke-width: ${a.width}px;${ringColors ? ` stroke: ${ringColor(i)};` : ''}`}
+      />
+    ))}
+  </svg>
+  )}
+  {wave && (
+    <svg class="topo-bg__wavebox" viewBox="0 0 2400 300" preserveAspectRatio="xMidYMid slice">
+      <path class="topo-bg__wave" d={wave} />
+    </svg>
+  )}
+  {audio && <div class="topo-bg__grid"></div>}
+</div>
+
+<style>
+  .topo-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(140% 90% at 50% 120%, rgb(20 52 50 / 0.9), transparent 60%),
+      linear-gradient(180deg, #213a2a 0%, #1f382c 55%, #183330 100%);
+  }
+
+  .topo-bg__glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      38% 55% at var(--topo-peak-x) var(--topo-peak-y),
+      color-mix(in oklab, var(--topo-accent) 34%, transparent),
+      color-mix(in oklab, var(--topo-accent) 10%, transparent) 55%,
+      transparent 80%
+    );
+  }
+
+  .topo-bg__lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .topo-bg__base {
+    stroke: rgb(196 214 190 / 0.22);
+    stroke-width: 1.3;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .topo-bg__accent {
+    stroke: var(--topo-accent);
+    stroke-opacity: 0.85;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* ── audio treatment (podcast heroes) ── */
+  .topo-bg__wave {
+    stroke: var(--topo-accent);
+    stroke-opacity: 0.7;
+    stroke-width: 3;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .topo-bg__wavebox {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    translate: 0 -50%;
+    width: 100%;
+    height: clamp(120px, 34%, 340px);
+    fill: none;
+  }
+
+  /* centred behind the title — a touch quieter so the type leads */
+  .topo-bg--audio .topo-bg__wave {
+    stroke-opacity: 0.5;
+  }
+
+  /* ── charcoal ground (homepage Featured Product) ── */
+  .topo-bg--charcoal {
+    background:
+      radial-gradient(140% 90% at 50% 120%, rgb(0 0 0 / 0.45), transparent 60%),
+      linear-gradient(180deg, #2a2c2e 0%, #232527 55%, #1b1c1e 100%);
+  }
+
+  .topo-bg--charcoal .topo-bg__base {
+    stroke: rgb(220 222 225 / 0.16);
+  }
+
+  /* Faint tech dot grid, fading out toward the edges */
+  .topo-bg__grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgb(214 230 205 / 0.22) 1px, transparent 1.4px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(70% 80% at var(--topo-peak-x) var(--topo-peak-y), #000 30%, transparent 85%);
+  }
+
+
+</style>
