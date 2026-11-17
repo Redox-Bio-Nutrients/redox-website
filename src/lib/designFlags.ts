@@ -10,6 +10,8 @@
 //   - homepage/page-builder heroes (HeroSection.astro — not videos)
 //   - callout boxes and "Pool" column sections (through
 //     PoolBackground.astro)
+//   - product cards (ProductCard.astro — catalogs, related products,
+//     blog product embeds)
 //   - the homepage Featured Product box drops its photo for a charcoal
 //     ground with a glow in the product's label colour (no topo map)
 // Accent line colour = the product's label colour where there is a
