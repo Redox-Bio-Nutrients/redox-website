@@ -37,6 +37,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 import { PortableText } from 'astro-portabletext'
 import {
   getAllCollections,
+  getAllProducts,
   getAllPageSlugs,
   getAllRegionsWithTeams,
   getOfficeStaff,
@@ -44,6 +45,9 @@ import {
   getTestimonialsByMarket,
 } from '../lib/queries'
 import { urlFor } from '../lib/sanity'
+import { TOPO_BACKGROUNDS } from '../lib/designFlags'
+import { productSpectrum } from '../lib/topo'
+import TopoBackground from '../components/ui/TopoBackground.astro'
 import { marketPalette } from '../lib/color'
 import { buildTextureVars } from '../lib/texture'
 import { onMissingPortableTextComponent, portableTextComponents } from '../lib/portableTextComponents'
@@ -85,6 +89,15 @@ const heroImageUrl = page.heroImage?.asset
 const heroAlign = page.heroTextAlign ?? (heroImageUrl ? 'center' : 'left')
 const heroTextureColor = marketPalette(slug === 'turf' ? 'turf' : 'agriculture').base
 const heroTextureVars = buildTextureVars(slug!, heroTextureColor)
+// TOPO_BACKGROUNDS: the Agriculture/Turf landing heroes swap their crop
+// photo for a topo map whose accent rings take that market's product
+// label colours (same homage idea as the homepage hero). Other pages
+// keep their photo.
+const isMarketLanding = slug === 'agriculture' || slug === 'turf'
+const topoHero = TOPO_BACKGROUNDS && isMarketLanding && Boolean(heroImageUrl)
+const marketSpectrum = topoHero
+  ? productSpectrum((await getAllProducts()).filter((p) => p.markets?.includes(slug as 'agriculture' | 'turf')).map((p) => p.primaryColor))
+  : []
 
 const officeStaff = slug === 'contact-us' ? await getOfficeStaff() : []
 const regionTeams = slug === 'contact-us' ? await getAllRegionsWithTeams() : []
@@ -105,9 +118,20 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
 <BaseLayout title={page.title} seo={page.seo}>
   {heroImageUrl ? (
     <header class="hero" data-header-theme="light">
-      <img class="hero__bg" src={heroImageUrl} alt={page.heroImage?.alt ?? ''} loading="eager" />
-      <div class="hero__overlay" aria-hidden="true"></div>
-      <div class="hero__texture texture-wash" style={heroTextureVars} aria-hidden="true"></div>
+      {topoHero ? (
+        <TopoBackground
+          seed={`market-${slug}`}
+          accents={marketSpectrum}
+          accentEvery={4}
+          peakX={0.5}
+          peakY={0.42}
+          loading="eager"
+        />
+      ) : (
+        <img class="hero__bg" src={heroImageUrl} alt={page.heroImage?.alt ?? ''} loading="eager" />
+      )}
+      <div class:list={['hero__overlay', { 'hero__overlay--topo': topoHero }]} aria-hidden="true"></div>
+      {!topoHero && <div class="hero__texture texture-wash" style={heroTextureVars} aria-hidden="true"></div>}
       <div class:list={['hero__content', `hero__content--${heroAlign}`]}>
         <h1 class="hero__title">{page.heroHeading ?? page.title}</h1>
         <div class="hero__meta">
@@ -267,6 +291,11 @@ const testimonialsHeading = slug === 'turf' ? 'What Turf Professionals Are Sayin
     background:
       linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0) 200px),
       rgb(0 0 0 / 0.26);
+  }
+
+  /* Topo ground is already dark — keep only the nav band. */
+  .hero__overlay--topo {
+    background: linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0) 200px);
   }
 
   /* Brand/market-colored grain + bloom texture over the dark wash —
