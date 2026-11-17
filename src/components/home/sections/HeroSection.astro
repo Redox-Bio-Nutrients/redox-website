@@ -85,6 +85,7 @@ const useTopo = TOPO_BACKGROUNDS && !videoUrl && (usePool || Boolean(imageUrl))
       accents={topo?.accents}
       accentEvery={topo?.accentEvery}
       treatment={topo?.treatment}
+      loading="eager"
     />
   ) : usePool ? (
     <PoolBackground pool={pool} />

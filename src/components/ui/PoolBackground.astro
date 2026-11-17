@@ -27,10 +27,9 @@ interface Props {
   topoAccent?: string
   topoPeakX?: number
   topoPeakY?: number
-  topoGround?: 'forest' | 'charcoal'
 }
 
-const { pool, regionalPools = [], topoSeed, topoAccent, topoPeakX = 0.78, topoPeakY = 0.4, topoGround } = Astro.props
+const { pool, regionalPools = [], topoSeed, topoAccent, topoPeakX = 0.78, topoPeakY = 0.4 } = Astro.props
 const topo = TOPO_BACKGROUNDS
 ---
 
@@ -40,7 +39,6 @@ const topo = TOPO_BACKGROUNDS
     accent={topoAccent}
     peakX={topoPeakX}
     peakY={topoPeakY}
-    ground={topoGround}
   />
 ) : pool.length > 0 && (
   <div

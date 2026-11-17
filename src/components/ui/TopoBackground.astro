@@ -6,6 +6,10 @@
 // Drop inside any position:relative container (fills it, like
 // PoolBackground).
 //
+// The contour lines are a cached SVG file served by /topo.svg
+// (src/pages/topo.svg.ts, renderTopoSvg in src/lib/topo.ts) rather than
+// inline path data — ~45 KB per map, cached a year by browser + CDN.
+//
 // Layers: forest→teal ground · warm glow at the peak · faint sage
 // contour lines · accent contour lines (each level its own seeded
 // stroke width, 1.6–4.2px — only the colour lines vary).
@@ -13,8 +17,7 @@
 // Variants: `accents` (array) cycles the accent rings through several
 // colours — the homepage uses every product's label colour, by hue.
 // `treatment="audio"` drops the contours for a centred seeded waveform
-// + faint dot grid — the podcast heroes. `ground="charcoal"` swaps the
-// forest ground for dark grey — the homepage Featured Product.
+// + faint dot grid — the podcast heroes.
 //
 // The accent line + glow colour is PER PRODUCT: it's the product's
 // label colour (product.primaryColor — KaPstone's orange label → orange
@@ -22,7 +25,7 @@
 // colours are lifted (ensureReadableOnDark) so the line still reads on
 // the dark ground. Non-product pages fall back to the posts' amber.
 
-import { generateTopo, generateWaveform } from '../../lib/topo'
+import { generateWaveform, topoSvgUrl } from '../../lib/topo'
 import { ensureReadableOnDark } from '../../lib/color'
 
 interface Props {
@@ -43,10 +46,8 @@ interface Props {
   /** 'audio' (podcast heroes): NO contour lines — a vertically centred
    * waveform band + faint tech dot grid over the ground and glow */
   treatment?: 'audio'
-  /** 'charcoal': neutral dark grey ground + grey contours instead of
-   * forest green — homepage Featured Product, so it reads apart from the
-   * hero's map */
-  ground?: 'forest' | 'charcoal'
+  /** 'eager' for heroes (above the fold); callouts default to lazy */
+  loading?: 'eager' | 'lazy'
   class?: string
 }
 
@@ -61,51 +62,54 @@ const {
   accentEvery,
   accents,
   treatment,
-  ground = 'forest',
+  loading = 'lazy',
   class: className,
 } = Astro.props
 
 const accentColor = ensureReadableOnDark(accent)
-const ringColors = accents?.length ? accents.map((c) => ensureReadableOnDark(c)) : null
-// Neighbouring rings step ~0.38 of the way round the hue-sorted palette
-// (golden-ratio stride), so adjacent rings contrast (orange next to blue
-// next to green) and every visible part of the hero shows a mix of the
-// product line — a smooth rainbow outward left the blues/purples in the
-// off-screen corners.
-const ringColor = (i: number) => {
-  const n = ringColors!.length
-  const stride = Math.max(1, Math.round(n * 0.382))
-  return ringColors![(i * stride) % n]
-}
+const isHex = (c: string) => /^#[0-9a-fA-F]{6}$/.test(c)
+// Ring colours: several (homepage spectrum — assigned with a golden-ratio
+// stride inside renderTopoSvg so neighbouring rings contrast) or the one
+// accent. Hex only — they go into the served SVG's URL.
+const ringColors = (accents?.length ? accents : [accent])
+  .map((c) => ensureReadableOnDark(c))
+  .filter(isHex)
 const audio = treatment === 'audio'
-// Audio skips the contour map entirely (Curtis 2026-11-17).
-const topo = audio ? null : generateTopo({ seed, peakX, peakY, spacing, warp, accentEvery })
+// The contour map is a cached SVG file from /topo.svg (src/pages/
+// topo.svg.ts), not inline path data. Audio skips it entirely.
+const topoUrl = audio
+  ? null
+  : topoSvgUrl({
+      seed: seed.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 64) || 'redox',
+      peakX,
+      peakY,
+      spacing,
+      warp,
+      accentEvery,
+      colors: ringColors.length ? ringColors : [DEFAULT_ACCENT],
+    })
 // Own 2400×300 strip, vertically centred in the container by CSS (not
 // part of the topo viewBox) so it stays put at any aspect ratio.
 const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peakX, maxAmp: 0.46 }) : null
 ---
 
 <div
-  class:list={['topo-bg', { 'topo-bg--audio': audio, 'topo-bg--charcoal': ground === 'charcoal' }, className]}
+  class:list={['topo-bg', { 'topo-bg--audio': audio }, className]}
   style={`--topo-accent: ${accentColor}; --topo-peak-x: ${peakX * 100}%; --topo-peak-y: ${peakY * 100}%;`}
   aria-hidden="true"
 >
   <div class="topo-bg__glow"></div>
-  {topo && (
-  <svg
-    class="topo-bg__lines"
-    viewBox={`0 0 ${topo.width} ${topo.height}`}
-    preserveAspectRatio="xMidYMid slice"
-  >
-    <path class="topo-bg__base" d={topo.base} />
-    {topo.accent.map((a, i) => (
-      <path
-        class="topo-bg__accent"
-        d={a.d}
-        style={`stroke-width: ${a.width}px;${ringColors ? ` stroke: ${ringColor(i)};` : ''}`}
-      />
-    ))}
-  </svg>
+  {topoUrl && (
+    <img
+      class="topo-bg__lines"
+      src={topoUrl}
+      alt=""
+      width="2400"
+      height="1200"
+      loading={loading}
+      decoding="async"
+      fetchpriority={loading === 'eager' ? 'high' : undefined}
+    />
   )}
   {wave && (
     <svg class="topo-bg__wavebox" viewBox="0 0 2400 300" preserveAspectRatio="xMidYMid slice">
@@ -136,26 +140,14 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
     );
   }
 
+  /* The served SVG (line colours/widths baked in — see renderTopoSvg);
+   * object-fit: cover matches the old inline preserveAspectRatio slice. */
   .topo-bg__lines {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .topo-bg__base {
-    stroke: rgb(196 214 190 / 0.22);
-    stroke-width: 1.3;
-    vector-effect: non-scaling-stroke;
-  }
-
-  .topo-bg__accent {
-    stroke: var(--topo-accent);
-    stroke-opacity: 0.85;
-    vector-effect: non-scaling-stroke;
+    object-fit: cover;
   }
 
   /* ── audio treatment (podcast heroes) ── */
@@ -183,16 +175,6 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
     stroke-opacity: 0.5;
   }
 
-  /* ── charcoal ground (homepage Featured Product) ── */
-  .topo-bg--charcoal {
-    background:
-      radial-gradient(140% 90% at 50% 120%, rgb(0 0 0 / 0.45), transparent 60%),
-      linear-gradient(180deg, #2a2c2e 0%, #232527 55%, #1b1c1e 100%);
-  }
-
-  .topo-bg--charcoal .topo-bg__base {
-    stroke: rgb(220 222 225 / 0.16);
-  }
 
   /* Faint tech dot grid, fading out toward the edges */
   .topo-bg__grid {

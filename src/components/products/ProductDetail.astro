@@ -138,7 +138,7 @@ const documents = (product.documents ?? []).map((doc) => ({
   style={`--product-color: ${color}; --product-accent-color: ${turfAccent};`}
 >
   {isTopo ? (
-    <TopoBackground seed={product.slug} accent={color} peakX={0.72} peakY={0.42} />
+    <TopoBackground seed={product.slug} accent={color} peakX={0.72} peakY={0.42} loading="eager" />
   ) : heroImage ? (
     <>
       <div
