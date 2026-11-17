@@ -341,3 +341,106 @@ export function generateWaveform(opts: {
   }
   return d
 }
+
+// ── served SVG files (/topo.svg) ─────────────────────────────────────
+// The contour maps are ~45 KB of path data each, so pages reference
+// them as cached SVG files instead of inlining them. Bump TOPO_VERSION
+// whenever the generator or the SVG styling changes — it's part of
+// every URL, so browsers/CDN fetch the new maps instead of a cached one.
+export const TOPO_VERSION = '1'
+
+export type TopoGround = 'forest' | 'charcoal'
+
+export interface TopoSvgParams {
+  seed: string
+  peakX: number
+  peakY: number
+  spacing?: number
+  warp?: number
+  accentEvery?: number
+  /** one colour = every accent ring; several = golden-ratio stride */
+  colors: string[]
+  ground: TopoGround
+}
+
+const BASE_STROKE: Record<TopoGround, string> = {
+  forest: 'rgb(196 214 190 / 0.22)',
+  charcoal: 'rgb(220 222 225 / 0.16)',
+}
+
+/** Neighbouring rings step ~0.38 round the palette (golden-ratio
+ * stride) so adjacent rings contrast — see the homepage spectrum. */
+function ringColor(colors: string[], i: number): string {
+  const n = colors.length
+  const stride = Math.max(1, Math.round(n * 0.382))
+  return colors[(i * stride) % n]
+}
+
+// vector-effect isn't inherited, so every path carries it: line widths
+// stay in screen pixels however far the map is scaled.
+const NSS = 'vector-effect="non-scaling-stroke"'
+
+export function renderTopoSvg(p: TopoSvgParams): string {
+  const topo = generateTopo({
+    seed: p.seed,
+    peakX: p.peakX,
+    peakY: p.peakY,
+    spacing: p.spacing,
+    warp: p.warp,
+    accentEvery: p.accentEvery,
+  })
+  const accents = topo.accent
+    .map(
+      (a, i) =>
+        `<path d="${a.d}" stroke="${ringColor(p.colors, i)}" stroke-width="${a.width}" ${NSS}/>`,
+    )
+    .join('')
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${topo.width} ${topo.height}" ` +
+    `width="${topo.width}" height="${topo.height}" preserveAspectRatio="xMidYMid slice">` +
+    `<g fill="none" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="${topo.base}" stroke="${BASE_STROKE[p.ground]}" stroke-width="1.3" ${NSS}/>` +
+    `<g stroke-opacity="0.85">${accents}</g>` +
+    `</g></svg>`
+  )
+}
+
+const num = (n: number) => String(Math.round(n * 1000) / 1000)
+
+/** URL for a served map — parameters in a fixed order so equal maps
+ * share one cache entry. */
+export function topoSvgUrl(p: TopoSvgParams): string {
+  const q = new URLSearchParams({ v: TOPO_VERSION, s: p.seed, x: num(p.peakX), y: num(p.peakY) })
+  if (p.spacing != null) q.set('sp', num(p.spacing))
+  if (p.warp != null) q.set('w', num(p.warp))
+  if (p.accentEvery != null) q.set('ae', String(p.accentEvery))
+  q.set('c', p.colors.map((c) => c.replace('#', '').toLowerCase()).join('.'))
+  if (p.ground !== 'forest') q.set('g', p.ground)
+  return `/topo.svg?${q}`
+}
+
+/** Parse + validate /topo.svg query params; null if anything's off. */
+export function parseTopoSvgParams(q: URLSearchParams): TopoSvgParams | null {
+  const seed = q.get('s') ?? ''
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(seed)) return null
+  const unit = (k: string, d?: number) => {
+    const raw = q.get(k)
+    if (raw == null) return d
+    const n = Number(raw)
+    return Number.isFinite(n) && n >= 0 && n <= 1 ? n : NaN
+  }
+  const peakX = unit('x', 0.5)!
+  const peakY = unit('y', 0.5)!
+  const spacing = unit('sp')
+  const warp = unit('w')
+  const aeRaw = q.get('ae')
+  const accentEvery = aeRaw == null ? undefined : Number(aeRaw)
+  if ([peakX, peakY, spacing, warp].some((n) => Number.isNaN(n))) return null
+  if (spacing != null && spacing < 0.02) return null
+  if (accentEvery != null && !(Number.isInteger(accentEvery) && accentEvery >= 2 && accentEvery <= 20)) return null
+  const colors = (q.get('c') ?? '').split('.').filter(Boolean)
+  if (colors.length < 1 || colors.length > 24 || !colors.every((c) => /^[0-9a-f]{6}$/.test(c))) return null
+  const g = q.get('g') ?? 'forest'
+  if (g !== 'forest' && g !== 'charcoal') return null
+  return { seed, peakX, peakY, spacing, warp, accentEvery, colors: colors.map((c) => `#${c}`), ground: g }
+}
