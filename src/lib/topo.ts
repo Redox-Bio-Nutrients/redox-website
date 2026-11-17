@@ -349,8 +349,6 @@ export function generateWaveform(opts: {
 // every URL, so browsers/CDN fetch the new maps instead of a cached one.
 export const TOPO_VERSION = '1'
 
-export type TopoGround = 'forest' | 'charcoal'
-
 export interface TopoSvgParams {
   seed: string
   peakX: number
@@ -360,13 +358,9 @@ export interface TopoSvgParams {
   accentEvery?: number
   /** one colour = every accent ring; several = golden-ratio stride */
   colors: string[]
-  ground: TopoGround
 }
 
-const BASE_STROKE: Record<TopoGround, string> = {
-  forest: 'rgb(196 214 190 / 0.22)',
-  charcoal: 'rgb(220 222 225 / 0.16)',
-}
+const BASE_STROKE = 'rgb(196 214 190 / 0.22)'
 
 /** Neighbouring rings step ~0.38 round the palette (golden-ratio
  * stride) so adjacent rings contrast — see the homepage spectrum. */
@@ -399,7 +393,7 @@ export function renderTopoSvg(p: TopoSvgParams): string {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${topo.width} ${topo.height}" ` +
     `width="${topo.width}" height="${topo.height}" preserveAspectRatio="xMidYMid slice">` +
     `<g fill="none" stroke-linecap="round" stroke-linejoin="round">` +
-    `<path d="${topo.base}" stroke="${BASE_STROKE[p.ground]}" stroke-width="1.3" ${NSS}/>` +
+    `<path d="${topo.base}" stroke="${BASE_STROKE}" stroke-width="1.3" ${NSS}/>` +
     `<g stroke-opacity="0.85">${accents}</g>` +
     `</g></svg>`
   )
@@ -415,7 +409,6 @@ export function topoSvgUrl(p: TopoSvgParams): string {
   if (p.warp != null) q.set('w', num(p.warp))
   if (p.accentEvery != null) q.set('ae', String(p.accentEvery))
   q.set('c', p.colors.map((c) => c.replace('#', '').toLowerCase()).join('.'))
-  if (p.ground !== 'forest') q.set('g', p.ground)
   return `/topo.svg?${q}`
 }
 
@@ -440,7 +433,5 @@ export function parseTopoSvgParams(q: URLSearchParams): TopoSvgParams | null {
   if (accentEvery != null && !(Number.isInteger(accentEvery) && accentEvery >= 2 && accentEvery <= 20)) return null
   const colors = (q.get('c') ?? '').split('.').filter(Boolean)
   if (colors.length < 1 || colors.length > 24 || !colors.every((c) => /^[0-9a-f]{6}$/.test(c))) return null
-  const g = q.get('g') ?? 'forest'
-  if (g !== 'forest' && g !== 'charcoal') return null
-  return { seed, peakX, peakY, spacing, warp, accentEvery, colors: colors.map((c) => `#${c}`), ground: g }
+  return { seed, peakX, peakY, spacing, warp, accentEvery, colors: colors.map((c) => `#${c}`) }
 }
