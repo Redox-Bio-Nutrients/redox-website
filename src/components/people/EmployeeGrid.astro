@@ -25,7 +25,7 @@ const palette = teamPalette(groupKey, groupIndex)
 
 {team.length > 0 ? (
   <div class="grid">
-    {team.map((author, index) => <EmployeeCard author={author} index={index} palette={palette} />)}
+    {team.map((author) => <EmployeeCard author={author} palette={palette} />)}
   </div>
 ) : (
   <p class="empty">{emptyMessage}</p>

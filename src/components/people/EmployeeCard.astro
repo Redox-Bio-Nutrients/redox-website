@@ -28,16 +28,11 @@ import XMark from '../ui/XMark.astro'
 
 interface Props {
   author: Author
-  /** Position within the grid (EmployeeGrid.astro's own map index) —
-   * drives the leaf-sprig's corner/size below. Not optional: every
-   * caller renders through EmployeeGrid, which always has an index to
-   * give. */
-  index: number
   /** The team group's panel colors (EmployeeGrid passes one per group). */
   palette: TeamPalette
 }
 
-const { author, index, palette } = Astro.props
+const { author, palette } = Astro.props
 
 // Seeded on the person, so each card's blooms land differently while
 // the whole group shares one palette.
@@ -57,24 +52,6 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 // corners (top-left/bottom-right, matching its border-radius) are in
 // play, so the sprig's point always sits flush in an actual corner.
 //
-// Driven by grid position, not a per-person random roll (an earlier
-// pass seeded this on author._id — replaced per Curtis's follow-up:
-// he wants neighbors in the same row to always visibly differ, which
-// independent per-card randomness can't promise, just makes likely).
-// Corner alternates tl/br by index parity — since that guarantees any
-// two *consecutive* indices differ, and any two cards "next to each
-// other" in the same row are always consecutive indices regardless of
-// the grid's column count (3/2/1 across breakpoints), this alone is
-// enough to guarantee no same-row neighbors share a corner at any
-// screen size, with no need to know the column count here. Size
-// cycles through 4 fixed steps the same way (period 4, so any two
-// consecutive indices always land on different sizes too) — offset
-// from the corner's own period-2 cycle so the two don't just repeat
-// the same combined pattern every 2 cards.
-const LEAF_SIZES = [0.6, 0.9, 1.2, 1.6]
-const leafCorner = index % 2 === 0 ? 'tl' : 'br'
-const leafScale = LEAF_SIZES[index % LEAF_SIZES.length]
-
 // Anti-harvesting: email/phone never appear in the page source as text
 // or as mailto:/tel: hrefs — only as a reversed + base64'd data
 // attribute behind an "Email me"/"Call me" link, decoded by the script
@@ -86,8 +63,12 @@ const emailCode = author.email ? encodeContact(author.email.trim()) : null
 const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
 ---
 
-<div class="employee x-host" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
-  <XMark corner={leafCorner === 'tl' ? 'tl' : 'br'} ground="light" size="sm" reveal="hover" />
+<div class="employee x-host">
+  {/* Same corner, same size on every card (2026-11-18, Curtis) — the
+     old per-index corner/size cycling is gone. Fades in on hover over
+     the photo's top-left, white strokes + the logo's own Redox green
+     leaf (#95C83D — written as rgb() so XMark doesn't lighten it). */}
+  <XMark corner="tl" ground="dark" size="sm" reveal="hover" leaf="rgb(149 200 61)" />
   <div class="employee__media">
     {photoUrl ? (
       <img
@@ -172,7 +153,7 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
     display: flex;
     flex-direction: column;
     /* No overflow:hidden here (moved to .employee__media below) — the
-     * occasional leaf sprig is allowed to spill past the card's own
+     * hover X mark is allowed to spill past the card's own
      * edge, same as CalloutSection's/AuthorBoxFooter's permanent ones. */
     /* Same asymmetric leaf-radius language as the callout/author-box
      * cards, scaled down to a roster-tile size. */
@@ -313,5 +294,10 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
     width: 1.1em;
     height: 1.1em;
     flex-shrink: 0;
+  }
+
+  /* Fade only — no scale-in, so the X is the same size the whole time. */
+  .employee :global(.x-mark__tile) {
+    scale: 1;
   }
 </style>
