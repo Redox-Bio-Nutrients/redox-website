@@ -27,7 +27,7 @@ const hasSections = (homepage?.sections?.length ?? 0) > 0
   {hasSections ? (
     <HomeSections
       sections={homepage!.sections!}
-      heroTopo={{ accents: spectrum, accentEvery: 3 }}
+      heroTopo={{ accents: spectrum, accentEvery: 3, soft: true }}
     />
   ) : (
     <section class="hero-fallback">
