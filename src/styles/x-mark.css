@@ -1,0 +1,68 @@
+/* src/styles/x-mark.css
+ *
+ * The Redox "X" corner mark (2026-11-18) — replaced the two-petal
+ * leaf sprig on callouts, product cards, team cards and the blog
+ * author box. The X sits at its host's corner and spills a little past
+ * it; the leaf swoosh takes the surface's highlight colour (--x-leaf).
+ * Never mirrored or rotated — it's a logo.
+ *
+ * Markup: src/components/ui/XMark.astro. Hosts need position: relative
+ * and no overflow clip (the mark breaks the border on purpose — see
+ * global.css's page-level overflow-x: clip).
+ */
+
+.x-mark {
+  --x-leaf: #c9862f; /* topo's non-product accent (amber) */
+  --x-ink: #fff;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.x-mark--light {
+  --x-ink: var(--color-text-primary);
+}
+
+.x-mark--lg { --x-size: clamp(104px, 14%, 180px); }
+.x-mark--md { --x-size: clamp(72px, 15%, 108px); }
+.x-mark--sm { --x-size: clamp(52px, 30%, 80px); }
+
+.x-mark__tile {
+  position: absolute;
+  display: block;
+  width: var(--x-size);
+  filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.28));
+  transition: opacity 0.3s ease, scale 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.x-mark--light .x-mark__tile {
+  filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.12));
+}
+
+.x-mark__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.x-mark__stroke { fill: var(--x-ink); }
+.x-mark__leaf { fill: var(--x-leaf); }
+
+/* corners — the tile spills past its corner */
+.x-mark[data-corner='tr'] .x-mark__tile { top: 0; right: 0; transform-origin: 100% 0; translate: 18% -34%; }
+.x-mark[data-corner='tl'] .x-mark__tile { top: 0; left: 0; transform-origin: 0 0; translate: -18% -34%; }
+.x-mark[data-corner='br'] .x-mark__tile { bottom: 0; right: 0; transform-origin: 100% 100%; translate: 18% 26%; }
+.x-mark[data-corner='bl'] .x-mark__tile { bottom: 0; left: 0; transform-origin: 0 100%; translate: -10% 18%; }
+
+/* hover-reveal hosts (product cards, team cards) */
+.x-mark--hover .x-mark__tile { opacity: 0; scale: 0.6; }
+.x-host:hover .x-mark--hover .x-mark__tile,
+.x-host:focus-within .x-mark--hover .x-mark__tile { opacity: 1; scale: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .x-mark__tile { transition: opacity 0.25s ease; }
+  .x-mark--hover .x-mark__tile { scale: 1; }
+}

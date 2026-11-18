@@ -24,6 +24,7 @@ import { buildTextureVars } from '../../lib/texture'
 import type { Author } from '../../lib/types/sanity'
 import type { TeamPalette } from './teamPalettes'
 import '../../styles/texture-surface.css'
+import XMark from '../ui/XMark.astro'
 
 interface Props {
   author: Author
@@ -85,7 +86,8 @@ const emailCode = author.email ? encodeContact(author.email.trim()) : null
 const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
 ---
 
-<div class="employee" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
+<div class="employee x-host" data-leaf-corner={leafCorner} style={`--leaf-scale: ${leafScale}`}>
+  <XMark corner={leafCorner === 'tl' ? 'tl' : 'br'} ground="light" size="sm" reveal="hover" />
   <div class="employee__media">
     {photoUrl ? (
       <img
@@ -311,77 +313,5 @@ const phoneCode = author.phone ? encodeContact(author.phone.trim()) : null
     width: 1.1em;
     height: 1.1em;
     flex-shrink: 0;
-  }
-
-  /* ── Leaf sprig — hidden until hover ──────────────────────────────
-   * Same two-petal gradient bloom as CalloutSection.astro's (always
-   * top-right) and AuthorBoxFooter.astro's (always bottom-right), just
-   * parameterized here via data-leaf-corner (top-left or bottom-right
-   * — the card's own two *sharp* corners, matching its border-radius,
-   * so the sprig's point always sits flush in an actual corner rather
-   * than floating over a rounded one) + scaled by --leaf-scale (one of
-   * 4 discrete sizes, not a smooth range — deliberately chunkier,
-   * more noticeable variety card-to-card). Sits at opacity:0 at rest;
-   * revealed only on :hover, so it reads as a small discovery rather
-   * than permanent decoration — a light scale-in on top of the fade
-   * so it feels like it's growing in, not just appearing. */
-  .employee[data-leaf-corner]::before,
-  .employee[data-leaf-corner]::after {
-    content: '';
-    position: absolute;
-    z-index: 2;
-    aspect-ratio: 1 / 2.1;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-  }
-
-  .employee[data-leaf-corner]:hover::before {
-    opacity: 0.92;
-  }
-
-  .employee[data-leaf-corner]:hover::after {
-    opacity: 0.68;
-  }
-
-  .employee[data-leaf-corner]::before {
-    width: calc(clamp(28px, 24%, 64px) * var(--leaf-scale, 1));
-    background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
-  }
-
-  .employee[data-leaf-corner]::after {
-    width: calc(clamp(18px, 16%, 44px) * var(--leaf-scale, 1));
-    background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
-  }
-
-  .employee[data-leaf-corner='tl']::before,
-  .employee[data-leaf-corner='tl']::after {
-    top: 0;
-    left: 0;
-    border-radius: 0 100% 0 100%;
-    transform-origin: 0% 0%;
-  }
-  .employee[data-leaf-corner='tl']::before { transform: rotate(8deg) scale(0.6); }
-  .employee[data-leaf-corner='tl']::after { transform: rotate(-30deg) scale(0.6); }
-  .employee[data-leaf-corner='tl']:hover::before { transform: rotate(8deg) scale(1); }
-  .employee[data-leaf-corner='tl']:hover::after { transform: rotate(-30deg) scale(1); }
-
-  .employee[data-leaf-corner='br']::before,
-  .employee[data-leaf-corner='br']::after {
-    bottom: 0;
-    right: 0;
-    border-radius: 0 100% 0 100%;
-    transform-origin: 100% 100%;
-  }
-  .employee[data-leaf-corner='br']::before { transform: rotate(-8deg) scale(0.6); }
-  .employee[data-leaf-corner='br']::after { transform: rotate(30deg) scale(0.6); }
-  .employee[data-leaf-corner='br']:hover::before { transform: rotate(-8deg) scale(1); }
-  .employee[data-leaf-corner='br']:hover::after { transform: rotate(30deg) scale(1); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .employee[data-leaf-corner]::before,
-    .employee[data-leaf-corner]::after {
-      transition: opacity 0.25s ease;
-    }
   }
 </style>
