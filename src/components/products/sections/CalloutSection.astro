@@ -200,7 +200,10 @@ const textureVars = buildTextureVars(section._key, color, accent)
      * background layers clip themselves to the radius instead */
   }
 
+  /* .topo-bg too — it replaced .pool-bg under TOPO_BACKGROUNDS and,
+   * left unclipped, squared off the leaf corners (2026-11-18). */
   .callout :global(.pool-bg),
+  .callout :global(.topo-bg),
   .callout__overlay,
   .callout__topo-wash,
   .callout__wash {
