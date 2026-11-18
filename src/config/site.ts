@@ -36,13 +36,9 @@ export interface PrimaryNavItem {
 }
 
 export const primaryNav: PrimaryNavItem[] = [
-  // Landing/marketing pages, not the catalogs — see /agriculture/products
-  // and /turf/products (also reachable via "Products" below) for the
-  // actual product grids. Split 2026-09 per Curtis's change order: each
-  // landing page makes its case, then hands off to the catalog via its
-  // own "Find the Right Solution" / "Products" button.
-  { label: 'Agriculture',      href: '/agriculture'  },
-  { label: 'Turf',             href: '/turf'         },
+  // The /agriculture and /turf landing pages were unpublished and
+  // dropped from the nav 2026-11-18 (vercel.json redirects them to the
+  // catalogs). "Products" below is the way into either market.
   {
     label: 'Products',
     href: '/agriculture/products',
@@ -57,7 +53,7 @@ export const primaryNav: PrimaryNavItem[] = [
   // detour until there's a second technology to actually list (see
   // vercel.json's matching redirect for anyone who still lands on
   // /technologies directly).
-  { label: 'RAM Technology',   href: '/technologies/ram-technology' },
+  { label: 'RAM',              href: '/technologies/ram-technology' },
   {
     label: 'News',
     children: [
@@ -107,8 +103,6 @@ export const footerNav: { heading: string; links: FooterLink[] }[] = [
   {
     heading: 'Markets',
     links: [
-      { label: 'Agriculture',          href: '/agriculture'          },
-      { label: 'Turf',                 href: '/turf'                 },
       { label: 'Agriculture Products', href: '/agriculture/products' },
       { label: 'Turf Products',        href: '/turf/products'        },
     ],
@@ -116,7 +110,7 @@ export const footerNav: { heading: string; links: FooterLink[] }[] = [
   {
     heading: 'Learn',
     links: [
-      { label: 'RAM Technology',    href: '/technologies/ram-technology' },
+      { label: 'RAM',               href: '/technologies/ram-technology' },
       { label: 'Blog',              href: '/blog'                        },
       { label: 'Podcast',           href: '/podcast'                     },
       { label: 'Technical Podcast', href: '/tech-podcast'                },
