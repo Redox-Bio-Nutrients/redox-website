@@ -11,6 +11,7 @@
 
 import { urlFor } from '../../lib/sanity'
 import type { Author } from '../../lib/types/sanity'
+import XMark from '../ui/XMark.astro'
 
 interface Props {
   author: Author
@@ -27,6 +28,7 @@ const initial = author.name.trim().charAt(0).toUpperCase()
 
 <section class="author-footer">
   <div class="author-footer__card">
+    <XMark corner="br" ground="light" size="md" />
     {photoUrl ? (
       <img
         class="author-footer__photo"
@@ -82,41 +84,6 @@ const initial = author.name.trim().charAt(0).toUpperCase()
     border-radius: 0 var(--radius-2xl) 0 var(--radius-2xl);
     /* No overflow:hidden — the leaf sprig below is allowed to spill
      * past the border, same as CalloutSection's corner sprig. */
-  }
-
-  /* ── Leaf sprig — permanent fixture at the bottom-right corner ───
-   * Same two-leaf bloom CalloutSection uses permanently at its
-   * top-right corner (itself the always-on sibling of the hover-only
-   * bloom on ProductCard) — mirrored to pivot from the bottom-right
-   * instead: sharp corners on the TL/BR diagonal (opposite of
-   * CalloutSection's TR/BL) so the point still lands exactly on its
-   * pivot corner. */
-  .author-footer__card::before,
-  .author-footer__card::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-    border-radius: 0 100% 0 100%;
-    transform-origin: 100% 100%;
-    pointer-events: none;
-  }
-
-  .author-footer__card::before {
-    width: clamp(48px, 11%, 84px);
-    aspect-ratio: 1 / 2.1;
-    background: linear-gradient(160deg, var(--color-green-light), var(--color-green-dark));
-    opacity: 0.92;
-    transform: rotate(-8deg);
-  }
-
-  .author-footer__card::after {
-    width: clamp(32px, 7%, 56px);
-    aspect-ratio: 1 / 2.1;
-    background: linear-gradient(160deg, var(--color-green-pale), var(--color-green));
-    opacity: 0.65;
-    transform: rotate(32deg);
   }
 
   .author-footer__body {

@@ -1,0 +1,59 @@
+---
+// src/components/ui/XMark.astro
+//
+// The Redox "X" (from the logo: two serif strokes + the leaf swoosh)
+// as a corner mark — replaced the two-petal leaf sprig 2026-11-18. The
+// leaf takes the surface's highlight colour (`leaf` prop → --x-leaf:
+// the topo accent / product label colour where there is one, amber
+// otherwise). Never mirrored or rotated — it's a logo.
+//
+// .x-mark is an inset:0 overlay of its host; the svg tile inside is
+// pinned to `corner` and spills past it. Styles: src/styles/x-mark.css.
+
+import { ensureReadableOnDark } from '../../lib/color'
+import '../../styles/x-mark.css'
+
+interface Props {
+  /** which host corner the mark anchors to */
+  corner?: 'tr' | 'tl' | 'br' | 'bl'
+  /** highlight colour for the leaf swoosh (hex or CSS colour) */
+  leaf?: string | null
+  /** 'dark' = white strokes (photo/topo grounds); 'light' = ink strokes */
+  ground?: 'dark' | 'light'
+  /** 'always' (callout, author box) or 'hover' (product + team cards) */
+  reveal?: 'always' | 'hover'
+  /** host size class — drives the mark's scale */
+  size?: 'lg' | 'md' | 'sm'
+}
+
+const { corner = 'tr', leaf, ground = 'dark', reveal = 'always', size = 'md' } = Astro.props
+const leafColor = leaf
+  ? ground === 'dark' && leaf.startsWith('#')
+    ? ensureReadableOnDark(leaf)
+    : leaf
+  : undefined
+---
+
+<span
+  class:list={['x-mark', `x-mark--${ground}`, `x-mark--${size}`, { 'x-mark--hover': reveal === 'hover' }]}
+  data-corner={corner}
+  style={leafColor ? `--x-leaf: ${leafColor};` : undefined}
+  aria-hidden="true"
+>
+  <span class="x-mark__tile">
+    <svg class="x-mark__svg" viewBox="150.5 -2 89.5 64" focusable="false">
+      <path
+        class="x-mark__stroke"
+        d="M176.48,45.01c-1.24,1.01-3.65,3.01-4.5,3.89l5.7,5.96h-4.58v5.12h16.54v-5.12l-3.68.09-9.48-9.95Z"
+      ></path>
+      <path
+        class="x-mark__stroke"
+        d="M167.79,44.55c.85-.9,3.56-3.79,4.07-4.32l-7.42-7.86h4.01v-5.12h-15.9v5.12l3.61-.09,11.63,12.27Z"
+      ></path>
+      <path
+        class="x-mark__leaf"
+        d="M196.78,26.55c-13.2,9.92-20.22,14.49-38.62,33.44h-5.21c6.25-6.92,11.52-12.64,17.08-18.88C185.87,23.29,209.45-1.21,237.79.05c0,0-8.12,1.74-14.08,5.86-6.59,4.55-16,12.42-26.93,20.64"
+      ></path>
+    </svg>
+  </span>
+</span>
