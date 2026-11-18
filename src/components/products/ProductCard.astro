@@ -76,9 +76,11 @@ const useTopo = TOPO_BACKGROUNDS
   style={
     isTurf
       ? `--turf-cut: var(--turf-cut-sm); --turf-cut-border-color: ${turfAccent}; --card-turf-color: ${turfColor}; --card-turf-accent: ${turfAccent};`
-      : accentColor
-        ? `--card-accent: ${accentColor}`
-        : undefined
+      : useTopo
+        ? `--card-turf-color: ${turfColor}; --card-turf-accent: ${turfAccent};${accentColor ? ` --card-accent: ${accentColor};` : ''}`
+        : accentColor
+          ? `--card-accent: ${accentColor}`
+          : undefined
   }
 >
   <div class="card__media">
@@ -95,7 +97,9 @@ const useTopo = TOPO_BACKGROUNDS
         <img class="card__bg-img" src={bgPool[0].url} alt="" loading="lazy" />
       </div>
     )}
-    {isTurf && <div class="card__turf-wash" aria-hidden="true"></div>}
+    {/* Turf's two-tone wash also goes on Ag cards over the topo map
+       (2026-11-18) — photo-era Ag cards stay unwashed. */}
+    {(isTurf || useTopo) && <div class="card__turf-wash" aria-hidden="true"></div>}
     {imageUrl ? (
       <img class="card__packaging" src={imageUrl} alt={product.image?.alt ?? product.title} width="800" height="640" loading="lazy" />
     ) : (
@@ -395,7 +399,7 @@ const useTopo = TOPO_BACKGROUNDS
     border-radius: 0;
   }
 
-  .card--turf .card__turf-wash {
+  .card__turf-wash {
     position: absolute;
     inset: 0;
     background: linear-gradient(

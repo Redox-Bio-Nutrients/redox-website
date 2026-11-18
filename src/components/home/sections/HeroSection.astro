@@ -23,6 +23,8 @@ export interface HeroTopoOptions {
   accentEvery?: number
   /** 'audio' = waveform band + dot grid (podcast pages) */
   treatment?: 'audio'
+  /** quieter lines + glow (homepage — the full multi-colour map read too loud) */
+  soft?: boolean
 }
 
 interface Props {
@@ -66,7 +68,7 @@ const centered = section.textAlign === 'center'
 const useTopo = TOPO_BACKGROUNDS && !videoUrl && (usePool || Boolean(imageUrl))
 ---
 
-<header class:list={['hero', { 'hero--center': centered }]} data-header-theme="light">
+<header class:list={['hero', { 'hero--center': centered, 'hero--topo-soft': useTopo && topo?.soft }]} data-header-theme="light">
   {videoUrl ? (
     <video
       class="hero__bg"
@@ -193,6 +195,18 @@ const useTopo = TOPO_BACKGROUNDS && !videoUrl && (usePool || Boolean(imageUrl))
   /* Topo ground is already dark — keep only the nav band. */
   .hero__overlay--topo {
     background: linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0) 200px);
+  }
+
+  /* Homepage (2026-11-18, Curtis: "soften / bring down the intensity"):
+   * the multi-colour map competed with the headline. Dim the served
+   * lines and the peak glow in CSS — the SVG itself is untouched, so no
+   * TOPO_VERSION bump. */
+  .hero--topo-soft :global(.topo-bg__lines) {
+    opacity: 0.5;
+  }
+
+  .hero--topo-soft :global(.topo-bg__glow) {
+    opacity: 0.55;
   }
 
   /* Brand-colored grain/bloom texture, layered *above* the dark wash

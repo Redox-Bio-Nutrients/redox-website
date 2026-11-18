@@ -142,6 +142,16 @@ const textureVars = buildTextureVars(section._key, color, accent)
       !solid && <div class="callout__wash" aria-hidden="true"></div>
     )}
     {hasBg && solid && !TOPO_BACKGROUNDS && <div class="callout__overlay texture-wash" aria-hidden="true"></div>}
+    {/* Over a topo map, Ag callouts get the same two-tone diagonal wash
+       as the Turf product hero (2026-11-18). */}
+    {hasBg && TOPO_BACKGROUNDS && (
+      <div
+        class="callout__topo-wash"
+        style={`--callout-wash-from: ${palette.base}; --callout-wash-to: ${palette.complement};`}
+        aria-hidden="true"
+      >
+      </div>
+    )}
 
     {/* Inert wrapper by default (no position/width of its own, so the
        product image's absolute positioning still resolves against
@@ -192,6 +202,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
   .callout :global(.pool-bg),
   .callout__overlay,
+  .callout__topo-wash,
   .callout__wash {
     border-radius: inherit;
     overflow: hidden;
@@ -276,6 +287,19 @@ const textureVars = buildTextureVars(section._key, color, accent)
   .callout__overlay {
     position: absolute;
     inset: 0;
+  }
+
+  /* Same recipe as ProductDetail's .hero__wash (Turf's topo wash). */
+  .callout__topo-wash {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--callout-wash-from) 62%, transparent) 0%,
+      color-mix(in srgb, var(--callout-wash-to) 48%, transparent) 100%
+    );
+    mix-blend-mode: overlay;
+    opacity: 0.8;
   }
 
   .callout--solid .callout__panel {

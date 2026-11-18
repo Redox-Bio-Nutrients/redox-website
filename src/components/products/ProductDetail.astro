@@ -162,9 +162,11 @@ const documents = (product.documents ?? []).map((doc) => ({
     <div class="hero__bg hero__bg--gradient" aria-hidden="true"></div>
   )}
   <div class="hero__scrim" aria-hidden="true"></div>
+  {/* Two-tone diagonal wash: Turf always; Ag too once it's on a topo
+     map (2026-11-18 — Curtis wanted the Turf topo's wash on Ag). */}
+  {(isTurf || isTopo) && <div class="hero__wash" aria-hidden="true"></div>}
   {isTurf && (
     <>
-      <div class="hero__turf-wash" aria-hidden="true"></div>
       <div class="hero__turf-navscrim" aria-hidden="true"></div>
       <div class="hero__turf-stripes turf-stripes" aria-hidden="true"></div>
     </>
@@ -1041,7 +1043,7 @@ const documents = (product.documents ?? []).map((doc) => ({
    * diagonal-cut CTA, and the italic condensed display face in place
    * of the serif. See src/pages/preview/turf-concept.astro for the
    * reviewed concept this was built from. */
-  .hero--turf .hero__turf-wash {
+  .hero__wash {
     position: absolute;
     inset: 0;
     background: linear-gradient(
