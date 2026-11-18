@@ -200,12 +200,26 @@ const textureVars = buildTextureVars(section._key, color, accent)
      * background layers clip themselves to the radius instead */
   }
 
+  /* .topo-bg too — it replaced .pool-bg under TOPO_BACKGROUNDS and,
+   * left unclipped, squared off the leaf corners (2026-11-18). */
   .callout :global(.pool-bg),
+  .callout :global(.topo-bg),
   .callout__overlay,
   .callout__topo-wash,
   .callout__wash {
     border-radius: inherit;
     overflow: hidden;
+  }
+
+  /* Quieter map behind the copy (2026-11-18, Curtis: readability) —
+   * same CSS-only dimming as the homepage hero's `soft` topo, so the
+   * served SVG and TOPO_VERSION are untouched. */
+  .callout :global(.topo-bg__lines) {
+    opacity: 0.45;
+  }
+
+  .callout :global(.topo-bg__glow) {
+    opacity: 0.5;
   }
 
   /* ── Leaf sprig — permanent fixture at the top-right corner ──── */
