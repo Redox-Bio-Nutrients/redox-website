@@ -58,6 +58,8 @@ export const technology = defineType({
         // src/components/home/HomeSections.astro for the dispatcher.
         { type: 'calloutSection' },
         { type: 'bulletSection' },
+        { type: 'homeStatsSection' },
+        { type: 'homeCtaSection' },
       ],
       description:
         'Compose the technology detail page — same modular sections as the Homepage. A "Built Into These Products" list renders automatically below, based on which products reference this technology.',

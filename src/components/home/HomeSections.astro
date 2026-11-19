@@ -28,12 +28,16 @@ interface Props {
   /** EXPLORATION (TOPO_BACKGROUNDS): page-specific topo hero options,
    * passed straight to HeroSection — homepage spectrum, podcast audio. */
   heroTopo?: HeroTopoOptions
+  /** Pull a card grid (Stats) up under the plain text section that
+   *  introduces it, instead of the full inter-section gap (technology
+   *  pages, where one chapter is split across several sections). */
+  tightLeadIns?: boolean
 }
 
-const { sections, heroTopo } = Astro.props
+const { sections, heroTopo, tightLeadIns = false } = Astro.props
 ---
 
-<div class="home-sections">
+<div class:list={['home-sections', { 'home-sections--tight': tightLeadIns }]}>
   {sections.map((section, index) => {
     switch (section._type) {
       case 'homeHeroSection':
@@ -125,6 +129,20 @@ const { sections, heroTopo } = Astro.props
     margin-top: calc(-1 * var(--space-24));
   }
 
+  /* tightLeadIns: a plain-background Columns section followed by a
+   * Stats grid reads as one chapter — drop the flex gap, the columns'
+   * bottom padding and the grid's top padding to one small step. */
+  .home-sections--tight > :global(.columns--bg-none + .stats) {
+    margin-top: calc(var(--space-6) - 2 * var(--space-24));
+  }
+  /* A grid with its own heading is a new sub-topic — a bit more air. */
+  .home-sections--tight > :global(.columns--bg-none + .stats:has(.stats__heading)) {
+    margin-top: calc(var(--space-16) - 2 * var(--space-24));
+  }
+  .home-sections--tight > :global(.columns--bg-none + .stats .stats__inner) {
+    padding-top: 0;
+  }
+
   .home-sections__constrain {
     max-width: var(--content-width);
     margin: 0 auto;
@@ -140,6 +158,10 @@ const { sections, heroTopo } = Astro.props
 
     .home-sections > :global(:is(.hero, .hero-carousel) + .callout) {
       margin-top: calc(-1 * var(--space-16));
+    }
+
+    .home-sections--tight > :global(.columns--bg-none + .stats) {
+      margin-top: calc(var(--space-6) - 2 * var(--space-16));
     }
   }
 </style>
