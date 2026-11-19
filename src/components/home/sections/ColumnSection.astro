@@ -761,8 +761,8 @@ const duoTextureVars = duoItems.map((item, i) => buildTextureVars(item._key, duo
   }
 
   .columns--bg-color .column__body :global(p),
-  .columns--bg-image .column__body :global(p),
-  .columns--bg-pool .column__body :global(p) {
+  .columns--bg-image .column__body :global(:is(p, li, h3, h4)),
+  .columns--bg-pool .column__body :global(:is(p, li, h3, h4)) {
     color: rgb(255 255 255 / 0.85);
   }
 

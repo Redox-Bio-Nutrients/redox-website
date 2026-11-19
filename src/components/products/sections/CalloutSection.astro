@@ -60,6 +60,18 @@ const solid = section.tone !== 'tint'
 const hasBody = section.body?.some(
   (b: any) => b.children?.some((c: any) => c.text?.trim()),
 )
+// Statement: a full-bleed callout that's just one paragraph — no
+// heading, eyebrow, CTA or image. A glass card sized for a heading +
+// body reads mostly empty around a single sentence (RAM page,
+// 2026-11-19), so it renders as a large centred serif line on the
+// band instead. Content-driven; no editor toggle needed.
+const statement =
+  fullBleed &&
+  !section.heading &&
+  !section.eyebrow &&
+  !section.cta &&
+  !section.backgroundImage?.asset &&
+  section.body?.length === 1
 
 const toEntry = (img: SanityImage) => ({
   url: urlFor(img).width(1800).height(900).fit('crop').auto('format').quality(75).url(),
@@ -133,7 +145,7 @@ const textureVars = buildTextureVars(section._key, color, accent)
     class:list={[
       'callout',
       solid ? ['callout--solid', 'texture-fill'] : 'callout--tint',
-      { 'callout--has-image': productImageUrl, 'callout--full-bleed': fullBleed },
+      { 'callout--has-image': productImageUrl, 'callout--full-bleed': fullBleed, 'callout--statement': statement },
     ]}
     style={textureVars}
   >
@@ -156,12 +168,15 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
     {/* Redox X corner mark (replaced the leaf sprig 2026-11-18); its
        leaf takes the topo accent / product label colour. */}
-    <XMark
-      corner="tr"
-      size={fullBleed ? 'lg' : 'md'}
-      leaf={topoAccent}
-      ground={solid || hasBg ? 'dark' : 'light'}
-    />
+    {/* Not on a statement band — Curtis 2026-11-19: cleaner without. */}
+    {!statement && (
+      <XMark
+        corner="tr"
+        size={fullBleed ? 'lg' : 'md'}
+        leaf={topoAccent}
+        ground={solid || hasBg ? 'dark' : 'light'}
+      />
+    )}
 
     {/* Inert wrapper by default (no position/width of its own, so the
        product image's absolute positioning still resolves against
@@ -174,7 +189,8 @@ const textureVars = buildTextureVars(section._key, color, accent)
         <img class="callout__product-image" src={productImageUrl} alt={section.backgroundImage?.alt ?? ''} loading="lazy" />
       )}
 
-      <div class:list={['callout__panel', { 'callout__panel--glass': !solid }]}>
+      <div class:list={['callout__panel', { 'callout__panel--glass': !solid && !statement }]}>
+        {statement && <span class="callout__statement-rule" aria-hidden="true"></span>}
         {section.eyebrow && <p class="callout__eyebrow">{section.eyebrow}</p>}
         {section.heading && <h2>{section.heading}</h2>}
         {hasBody && (
@@ -465,6 +481,50 @@ const textureVars = buildTextureVars(section._key, color, accent)
 
   .callout--full-bleed .callout__body {
     font-size: var(--text-xl);
+  }
+
+  /* ── Statement (single-paragraph full-bleed callout) ─────────── */
+  .callout--statement.callout--tint {
+    padding: 0;
+  }
+
+  .callout--statement .callout__panel {
+    position: relative;
+    padding: var(--space-24) var(--space-6);
+    text-align: center;
+  }
+
+  .callout__statement-rule {
+    display: block;
+    width: 64px;
+    height: 4px;
+    margin: 0 auto var(--space-8);
+    border-radius: 2px;
+    background: var(--texture-color, var(--color-green));
+  }
+
+  .callout--statement .callout__body {
+    margin: 0 auto;
+    max-width: 42ch;
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 2.6vw, 2.125rem);
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+
+  .callout--statement .callout__body :global(p) {
+    line-height: inherit;
+    color: var(--color-text-primary);
+  }
+
+  .callout--statement.callout--solid .callout__body :global(p) {
+    color: var(--color-white);
+  }
+
+  @media (max-width: 767px) {
+    .callout--statement .callout__panel {
+      padding: var(--space-16) var(--space-6);
+    }
   }
 
   /* Product image breaks the top edge of the box — sized taller than

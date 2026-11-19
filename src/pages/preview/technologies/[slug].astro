@@ -1,0 +1,39 @@
+---
+// src/pages/preview/technologies/[slug].astro
+//
+// Draft-aware mirror of src/pages/technologies/[slug].astro — same
+// HomeSections render, but SSR and fetched via the draft-perspective
+// client so an unpublished draft renders exactly as it will once
+// published. Gated by the "sanity-preview" cookie set in
+// src/pages/api/preview.ts (?type=technology&slug=...).
+
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import HomeSections from '../../../components/home/HomeSections.astro'
+import PreviewBanner from '../../../components/preview/PreviewBanner.astro'
+import { getTechnologyPreview } from '../../../lib/queries'
+import { PREVIEW_COOKIE, isValidPreviewToken } from '../../../lib/previewAuth'
+
+export const prerender = false
+
+const authed = isValidPreviewToken(Astro.cookies.get(PREVIEW_COOKIE)?.value)
+if (!authed) {
+  return new Response(
+    'Preview not authorized. Open this page via the preview link (see src/pages/api/preview.ts) rather than navigating here directly.',
+    { status: 401 },
+  )
+}
+
+const { slug } = Astro.params
+const technology = await getTechnologyPreview(slug!)
+
+if (!technology) {
+  return new Response(`No technology found for slug "${slug}" (checked drafts and published).`, {
+    status: 404,
+  })
+}
+---
+
+<BaseLayout title={technology.title} description={technology.tagline} seo={technology.seo}>
+  <PreviewBanner />
+  <HomeSections sections={technology.sections ?? []} tightLeadIns />
+</BaseLayout>

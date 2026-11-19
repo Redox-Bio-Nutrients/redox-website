@@ -36,6 +36,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const routesByType: Record<string, string> = {
     product: `/preview/products/${encodeURIComponent(slug ?? '')}`,
     blogPost: `/preview/blog/${encodeURIComponent(slug ?? '')}`,
+    technology: `/preview/technologies/${encodeURIComponent(slug ?? '')}`,
     homepage: '/preview/home',
   }
   const target = routesByType[type ?? 'product']
