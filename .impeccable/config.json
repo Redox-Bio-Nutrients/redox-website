@@ -1,3 +1,10 @@
 {
-  "telemetry": false
+  "telemetry": false,
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [
+      "design/redox/**"
+    ],
+    "ignoreValues": []
+  }
 }
