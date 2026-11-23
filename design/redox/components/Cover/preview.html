@@ -1,0 +1,54 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html><head><style>
+  html,body{margin:0;padding:0;background:var(--color-bg);background-image:var(--grain)}
+  .cover{position:relative;width:960px;height:288px;overflow:hidden;font-family:var(--font-sans)}
+  svg{position:absolute;inset:0}
+  .b-bright{fill:var(--color-slab-bright)} .b-signal{fill:var(--color-signal)} .b-ink{fill:var(--color-ink)} .b-alert{fill:var(--color-alert)}
+  .p-slab{fill:var(--color-slab)} .p-signal{fill:var(--color-signal)}
+  .text{position:absolute;left:40px;bottom:36px;max-width:440px}
+  .name{margin:0;font-size:120px;line-height:.92;font-weight:800;letter-spacing:-0.04em;color:var(--color-ink)}
+  .tag{margin:12px 0 0;font-size:14px;line-height:20px;color:var(--color-muted)}
+</style></head><body>
+<div class="cover">
+  <svg viewBox="0 0 960 288" width="960" height="288" aria-hidden="true">
+    <!-- blocks: color-slab-bright 288x256, color-signal 152x256, color-ink 168x96, color-alert 88x56 (multiples of space-2) -->
+    <!-- arrangement: one tall slab bleeding off the top with lime and ink satellites bleeding right and bottom, all right of x=480 -->
+    <!-- pattern: literal motif (the leaf corner from redoxgrows.com is the system's one shape): 28 small leaves cut into the slab, one lit in color-signal -->
+    <!-- scales: radius-leaf-lg 40 on the big blocks, radius-leaf 20 on the small, leaves 20px at a 32px pitch (space-8) -->
+    <path class="b-bright" d="M520,0 A40,40 0 0 1 560,-40 H808 V176 A40,40 0 0 1 768,216 H520 Z"/>
+    <path class="b-signal" d="M808,112 A40,40 0 0 1 848,72 H960 V288 A40,40 0 0 1 920,328 H808 Z"/>
+    <path class="b-ink" d="M520,252 A20,20 0 0 1 540,232 H688 V308 A20,20 0 0 1 668,328 H520 Z"/>
+    <path class="b-alert" d="M704,252 A20,20 0 0 1 724,232 H792 V268 A20,20 0 0 1 772,288 H704 Z"/>
+    <path class="p-slab" d="M544,34 A10,10 0 0 1 554,24 H564 V34 A10,10 0 0 1 554,44 H544 Z"/>
+    <path class="p-slab" d="M576,34 A10,10 0 0 1 586,24 H596 V34 A10,10 0 0 1 586,44 H576 Z"/>
+    <path class="p-slab" d="M608,34 A10,10 0 0 1 618,24 H628 V34 A10,10 0 0 1 618,44 H608 Z"/>
+    <path class="p-slab" d="M640,34 A10,10 0 0 1 650,24 H660 V34 A10,10 0 0 1 650,44 H640 Z"/>
+    <path class="p-slab" d="M672,34 A10,10 0 0 1 682,24 H692 V34 A10,10 0 0 1 682,44 H672 Z"/>
+    <path class="p-slab" d="M704,34 A10,10 0 0 1 714,24 H724 V34 A10,10 0 0 1 714,44 H704 Z"/>
+    <path class="p-slab" d="M736,34 A10,10 0 0 1 746,24 H756 V34 A10,10 0 0 1 746,44 H736 Z"/>
+    <path class="p-slab" d="M544,66 A10,10 0 0 1 554,56 H564 V66 A10,10 0 0 1 554,76 H544 Z"/>
+    <path class="p-slab" d="M576,66 A10,10 0 0 1 586,56 H596 V66 A10,10 0 0 1 586,76 H576 Z"/>
+    <path class="p-slab" d="M608,66 A10,10 0 0 1 618,56 H628 V66 A10,10 0 0 1 618,76 H608 Z"/>
+    <path class="p-slab" d="M640,66 A10,10 0 0 1 650,56 H660 V66 A10,10 0 0 1 650,76 H640 Z"/>
+    <path class="p-slab" d="M672,66 A10,10 0 0 1 682,56 H692 V66 A10,10 0 0 1 682,76 H672 Z"/>
+    <path class="p-slab" d="M704,66 A10,10 0 0 1 714,56 H724 V66 A10,10 0 0 1 714,76 H704 Z"/>
+    <path class="p-slab" d="M736,66 A10,10 0 0 1 746,56 H756 V66 A10,10 0 0 1 746,76 H736 Z"/>
+    <path class="p-slab" d="M544,98 A10,10 0 0 1 554,88 H564 V98 A10,10 0 0 1 554,108 H544 Z"/>
+    <path class="p-slab" d="M576,98 A10,10 0 0 1 586,88 H596 V98 A10,10 0 0 1 586,108 H576 Z"/>
+    <path class="p-slab" d="M608,98 A10,10 0 0 1 618,88 H628 V98 A10,10 0 0 1 618,108 H608 Z"/>
+    <path class="p-slab" d="M640,98 A10,10 0 0 1 650,88 H660 V98 A10,10 0 0 1 650,108 H640 Z"/>
+    <path class="p-slab" d="M672,98 A10,10 0 0 1 682,88 H692 V98 A10,10 0 0 1 682,108 H672 Z"/>
+    <path class="p-signal" d="M704,98 A10,10 0 0 1 714,88 H724 V98 A10,10 0 0 1 714,108 H704 Z"/>
+    <path class="p-slab" d="M736,98 A10,10 0 0 1 746,88 H756 V98 A10,10 0 0 1 746,108 H736 Z"/>
+    <path class="p-slab" d="M544,130 A10,10 0 0 1 554,120 H564 V130 A10,10 0 0 1 554,140 H544 Z"/>
+    <path class="p-slab" d="M576,130 A10,10 0 0 1 586,120 H596 V130 A10,10 0 0 1 586,140 H576 Z"/>
+    <path class="p-slab" d="M608,130 A10,10 0 0 1 618,120 H628 V130 A10,10 0 0 1 618,140 H608 Z"/>
+    <path class="p-slab" d="M640,130 A10,10 0 0 1 650,120 H660 V130 A10,10 0 0 1 650,140 H640 Z"/>
+    <path class="p-slab" d="M672,130 A10,10 0 0 1 682,120 H692 V130 A10,10 0 0 1 682,140 H672 Z"/>
+    <path class="p-slab" d="M704,130 A10,10 0 0 1 714,120 H724 V130 A10,10 0 0 1 714,140 H704 Z"/>
+    <path class="p-slab" d="M736,130 A10,10 0 0 1 746,120 H756 V130 A10,10 0 0 1 746,140 H736 Z"/>
+  </svg>
+  <div class="text"><h1 class="name">Redox</h1><p class="tag">A field instrument for growers: calm page, lit slabs, one lime accent.</p></div>
+</div>
+</body></html>
