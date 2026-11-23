@@ -18,8 +18,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro'
 import ProductDetail from '../../components/products/ProductDetail.astro'
 import TopoBackground from '../../components/ui/TopoBackground.astro'
 import { getAllProducts, getProduct } from '../../lib/queries'
+import { PREVIEW_COOKIE, isValidPreviewToken } from '../../lib/previewAuth'
 
 export const prerender = false
+
+// Gated like every other /preview/ route: it renders full product-page
+// content, which must not be public (product pages are retired).
+if (!isValidPreviewToken(Astro.cookies.get(PREVIEW_COOKIE)?.value)) {
+  return new Response('Preview not authorized.', { status: 401 })
+}
 
 const slug = Astro.url.searchParams.get('product') ?? 'kapstone'
 const [product, all] = await Promise.all([getProduct(slug), getAllProducts()])
