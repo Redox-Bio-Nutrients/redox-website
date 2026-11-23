@@ -206,8 +206,6 @@ function toPath(line: Pt[]): string {
 }
 
 // ── public ───────────────────────────────────────────────────────────
-const cache = new Map<string, TopoResult>()
-
 export function generateTopo(opts: TopoOptions): TopoResult {
   const {
     seed,
@@ -219,9 +217,6 @@ export function generateTopo(opts: TopoOptions): TopoResult {
     warp = 0.32,
     accentEvery = 7,
   } = opts
-  const key = JSON.stringify({ seed, width, height, peakX, peakY, spacing, warp, accentEvery })
-  const hit = cache.get(key)
-  if (hit) return hit
 
   const h = hashString(seed)
   const n1 = makeNoise(h)
@@ -281,9 +276,7 @@ export function generateTopo(opts: TopoOptions): TopoResult {
     else base.push(levelPath)
   }
 
-  const result = { width, height, base: base.join(''), accent }
-  cache.set(key, result)
-  return result
+  return { width, height, base: base.join(''), accent }
 }
 
 // ── multi-colour "spectrum" accents (homepage) ───────────────────────
