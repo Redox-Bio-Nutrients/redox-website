@@ -11,6 +11,16 @@ import { visionTool } from '@sanity/vision'
 import { schemaTypes } from './schemaTypes'
 import { structure } from './structure'
 
+const SINGLETON_TYPES = [
+  'homepage',
+  'podcastPage',
+  'technicalPodcastPage',
+  'siteWallpaper',
+  'backgroundPool',
+  'teamContacts',
+  'formSettings',
+]
+
 export default defineConfig({
   name: 'default',
   title: 'Redox Bio-Nutrients',
@@ -25,13 +35,14 @@ export default defineConfig({
     visionTool(),
   ],
 
-  // WHY: The private singletons only stay private at their fixed dotted
-  // IDs (see structure.ts / teamContacts.ts). Creating one from the
-  // global "+" menu would give it a random, publicly readable ID.
+  // WHY: Singletons live at fixed IDs set in structure.ts, and the site
+  // reads them by those IDs. Creating one from the global "+" menu would
+  // make a second copy at a random ID: the site would ignore it, and for
+  // the private ones that ID would be publicly readable.
   document: {
     newDocumentOptions: (prev, { creationContext }) =>
       creationContext.type === 'global'
-        ? prev.filter((item) => !['teamContacts', 'formSettings'].includes(item.templateId))
+        ? prev.filter((item) => !SINGLETON_TYPES.includes(item.templateId))
         : prev,
   },
 

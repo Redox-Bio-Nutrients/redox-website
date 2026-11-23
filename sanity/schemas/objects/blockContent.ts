@@ -6,6 +6,7 @@
 // that uses blockContent gets them automatically.
 
 import { defineArrayMember, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const blockContent = defineType({
   name: 'blockContent',
@@ -51,6 +52,7 @@ export const blockContent = defineType({
     }),
     defineArrayMember({
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [
         { name: 'alt', type: 'string', title: 'Alt text', validation: (rule: any) => rule.required() },
@@ -70,6 +72,7 @@ export const blockContent = defineType({
           of: [
             {
               type: 'image',
+              validation: imageHasFile,
               options: { hotspot: true },
               fields: [
                 { name: 'alt', type: 'string', title: 'Alt text', validation: (rule: any) => rule.required() },

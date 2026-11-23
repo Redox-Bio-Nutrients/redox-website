@@ -131,7 +131,8 @@ async function plan({ manifest, out }) {
   }
 
   const query = encodeURIComponent(
-    `*[_type == "product" && !(_id in path("drafts.**"))]{_id, title, "assetId": image.asset._ref, "sha1": image.asset->sha1hash, imageSync}`,
+    // An editor's unpublished "Pause syncing" counts: the draft's flag wins.
+    `*[_type == "product" && !(_id in path("drafts.**"))]{_id, title, "assetId": image.asset._ref, "sha1": image.asset->sha1hash, imageSync, "paused": coalesce(*[_id == "drafts." + ^._id][0].imageSync.paused, imageSync.paused)}`,
   )
   const { result: products } = await sanity(`/data/query/${DATASET}?query=${query}`)
 
@@ -140,7 +141,7 @@ async function plan({ manifest, out }) {
   const paused = []
   const unmatched = []
   for (const product of products) {
-    if (product.imageSync?.paused) {
+    if (product.paused) {
       paused.push(product.title)
       continue
     }
@@ -224,6 +225,12 @@ async function apply({ plan: planFile, blobs, 'dry-run': dryRun }) {
     for (const id of [change.productId, `drafts.${change.productId}`]) {
       const doc = existing.get(id)
       if (!doc) continue
+      // A draft whose image differs from the published one holds an
+      // editor's own pick: leave it alone.
+      if (id !== change.productId && (doc.image?.asset?._ref ?? null) !== change.currentAssetId) {
+        report.push({ title: change.title, skippedDraft: 'draft image differs from published; left as the editor set it' })
+        continue
+      }
       mutations.push({
         patch: {
           id,

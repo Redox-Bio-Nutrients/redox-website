@@ -10,6 +10,7 @@ import { createElement } from 'react'
 import { defineField, defineType } from 'sanity'
 import { BenefitIconInput, BenefitIconPreview } from '../../components/BenefitIconInput'
 import { BENEFIT_ICON_OPTIONS } from '../../lib/benefitIcons'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 // ── Header + paragraph ─────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export const calloutSection = defineType({
       name: 'backgroundImage',
       title: 'Background Image',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
       description:
@@ -475,6 +477,7 @@ export const testimonialSection = defineType({
       name: 'avatar',
       title: 'Photo',
       type: 'image',
+      validation: imageHasFile,
       description: 'Optional — falls back to a monogram if not set.',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],

@@ -12,6 +12,7 @@
 
 import { defineField, defineType } from 'sanity'
 import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const testimonial = defineType({
   name: 'testimonial',
@@ -47,6 +48,7 @@ export const testimonial = defineType({
       name: 'avatar',
       title: 'Photo',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
@@ -57,6 +59,7 @@ export const testimonial = defineType({
       of: [
         {
           type: 'image',
+          validation: imageHasFile,
           options: { hotspot: true },
           fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
         },

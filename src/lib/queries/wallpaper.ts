@@ -9,7 +9,7 @@ import { IMAGE_FRAGMENT } from './fragments'
 
 export async function getSiteWallpaper(): Promise<SiteWallpaper | null> {
   return sanityFetch(
-    /* groq */ `*[_type == "siteWallpaper"][0]{
+    /* groq */ `*[_id == "siteWallpaper"][0]{
       "lightImage": lightImage ${IMAGE_FRAGMENT},
       "darkImage": darkImage ${IMAGE_FRAGMENT},
       opacity

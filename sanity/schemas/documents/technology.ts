@@ -10,6 +10,7 @@
 
 import { defineField, defineType } from 'sanity'
 import { pageUrlField } from '../../lib/pageUrlField'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const technology = defineType({
   name: 'technology',
@@ -40,6 +41,7 @@ export const technology = defineType({
       name: 'icon',
       title: 'Icon / Logo',
       type: 'image',
+      validation: imageHasFile,
       description: 'Shown on the Technologies listing card.',
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),

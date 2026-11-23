@@ -9,6 +9,7 @@
 // so editors can't accidentally break the layout grid.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 // Shared by the single Hero and each slide of the Hero Carousel — same
 // content shape either way (heading/subheading/media/CTA), so a slide
@@ -32,6 +33,7 @@ function heroContentFields() {
       name: 'backgroundImage',
       title: 'Background Image',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
       description:
@@ -247,6 +249,7 @@ export const homeColumnSection = defineType({
               name: 'image',
               title: 'Image',
               type: 'image',
+              validation: imageHasFile,
               options: { hotspot: true },
               fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
             }),
@@ -313,6 +316,7 @@ export const homeColumnSection = defineType({
       name: 'backgroundImage',
       title: 'Background Image',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       hidden: ({ parent }) => parent?.backgroundType !== 'image',
     }),
