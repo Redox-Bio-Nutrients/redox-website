@@ -19,8 +19,15 @@ import { sanityFetch } from '../../lib/sanity'
 import { IMAGE_FRAGMENT } from '../../lib/queries/fragments'
 import type { Product, ProductSection, SanityImage } from '../../lib/types/sanity'
 import type { PortableTextBlock } from '@portabletext/types'
+import { PREVIEW_COOKIE, isValidPreviewToken } from '../../lib/previewAuth'
 
 export const prerender = false
+
+// Gated like every other /preview/ route: it renders full product-page
+// content, which must not be public (product pages are retired).
+if (!isValidPreviewToken(Astro.cookies.get(PREVIEW_COOKIE)?.value)) {
+  return new Response('Preview not authorized.', { status: 401 })
+}
 
 const rawPool = await sanityFetch<SanityImage[]>(
   /* groq */ `*[_id == "turfBackgroundPool"][0].images[] ${IMAGE_FRAGMENT}`,
