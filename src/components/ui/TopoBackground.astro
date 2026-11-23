@@ -9,6 +9,9 @@
 // The contour lines are a cached SVG file served by /topo.svg
 // (src/pages/topo.svg.ts, renderTopoSvg in src/lib/topo.ts) rather than
 // inline path data — ~45 KB per map, cached a year by browser + CDN.
+// That still map is the poster: src/lib/topoMotion.ts then takes over
+// with the moving version (same accent lines and colours), except under
+// reduced motion or without WebGL2.
 //
 // Layers: forest→teal ground · warm glow at the peak · faint sage
 // contour lines · accent contour lines (each level its own seeded
@@ -118,6 +121,12 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
   )}
   {audio && <div class="topo-bg__grid"></div>}
 </div>
+
+<script>
+  import { animateTopo } from '../../lib/topoMotion'
+
+  document.querySelectorAll<HTMLImageElement>('.topo-bg__lines').forEach(animateTopo)
+</script>
 
 <style>
   .topo-bg {
