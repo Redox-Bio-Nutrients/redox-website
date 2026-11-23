@@ -5,8 +5,8 @@
 // terrain flows — hills rise, sink, merge and split, and lines fade in
 // and out. Accent lines and their colours (product label colours, or
 // the homepage spectrum) come from the same seeded data as the still
-// /topo.svg map, which stays as the poster and as the fallback for
-// reduced motion or no WebGL2.
+// /topo.svg map, which is only the fallback for reduced motion or no
+// WebGL2. The lines fade in over the ground + glow on first draw.
 //
 // One shared WebGL context draws every visible map in turn and copies
 // it into that map's own 2D canvas: browsers allow only ~16 WebGL
@@ -103,7 +103,6 @@ export function setTopoMotion(s: Partial<typeof settings>): void {
 }
 
 interface TopoMap {
-  img: HTMLImageElement
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   tex: WebGLTexture
@@ -204,22 +203,24 @@ function frame(now: number) {
     m.ctx.drawImage(glCanvas, 0, glCanvas.height - h, w, h, 0, 0, w, h)
     if (!m.shown) {
       m.shown = true
-      m.canvas.style.opacity = '1' // fades in over the still map, which then goes
-      setTimeout(() => (m.img.style.visibility = 'hidden'), 400)
+      m.canvas.style.opacity = '1' // fades in over the ground + glow
     }
   })
   raf = requestAnimationFrame(frame)
 }
 
-/** Starts the moving map over `img` (a TopoBackground's .topo-bg__lines). */
-export function animateTopo(img: HTMLImageElement): void {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+/** Starts the moving map beside `img` (a TopoBackground's .topo-bg__still,
+ * whose data-src is the still map's URL). False when it can't run
+ * (reduced motion, no WebGL2) — the caller then shows the still map. */
+export function animateTopo(img: HTMLImageElement): boolean {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false
   if (renderer === undefined) renderer = createRenderer()
-  if (!renderer) return
+  if (!renderer) return false
   const { gl } = renderer
 
-  const params = parseTopoSvgParams(new URL(img.src, location.href).searchParams)
-  if (!params) throw new Error(`topoMotion: bad map URL ${img.src}`)
+  const src = img.dataset.src!
+  const params = parseTopoSvgParams(new URL(src, location.href).searchParams)
+  if (!params) throw new Error(`topoMotion: bad map URL ${src}`)
   const data = topoShaderData(params)
 
   const tex = gl.createTexture()!
@@ -230,11 +231,10 @@ export function animateTopo(img: HTMLImageElement): void {
 
   const canvas = document.createElement('canvas')
   canvas.setAttribute('aria-hidden', 'true')
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 0.4s ease'
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1s ease'
   img.after(canvas)
 
   const map: TopoMap = {
-    img,
     canvas,
     ctx: canvas.getContext('2d')!,
     tex,
@@ -251,4 +251,5 @@ export function animateTopo(img: HTMLImageElement): void {
       raf = requestAnimationFrame(frame)
     }
   }).observe(canvas)
+  return true
 }
