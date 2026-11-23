@@ -1,0 +1,110 @@
+---
+// src/pages/preview/topo-motion.astro
+//
+// Tuning page for the moving topographic backgrounds (src/lib/topoMotion.ts):
+// the sliders adjust every map live; the chosen values are the defaults
+// in topoMotion.ts. Not linked anywhere; /preview/ is robots-disallowed.
+// Topo maps only, no product content, so it needs no preview cookie.
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import TopoBackground from '../../components/ui/TopoBackground.astro'
+import { getAllProducts } from '../../lib/queries'
+import { productSpectrum } from '../../lib/topo'
+
+const spectrum = productSpectrum((await getAllProducts()).map((p) => p.primaryColor))
+---
+
+<BaseLayout title="Topo motion prototype" description="Design exploration" seo={{ noIndex: true }}>
+  <section class="tm-hero">
+    <TopoBackground seed="home" accents={spectrum} peakX={0.5} peakY={0.55} loading="eager" />
+    <div class="tm-hero__text">
+      <p class="tm-eyebrow">Design exploration · not live</p>
+      <h1>Moving topo</h1>
+      <p>Tuning page for the moving topo backgrounds. The sliders start at the site's settings and change this page only.</p>
+      <div class="tm-controls">
+        <label class="tm-speed">
+          Speed <input type="range" min="0" max="8" step="0.25" value="3" data-speed />
+          <output data-speed-out>3×</output>
+        </label>
+        <label class="tm-speed">
+          Shape: Rings <input type="range" min="0" max="1" step="0.05" value="0.8" data-mix /> Free
+        </label>
+        <label class="tm-speed">
+          Lines: Fewer <input type="range" min="0.4" max="2" step="0.1" value="0.8" data-density /> More
+        </label>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<script>
+  import { setTopoMotion } from '../../lib/topoMotion'
+
+  const slider = (name: string, apply: (v: number) => void) => {
+    const el = document.querySelector<HTMLInputElement>(`[data-${name}]`)!
+    el.addEventListener('input', () => apply(Number(el.value)))
+  }
+  const out = document.querySelector<HTMLOutputElement>('[data-speed-out]')!
+  slider('speed', (speed) => {
+    out.textContent = `${speed}×`
+    setTopoMotion({ speed })
+  })
+  slider('mix', (mix) => setTopoMotion({ mix }))
+  slider('density', (density) => setTopoMotion({ density }))
+</script>
+
+<style>
+  .tm-hero {
+    position: relative;
+    min-height: 88vh;
+    display: grid;
+    align-items: end;
+    color: var(--color-white);
+    overflow: hidden;
+  }
+
+  .tm-hero__text {
+    position: relative;
+    max-width: var(--content-width);
+    width: 100%;
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6) var(--space-12);
+  }
+
+  .tm-eyebrow {
+    font-size: var(--text-sm);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-brand-lime);
+  }
+
+  .tm-hero h1 {
+    font-family: var(--font-serif);
+    font-weight: var(--font-normal);
+    font-size: var(--text-5xl);
+    margin: var(--space-2) 0 var(--space-4);
+  }
+
+  .tm-hero p {
+    max-width: 52ch;
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  .tm-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .tm-speed {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    background: rgb(0 0 0 / 0.35);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+  }
+</style>

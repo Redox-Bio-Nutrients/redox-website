@@ -70,9 +70,13 @@ function makeNoise(seed: number) {
   }
   for (let i = 0; i < 512; i++) perm[i] = p[i & 255]
   for (let i = 0; i < 256; i++) vals[i] = rand() * 2 - 1
+  // The 256×256 lattice of corner values, precomputed so the WebGL
+  // version (topoMotion.ts) samples exactly the same noise.
+  const lattice = new Float32Array(256 * 256)
+  for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) lattice[y * 256 + x] = vals[perm[(perm[x] + y) & 255]]
   const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10)
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-  const v = (x: number, y: number) => vals[perm[(perm[x & 255] + y) & 255]]
+  const v = (x: number, y: number) => lattice[((y & 255) << 8) | (x & 255)]
 
   const noise = (x: number, y: number) => {
     const xi = Math.floor(x)
@@ -81,7 +85,7 @@ function makeNoise(seed: number) {
     const w = fade(y - yi)
     return lerp(lerp(v(xi, yi), v(xi + 1, yi), u), lerp(v(xi, yi + 1), v(xi + 1, yi + 1), u), w)
   }
-  return (x: number, y: number, octaves = 3) => {
+  const fbm = (x: number, y: number, octaves = 3) => {
     let sum = 0
     let amp = 1
     let freq = 1
@@ -94,6 +98,7 @@ function makeNoise(seed: number) {
     }
     return sum / norm
   }
+  return Object.assign(fbm, { lattice })
 }
 
 // ── marching squares ─────────────────────────────────────────────────
@@ -205,19 +210,10 @@ function toPath(line: Pt[]): string {
   return d + `L${r(last[0])} ${r(last[1])}`
 }
 
-// ── public ───────────────────────────────────────────────────────────
-export function generateTopo(opts: TopoOptions): TopoResult {
-  const {
-    seed,
-    width = 2400,
-    height = 1200,
-    peakX = 0.5,
-    peakY = 0.5,
-    spacing = 0.05,
-    warp = 0.32,
-    accentEvery = 7,
-  } = opts
-
+// The terrain: a "distance from the peak" field warped by noise.
+// generateTopo traces it on the CPU; topoShaderData hands the same
+// inputs to the WebGL version, which recomputes it per pixel.
+function topoField(seed: string, width: number, height: number, peakX: number, peakY: number, warp: number) {
   const h = hashString(seed)
   const n1 = makeNoise(h)
   const n2 = makeNoise(h ^ 0x9e3779b9)
@@ -257,6 +253,24 @@ export function generateTopo(opts: TopoOptions): TopoResult {
     if (v < min) min = v
     if (v > max) max = v
   }
+
+  return { h, field, nx, ny, cell, min, max, lattices: [n1.lattice, n2.lattice, n3.lattice] }
+}
+
+// ── public ───────────────────────────────────────────────────────────
+export function generateTopo(opts: TopoOptions): TopoResult {
+  const {
+    seed,
+    width = 2400,
+    height = 1200,
+    peakX = 0.5,
+    peakY = 0.5,
+    spacing = 0.05,
+    warp = 0.32,
+    accentEvery = 7,
+  } = opts
+
+  const { h, field, nx, ny, cell, min, max } = topoField(seed, width, height, peakX, peakY, warp)
 
   const base: string[] = []
   const accent: { d: string; width: number }[] = []
@@ -390,6 +404,22 @@ export function renderTopoSvg(p: TopoSvgParams): string {
     `<g stroke-opacity="0.85">${accents}</g>` +
     `</g></svg>`
   )
+}
+
+/** Everything the WebGL version (src/lib/topoMotion.ts) needs to draw
+ * the same map as renderTopoSvg: the three noise lattices (RGB), the
+ * field minimum, and the same seeded accent widths and ring colours. */
+export function topoShaderData(p: TopoSvgParams) {
+  const width = 2400
+  const height = 1200
+  const { spacing = 0.05, warp = 0.32, accentEvery = 7 } = p
+  const { h, min, lattices } = topoField(p.seed, width, height, p.peakX, p.peakY, warp)
+  const lattice = new Float32Array(256 * 256 * 3)
+  for (let i = 0; i < 256 * 256; i++) for (let c = 0; c < 3; c++) lattice[i * 3 + c] = lattices[c][i]
+  const widthRand = mulberry32(h ^ 0x27d4eb2f)
+  const accentWidths = Array.from({ length: 32 }, () => Math.round((1.6 + widthRand() * 2.6) * 10) / 10)
+  const ringColors = accentWidths.map((_, i) => ringColor(p.colors, i))
+  return { width, height, peakX: p.peakX, peakY: p.peakY, spacing, warp, accentEvery, min, phase: (h % 1000) / 1000, lattice, accentWidths, ringColors }
 }
 
 const num = (n: number) => String(Math.round(n * 1000) / 1000)
