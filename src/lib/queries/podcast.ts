@@ -41,7 +41,7 @@ export async function getEpisode(slug: string): Promise<PodcastEpisode | null> {
 
 export async function getPodcastPage(): Promise<PodcastPage | null> {
   return sanityFetch(
-    /* groq */ `*[_type == "podcastPage"][0]{
+    /* groq */ `*[_id == "podcastPage"][0]{
       _id,
       ${HOME_SECTIONS_FRAGMENT},
       ${SEO_FRAGMENT}
@@ -51,7 +51,7 @@ export async function getPodcastPage(): Promise<PodcastPage | null> {
 
 export async function getTechnicalPodcastPage(): Promise<TechnicalPodcastPage | null> {
   return sanityFetch(
-    /* groq */ `*[_type == "technicalPodcastPage"][0]{
+    /* groq */ `*[_id == "technicalPodcastPage"][0]{
       _id,
       ${HOME_SECTIONS_FRAGMENT},
       episodes[]{ _key, title, youtubeId, episodeNumber },

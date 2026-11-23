@@ -9,7 +9,7 @@ import { previewFetch, sanityFetch } from '../sanity'
 import type { Homepage } from '../types/sanity'
 import { HOME_SECTIONS_FRAGMENT, SEO_FRAGMENT } from './fragments'
 
-const HOMEPAGE_QUERY = /* groq */ `*[_type == "homepage"][0]{
+const HOMEPAGE_QUERY = /* groq */ `*[_id == "homepage"][0]{
   _id,
   ${HOME_SECTIONS_FRAGMENT},
   ${SEO_FRAGMENT}
