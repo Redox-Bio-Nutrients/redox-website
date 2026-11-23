@@ -23,6 +23,7 @@
 import { defineField, defineType } from 'sanity'
 import { US_STATES } from '../../lib/usStates'
 import { BulkImageInput } from '../../components/BulkImageInput'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const region = defineType({
   name: 'region',
@@ -58,6 +59,7 @@ export const region = defineType({
       name: 'image',
       title: 'Region Image / Map',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
@@ -78,6 +80,7 @@ export const region = defineType({
       of: [
         {
           type: 'image',
+          validation: imageHasFile,
           options: { hotspot: true },
           fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
         },

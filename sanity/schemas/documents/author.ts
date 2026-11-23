@@ -37,6 +37,7 @@
 // (teamContacts.ts) and are joined back on by AUTHOR_FRAGMENT.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const author = defineType({
   name: 'author',
@@ -76,6 +77,7 @@ export const author = defineType({
       name: 'photo',
       title: 'Photo',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),

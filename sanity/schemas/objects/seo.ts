@@ -5,6 +5,7 @@
 // Frontend falls back to the document's own title/excerpt when empty.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const seo = defineType({
   name: 'seo',
@@ -29,6 +30,7 @@ export const seo = defineType({
       name: 'ogImage',
       title: 'Social Share Image',
       type: 'image',
+      validation: imageHasFile,
       description: '1200×630 recommended. Falls back to the site default when empty.',
     }),
     defineField({

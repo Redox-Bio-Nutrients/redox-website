@@ -10,6 +10,7 @@
 // `category` document, generalized past one fixed taxonomy dimension.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const collection = defineType({
   name: 'collection',
@@ -56,6 +57,7 @@ export const collection = defineType({
       name: 'icon',
       title: 'Icon',
       type: 'image',
+      validation: imageHasFile,
       description: 'Shown floated left of this collection\'s heading/description wherever it\'s displayed, e.g. the grouped catalog pages.',
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),

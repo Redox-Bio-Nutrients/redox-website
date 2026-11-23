@@ -10,6 +10,7 @@
 // the gaps between them and on plain-text pages.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const siteWallpaper = defineType({
   name: 'siteWallpaper',
@@ -20,6 +21,7 @@ export const siteWallpaper = defineType({
       name: 'lightImage',
       title: 'Light Mode Wallpaper',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       description: 'Shown site-wide in light mode. Leave empty for no wallpaper in light mode.',
     }),
@@ -27,6 +29,7 @@ export const siteWallpaper = defineType({
       name: 'darkImage',
       title: 'Dark Mode Wallpaper',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       description: 'Shown site-wide in dark mode. Leave empty for no wallpaper in dark mode.',
     }),

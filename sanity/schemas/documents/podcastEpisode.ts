@@ -5,6 +5,7 @@
 // episode ID for the embedded player.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const podcastEpisode = defineType({
   name: 'podcastEpisode',
@@ -46,6 +47,7 @@ export const podcastEpisode = defineType({
       name: 'coverImage',
       title: 'Cover Image',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),

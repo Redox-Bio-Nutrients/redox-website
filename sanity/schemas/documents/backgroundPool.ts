@@ -16,6 +16,7 @@
 
 import { defineField, defineType } from 'sanity'
 import { BulkImageInput } from '../../components/BulkImageInput'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const backgroundPool = defineType({
   name: 'backgroundPool',
@@ -29,6 +30,7 @@ export const backgroundPool = defineType({
       of: [
         {
           type: 'image',
+          validation: imageHasFile,
           options: { hotspot: true },
           fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
         },

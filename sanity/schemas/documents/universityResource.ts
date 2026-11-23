@@ -6,6 +6,7 @@
 // new formats appear.
 
 import { defineField, defineType } from 'sanity'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const universityResource = defineType({
   name: 'universityResource',
@@ -50,6 +51,7 @@ export const universityResource = defineType({
       name: 'coverImage',
       title: 'Cover Image',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),

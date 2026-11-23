@@ -8,6 +8,7 @@
 import { defineField, defineType } from 'sanity'
 import { pageUrlField } from '../../lib/pageUrlField'
 import { BulkImageInput } from '../../components/BulkImageInput'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const product = defineType({
   name: 'product',
@@ -67,6 +68,7 @@ export const product = defineType({
       name: 'image',
       title: 'Product Image',
       type: 'image',
+      validation: imageHasFile,
       description: 'The packaging/product shot — cards and the product page sidebar.',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
@@ -114,6 +116,7 @@ export const product = defineType({
       name: 'logo',
       title: 'Product Logo',
       type: 'image',
+      validation: imageHasFile,
       description:
         'Optional stylized product wordmark/logotype (e.g. a designed "OxyCal" logo graphic), shown in place of the plain text product name on the page hero when set. Works for both Agriculture and Turf products — falls back to plain text when empty. Prefer a transparent-background file.',
       options: { hotspot: true },
@@ -126,6 +129,7 @@ export const product = defineType({
       of: [
         {
           type: 'image',
+          validation: imageHasFile,
           options: { hotspot: true },
           fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
         },
@@ -141,6 +145,7 @@ export const product = defineType({
       of: [
         {
           type: 'image',
+          validation: imageHasFile,
           options: { hotspot: true },
           fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
         },
@@ -153,6 +158,7 @@ export const product = defineType({
       name: 'heroImage',
       title: 'Hero Image',
       type: 'image',
+      validation: imageHasFile,
       description:
         'Wide lifestyle/field imagery for the product page hero. Falls back to a gradient of the primary color when empty.',
       options: { hotspot: true },

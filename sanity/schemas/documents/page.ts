@@ -6,6 +6,7 @@
 
 import { defineField, defineType } from 'sanity'
 import { pageUrlField } from '../../lib/pageUrlField'
+import { imageHasFile } from '../../lib/imageHasFile'
 
 export const page = defineType({
   name: 'page',
@@ -41,6 +42,7 @@ export const page = defineType({
       name: 'heroImage',
       title: 'Hero Image',
       type: 'image',
+      validation: imageHasFile,
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alt text' }],
     }),
