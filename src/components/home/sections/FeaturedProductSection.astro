@@ -4,10 +4,9 @@
 // A single product, by reference — see the schema field's own comment
 // (sanity/schemas/objects/homeSections.ts) for why this pulls its
 // name/tagline/image/color live from the product instead of storing
-// copies of any of it. The whole card links to the product's page
-// (an aria-hidden full-card hit layer, since links can't nest), and an
-// optional editor-set callout link (`secondaryLink`) sits beside the
-// "Explore" link, above that layer.
+// copies of any of it. The card does not link to the product: product
+// pages are retired (see pages/products/[slug].astro). Only the
+// optional editor-set callout link (`secondaryLink`) is a link.
 //
 // Full-bleed, same convention as CalloutSection's fullBleed variant —
 // the card (background photo + wash) spans the true viewport edge,
@@ -92,8 +91,10 @@ function truncate(text: string, max: number): string {
 }
 
 const excerpt = product?.excerpt ? truncate(product.excerpt, 180) : null
-const productHref = product ? `/products/${product.slug}` : '#'
-const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? section.secondaryLink : null
+// A callout into a (retired) product page is dropped rather than sent to the catalog.
+const secondaryHref = section.secondaryLink?.href
+const secondary =
+  section.secondaryLink?.label && secondaryHref && !secondaryHref.startsWith('/products/') ? section.secondaryLink : null
 ---
 
 {product && (
@@ -123,11 +124,6 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
       {glow && (
         <div class="featured-product__glow" style={`--fp-glow: ${glowColor};`} aria-hidden="true"></div>
       )}
-      {/* Whole-card click target — keeps the old "entire card is the
-         link" behavior now that the card holds two links. Hidden from
-         assistive tech/tab order; the real "Explore" link below is
-         the accessible one. */}
-      <a class="featured-product__hit" href={productHref} tabindex="-1" aria-hidden="true"></a>
       {isTurf ? (
         <div class="featured-product__turf-wash" aria-hidden="true"></div>
       ) : (
@@ -151,11 +147,8 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
           </h2>
           {product.tagline && <p class="featured-product__tagline">{product.tagline}</p>}
           {excerpt && <p class="featured-product__excerpt">{excerpt}</p>}
-          <div class="featured-product__links">
-            <a class="featured-product__cta" href={productHref}>
-              Explore {product.title} <span aria-hidden="true">→</span>
-            </a>
-            {secondary && (
+          {secondary && (
+            <div class="featured-product__links">
               <a
                 class="featured-product__callout"
                 href={secondary.href}
@@ -166,8 +159,8 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
                 <span>{secondary.label}</span>
                 <span class="featured-product__callout-arrow" aria-hidden="true">→</span>
               </a>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -197,7 +190,6 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
     border-radius: 0;
     overflow: hidden;
     box-shadow: var(--shadow-lg);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
     /* Pulled up to reach behind the overlap section above it (the
      * white "Many Companies Formulate..." card) instead of stopping at
      * this section's own top edge — same negative-margin technique
@@ -210,11 +202,6 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
      * height. .columns--overlap's z-index: 2 is what keeps that card
      * painting above this reaching-up background rather than under it. */
     margin-top: -540px;
-  }
-
-  .featured-product__card:hover {
-    box-shadow: var(--shadow-xl);
-    transform: translateY(-3px);
   }
 
   /* The actual grid content, constrained back down to the page's
@@ -358,27 +345,6 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
     color: rgb(255 255 255 / 0.7);
   }
 
-  /* Full-card link layer — above the background layers (z 0), below
-   * .featured-product__inner (z 1). The inner content lets clicks fall
-   * through to it except on its own real links. */
-  .featured-product__hit {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-
-  .featured-product__inner {
-    pointer-events: none;
-  }
-
-  .featured-product__inner a {
-    pointer-events: auto;
-  }
-
-  /* Side by side on desktop (Curtis, 2026-10-08): "Explore" never
-   * shrinks; the callout pill takes the remaining width and wraps its
-   * own text to two lines if it has to, rather than dropping below.
-   * Mobile stacks them (see the max-width block further down). */
   .featured-product__links {
     display: flex;
     flex-wrap: nowrap;
@@ -387,31 +353,7 @@ const secondary = section.secondaryLink?.label && section.secondaryLink?.href ? 
     margin-top: var(--space-6);
   }
 
-  .featured-product__links > .featured-product__cta {
-    flex-shrink: 0;
-  }
-
-  .featured-product__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: fit-content;
-    color: inherit;
-    font-size: calc(var(--text-sm) * 1.5);
-    font-weight: var(--font-medium);
-    border-bottom: 1px solid currentColor;
-  }
-
-  .featured-product__cta span {
-    transition: transform 0.2s ease;
-  }
-
-  .featured-product__card:hover .featured-product__cta span {
-    transform: translateX(3px);
-  }
-
-  /* Callout link — a frosted pill so it reads as a highlighted aside,
-   * not a second competing "Explore" link. */
+  /* Callout link — a frosted pill so it reads as a highlighted aside. */
   .featured-product__callout {
     display: inline-flex;
     align-items: center;
