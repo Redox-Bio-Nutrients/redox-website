@@ -9,9 +9,11 @@
 // The contour lines are a cached SVG file served by /topo.svg
 // (src/pages/topo.svg.ts, renderTopoSvg in src/lib/topo.ts) rather than
 // inline path data — ~45 KB per map, cached a year by browser + CDN.
-// That still map is the poster: src/lib/topoMotion.ts then takes over
-// with the moving version (same accent lines and colours), except under
-// reduced motion or without WebGL2.
+// The page first shows only the ground + glow; src/lib/topoMotion.ts
+// then fades in the moving lines (same accent lines and colours). Only
+// under reduced motion or without WebGL2 is the still SVG fetched and
+// faded in instead. .topo-bg__lines wraps whichever one shows, so
+// callers' dimming (homepage hero, callouts) applies to both.
 //
 // Layers: forest→teal ground · warm glow at the peak · faint sage
 // contour lines · accent contour lines (each level its own seeded
@@ -103,16 +105,18 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
 >
   <div class="topo-bg__glow"></div>
   {topoUrl && (
-    <img
-      class="topo-bg__lines"
-      src={topoUrl}
-      alt=""
-      width="2400"
-      height="1200"
-      loading={loading}
-      decoding="async"
-      fetchpriority={loading === 'eager' ? 'high' : undefined}
-    />
+    <div class="topo-bg__lines">
+      <img
+        class="topo-bg__still"
+        data-src={topoUrl}
+        alt=""
+        width="2400"
+        height="1200"
+        loading={loading}
+        decoding="async"
+        fetchpriority={loading === 'eager' ? 'high' : undefined}
+      />
+    </div>
   )}
   {wave && (
     <svg class="topo-bg__wavebox" viewBox="0 0 2400 300" preserveAspectRatio="xMidYMid slice">
@@ -125,7 +129,12 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
 <script>
   import { animateTopo } from '../../lib/topoMotion'
 
-  document.querySelectorAll<HTMLImageElement>('.topo-bg__lines').forEach(animateTopo)
+  document.querySelectorAll<HTMLImageElement>('.topo-bg__still').forEach((img) => {
+    if (animateTopo(img)) return
+    // Reduced motion / no WebGL2: fetch the still map and fade it in.
+    img.addEventListener('load', () => img.classList.add('is-shown'), { once: true })
+    img.src = img.dataset.src!
+  })
 </script>
 
 <style>
@@ -154,9 +163,20 @@ const wave = audio ? generateWaveform({ seed, height: 300, y: 0.5, centerX: peak
   .topo-bg__lines {
     position: absolute;
     inset: 0;
+  }
+
+  .topo-bg__still {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  .topo-bg__still.is-shown {
+    opacity: 1;
   }
 
   /* ── audio treatment (podcast heroes) ── */
