@@ -94,8 +94,7 @@ export default defineConfig({
         const path = new URL(page).pathname
         // /preview/* is robots-disallowed; a param-less SSR route there
         // (turf-concept) still gets picked up by the integration.
-        // /products/* only redirects to the market catalogs now.
-        return !path.startsWith('/preview/') && !path.startsWith('/products/') && !noIndexPaths.has(path)
+        return !path.startsWith('/preview/') && !noIndexPaths.has(path)
       },
     }),
   ],

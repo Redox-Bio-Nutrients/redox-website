@@ -1,0 +1,28 @@
+---
+// src/pages/products/[...path].astro
+//
+// Product detail pages are retired (2026-11-23). Every /products/…
+// URL — current slugs, old or renamed ones, odd casing, bare /products —
+// 301s to a catalog, so email blasts, QR codes and other outside links
+// never 404. A product's own market decides which catalog (Turf-only →
+// /turf/products); anything unknown goes to the Agriculture catalog.
+// Server-rendered so slugs that no longer exist are covered too.
+// ProductDetail.astro is kept only for the Studio draft preview.
+
+import { getProductMarkets } from '../../lib/queries'
+import { getProductVariant } from '../../lib/productVariant'
+
+export const prerender = false
+
+const slug = (Astro.params.path ?? '').split('/')[0].toLowerCase()
+const markets = slug ? await getProductMarkets(slug) : null
+
+return new Response(null, {
+  status: 301,
+  headers: {
+    // Keep the query string: email blasts carry utm_* tracking tags.
+    Location: `/${getProductVariant(markets ?? undefined)}/products${Astro.url.search}`,
+    'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+  },
+})
+---
