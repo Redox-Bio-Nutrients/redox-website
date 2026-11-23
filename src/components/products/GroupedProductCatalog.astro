@@ -22,6 +22,7 @@ import ProductCard from './ProductCard.astro'
 import { urlFor } from '../../lib/sanity'
 import { CATEGORY_ORDER } from '../../lib/catalogTaxonomy'
 import SectionNav, { type SectionNavItem } from '../ui/SectionNav.astro'
+import ResourceRequestDialog from './ResourceRequestDialog.astro'
 
 interface Props {
   products: ProductCardType[]
@@ -62,10 +63,16 @@ const navItems: SectionNavItem[] = groups.map((group) => ({
 ---
 
 {products.length > 0 ? (
-  <div class:list={['catalog', { 'catalog--with-nav': hasNav }]}>
-    {hasNav && (
-      <SectionNav items={navItems} label="Product categories" title="Categories" countNoun="products" />
-    )}
+  <div class="catalog catalog--with-side">
+    {/* Sidebar on every catalog (Turf has no categories, so only the button). */}
+    <div class="catalog__side">
+      {hasNav && (
+        <SectionNav items={navItems} label="Product categories" title="Categories" countNoun="products" />
+      )}
+      <button type="button" class="btn btn--primary catalog__request" data-dialog-open="resource-request-dialog">
+        Request Information
+      </button>
+    </div>
     <div class="catalog__groups">
     {groups.map((group) => {
       // A lone "More Products" bucket (no real Collection exists for
@@ -102,7 +109,7 @@ const navItems: SectionNavItem[] = groups.map((group) => ({
           )}
           <div class="catalog__grid">
             {group.products.map((product) => (
-              <ProductCard product={product} accentColor={group.collection?.color} />
+              <ProductCard product={product} accentColor={group.collection?.color} hideTagline />
             ))}
           </div>
         </section>
@@ -114,18 +121,44 @@ const navItems: SectionNavItem[] = groups.map((group) => ({
   <p class="catalog__empty">{emptyMessage}</p>
 )}
 
+{products.length > 0 && <ResourceRequestDialog products={products.map((p) => p.title).sort((a, b) => a.localeCompare(b))} />}
+
 <style>
   /* ── Layout: side rail (desktop) / sticky picker (phones+tablets) ── */
-  .catalog--with-nav {
+  .catalog--with-side {
     display: grid;
     grid-template-columns: 200px minmax(0, 1fr);
     gap: var(--space-12);
     align-items: start;
   }
 
+  /* Rail + button stick together on desktop. Below 1024px the wrapper
+   * dissolves so SectionNav's own sticky picker spans the whole catalog. */
+  .catalog__side {
+    position: sticky;
+    top: calc(var(--header-space) + var(--space-8));
+  }
+
+  .catalog__request {
+    width: 100%;
+  }
+
+  .catalog__request:not(:first-child) {
+    margin-top: var(--space-6);
+  }
+
   @media (max-width: 1023px) {
-    .catalog--with-nav {
+    .catalog--with-side {
       display: block;
+    }
+
+    .catalog__side {
+      display: contents;
+    }
+
+    .catalog__side .catalog__request {
+      width: auto;
+      margin: 0 0 var(--space-10);
     }
   }
 
@@ -206,7 +239,7 @@ const navItems: SectionNavItem[] = groups.map((group) => ({
   }
 
   /* The side rail takes ~250px on desktop, so one fewer column there. */
-  .catalog--with-nav .catalog__grid {
+  .catalog--with-side .catalog__grid {
     grid-template-columns: repeat(3, 1fr);
   }
 
@@ -221,21 +254,21 @@ const navItems: SectionNavItem[] = groups.map((group) => ({
       grid-template-columns: repeat(3, 1fr);
     }
 
-    .catalog--with-nav .catalog__grid {
+    .catalog--with-side .catalog__grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media (max-width: 1023px) {
     .catalog__grid,
-    .catalog--with-nav .catalog__grid {
+    .catalog--with-side .catalog__grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media (max-width: 639px) {
     .catalog__grid,
-    .catalog--with-nav .catalog__grid {
+    .catalog--with-side .catalog__grid {
       grid-template-columns: 1fr;
     }
   }

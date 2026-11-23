@@ -1,0 +1,19 @@
+---
+// src/components/portableText/PortableTextLink.astro
+//
+// Rich-text links, rendered the same as astro-portabletext's default
+// <a href> except a link to a product page (/products/…, the legacy
+// /product/…, absolute or relative) renders as plain text: product
+// pages are retired for regulatory reasons (see pages/products/[slug].astro),
+// and visitors may only request information from the catalogs.
+
+import type { Mark, MarkProps } from 'astro-portabletext/types'
+
+type Props = MarkProps
+
+const { node, index, isInline, ...attrs } = Astro.props
+const href = (node as unknown as Mark<{ href?: string }>).markDef.href ?? ''
+const isProductPage = /^(https?:\/\/(www\.)?redoxgrows\.com)?\/products?\//i.test(href)
+---
+
+{isProductPage ? <slot /> : <a href={href} {...attrs}><slot /></a>}

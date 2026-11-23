@@ -10,6 +10,7 @@
 // Added to a schema via pageUrlField() in sanity/lib/pageUrlField.ts.
 // Routes below mirror src/pages/ — update them if a route moves, and
 // add an entry before giving another document type this field.
+// Products deliberately have no Page URL: product pages are retired.
 
 import { Badge, Box, Button, Card, Flex, Stack, Text } from '@sanity/ui'
 import { CopyIcon, LaunchIcon } from '@sanity/icons'
@@ -20,7 +21,6 @@ import type { StringInputProps } from 'sanity'
 const SITE_URL = 'https://redoxgrows.com'
 // Slug-based routes: the URL is prefix + slug.
 const PATH_PREFIX: Record<string, string> = {
-  product: '/products/', // src/pages/products/[slug].astro
   blogPost: '/blog/', // src/pages/blog/[slug].astro
   technology: '/technologies/', // src/pages/technologies/[slug].astro
   page: '/', // src/pages/[slug].astro

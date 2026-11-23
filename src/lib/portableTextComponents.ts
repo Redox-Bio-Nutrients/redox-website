@@ -37,6 +37,7 @@ import PortableTextChart from '../components/portableText/PortableTextChart.astr
 import PortableTextPullQuote from '../components/portableText/PortableTextPullQuote.astro'
 import PortableTextCalloutBox from '../components/portableText/PortableTextCalloutBox.astro'
 import PortableTextUnknownMark from '../components/portableText/PortableTextUnknownMark.astro'
+import PortableTextLink from '../components/portableText/PortableTextLink.astro'
 
 export const portableTextComponents = {
   type: {
@@ -59,6 +60,8 @@ export const portableTextComponents = {
   // unknown="mark">` with a console warning on every build. See
   // PortableTextUnknownMark.astro.
   unknownMark: PortableTextUnknownMark,
+  // Product-page links render as plain text — see PortableTextLink.astro.
+  mark: { link: PortableTextLink },
 }
 
 // Silences only the one known, understood case (a dangling mark

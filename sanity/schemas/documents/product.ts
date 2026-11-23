@@ -6,7 +6,6 @@
 // are references so the relationship stays queryable in both directions.
 
 import { defineField, defineType } from 'sanity'
-import { pageUrlField } from '../../lib/pageUrlField'
 import { BulkImageInput } from '../../components/BulkImageInput'
 import { imageHasFile } from '../../lib/imageHasFile'
 
@@ -28,7 +27,6 @@ export const product = defineType({
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
     }),
-    pageUrlField(),
     defineField({
       name: 'markets',
       title: 'Markets',
