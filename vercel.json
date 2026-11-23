@@ -66,6 +66,12 @@
     { "source": "/product/optimax/", "destination": "/agriculture/products", "permanent": true },
     { "source": "/product/:slug", "destination": "/products/:slug", "permanent": true },
     { "source": "/product/:slug/", "destination": "/products/:slug", "permanent": true },
+    { "source": "/product", "destination": "/agriculture/products", "permanent": true },
+    { "source": "/product/", "destination": "/agriculture/products", "permanent": true },
+    { "source": "/agriculture/products/:slug", "destination": "/agriculture/products", "permanent": true },
+    { "source": "/agriculture/products/:slug/", "destination": "/agriculture/products", "permanent": true },
+    { "source": "/turf/products/:slug", "destination": "/turf/products", "permanent": true },
+    { "source": "/turf/products/:slug/", "destination": "/turf/products", "permanent": true },
 
     { "source": "/news", "destination": "/blog", "permanent": true },
     { "source": "/news/", "destination": "/blog", "permanent": true },

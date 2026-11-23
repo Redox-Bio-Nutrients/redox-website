@@ -13,6 +13,12 @@ import {
   blockContentField,
 } from './fragments'
 
+// Which catalog a (retired) product URL redirects to — see
+// src/pages/products/[...path].astro. Null for an unknown slug.
+export async function getProductMarkets(slug: string): Promise<Market[] | null> {
+  return sanityFetch(/* groq */ `*[_type == "product" && slug.current == $slug][0].markets`, { slug })
+}
+
 export async function getProductsByMarket(market: Market): Promise<ProductCard[]> {
   return sanityFetch(
     /* groq */ `*[_type == "product" && $market in markets]
