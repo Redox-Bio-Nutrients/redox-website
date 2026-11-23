@@ -5,7 +5,7 @@ description: Public register of the Redox design system. All values live in desi
 
 # DESIGN.md
 
-The source of truth for this site's visual design is **design/redox/**, a read-only snapshot of the claude.ai "Redox" design system artifact (see design/redox/SOURCE.md). This file deliberately restates no token values, so it cannot drift. Read the files named below and use their tokens by name. Never edit design/redox/, and never invent a colour, font, size, radius, shadow or spacing value that is not in design/redox/tokens.json.
+The source of truth for this site's visual design is **design/redox/**, a read-only snapshot of the claude.ai "Redox" design system artifact (see design/redox/SOURCE.md). This file deliberately restates no token values, so it cannot drift. Read the files named below for the rules. In code, use each token through its CSS variable in src/styles/tokens.css, never its value; CLAUDE.md explains how token names map to variable names. Never edit design/redox/, and never invent a colour, font, size, radius, shadow or spacing value that is not in design/redox/tokens.json.
 
 This repo is the website, so use the **public register**:
 
