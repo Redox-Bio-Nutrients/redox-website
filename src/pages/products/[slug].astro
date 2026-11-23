@@ -1,29 +1,21 @@
 ---
 // src/pages/products/[slug].astro
 //
-// Statically prerendered product detail page. Actual design/markup
-// lives in src/components/products/ProductDetail.astro, shared with
-// the SSR draft-preview route at src/pages/preview/products/[slug].astro
-// — this file's only job is fetching the *published* product and
-// handing it off.
+// Product detail pages are retired (2026-11-23): every old product URL
+// (catalog cards, blog embeds, homepage links, vercel.json legacy
+// redirects) now lands on that product's market catalog instead.
+// ProductDetail.astro is kept only for the Studio draft-preview route.
 
-import BaseLayout from '../../layouts/BaseLayout.astro'
-import ProductDetail from '../../components/products/ProductDetail.astro'
-import { getAllProducts, getProduct } from '../../lib/queries'
+import { getAllProducts } from '../../lib/queries'
+import { getProductVariant } from '../../lib/productVariant'
 
 export async function getStaticPaths() {
   const products = await getAllProducts()
-  return products.map((p) => ({ params: { slug: p.slug } }))
+  return products.map((p) => ({
+    params: { slug: p.slug },
+    props: { variant: getProductVariant(p.markets) },
+  }))
 }
 
-const { slug } = Astro.params
-const product = await getProduct(slug!)
-
-if (!product) {
-  return Astro.redirect('/404')
-}
+return Astro.redirect(`/${Astro.props.variant}/products`, 301)
 ---
-
-<BaseLayout title={product.title} description={product.tagline} seo={product.seo}>
-  <ProductDetail product={product} />
-</BaseLayout>
